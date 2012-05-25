@@ -1,0 +1,3 @@
+[submodule "libs/jasmine-haxe"]
+	path = libs/jasmine-haxe
+	url = https://rjanicek@github.com/rjanicek/jasmine-haxe.git
