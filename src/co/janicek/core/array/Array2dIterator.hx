@@ -9,8 +9,6 @@ using co.janicek.core.array.Array2dCore;
 
 class Array2dIterator<T> {
 	var a:Array<Array<T>>;
-	var yIterator : Iterator<Array<T>>;
-	var xIterator : Iterator<T>;
 	var nextValue : Array2dIndex;
 	var y:Int;
 	var x:Int;

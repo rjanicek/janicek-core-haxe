@@ -13,9 +13,9 @@ using Lambda;
 class Array2dSpec {
 
 	public function new() {
-		J.describe("Vector Array", function() {
+		J.describe("Array2D", function() {
 			
-			J.it("should set and get value at vector", function() {
+			J.it("should set and get value at index", function() {
 				var a = new Array<Array<Int>>();
 				J.expect(a.get(0, 0)).toBeNull();
 				a.set(0, 0, 1);
