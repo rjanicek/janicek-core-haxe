@@ -13,8 +13,8 @@ class StringCoreSpec {
 
 	public function new() {
 		J.describe("StringCore", function() {
-			J.it("should trim one string from the end of another string", function() {
-				J.expect(StringCore.trimEnd("ab", "b")).toEqual("a");
+			J.it("should remove one string from the end of another string", function() {
+				J.expect(StringCore.removeFromEnd("ab", "b")).toEqual("a");
 			});
 			J.it("should check if string is null or empty", function() {
 				J.expect(StringCore.isNullOrEmpty("")).toBeTruthy();

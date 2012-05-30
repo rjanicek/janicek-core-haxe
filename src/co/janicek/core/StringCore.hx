@@ -3,20 +3,20 @@ package co.janicek.core;
 class StringCore {
 
 	/**
-	 * Trim string from end of string.
-	 * @param	string String to trim.
-	 * @param	trim String to trim from other string.
-	 * @return	Trimmed string.
+	 * Remove pattern from end of string.
+	 * @param	string String to remove pattern from.
+	 * @param	pattern String to remove from end of other string.
+	 * @return	String with pattern removed from end.
 	 */
-	public static function trimEnd( string : String, trim : String ) :  String {
-		if (StringTools.endsWith(string, trim)) {
-			return string.substr(0, string.lastIndexOf(trim));
+	public static function removeFromEnd( string : String, pattern : String ) :  String {
+		if (StringTools.endsWith(string, pattern)) {
+			return string.substr(0, string.lastIndexOf(pattern));
 		}		
 		return string;
 	}
 	
 	/**
-	 * Check if sting is null or empty.
+	 * Test if sting is null or empty.
 	 * @return True if string is null or empty.
 	 */
 	public static function isNullOrEmpty( string : String ) : Bool {
@@ -29,6 +29,16 @@ class StringCore {
 		}
 		
 		return false;
+	}
+	
+	/**
+	 * Test if string contains another string.
+	 * @param	search String to test.
+	 * @param	pattern Pattern to find in test string.
+	 * @return	True if string contains pattern, else false.
+	 */
+	public static function contains(string:String, pattern:String):Bool {
+		return string.indexOf(pattern) != -1;
 	}
 	
 }
