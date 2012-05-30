@@ -13,7 +13,7 @@ Haxe port and optimization by Nicolas Cannasse http://haxe.org
 Flash dependency removed by Richard Janicek http://janicek.co
 */
 
-class OptimizedPerlin {
+class PerlinNoise {
 
   private static var P = [
     151,160,137,91,90,15,131,13,201,95,

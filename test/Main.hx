@@ -2,7 +2,7 @@ import co.janicek.core.Array2dSpec;
 import co.janicek.core.BaseCode64Spec;
 import co.janicek.core.MathCoreSpec;
 import co.janicek.core.PathCoreSpec;
-import co.janicek.core.PerlinSpec;
+import co.janicek.core.PerlinNoiseSpec;
 import co.janicek.core.RandomCoreSpec;
 import co.janicek.core.StringCore;
 import co.janicek.core.StringCoreSpec;
@@ -25,7 +25,7 @@ class Main {
 		new BaseCode64Spec();
 		new MathCoreSpec();
 		new PathCoreSpec();
-		new PerlinSpec();
+		new PerlinNoiseSpec();
 		new RandomCoreSpec();
 		new StringCoreSpec();
 
