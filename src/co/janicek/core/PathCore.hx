@@ -2,24 +2,19 @@ package co.janicek.core;
 
 class PathCore {
 
-	public var pathDelimeter : String;
-	public var fileExtensionDelimeter : String;
+	private static inline var PATH_DELIMETER = "/";
+	private static inline var FILE_EXTENSION_DELIMETER = ".";
 	
-	public function new( ?pathDelimeter : String, ?fileExtensionDelimeter : String ) {
-		this.pathDelimeter = (pathDelimeter == null ? "\\" : pathDelimeter);
-		this.fileExtensionDelimeter = (fileExtensionDelimeter == null ? "." : fileExtensionDelimeter);
-	}
-
-	public function getDirectoryName( path : String ) : String {
+	public static function getDirectoryName( path : String, pathDelimeter = PATH_DELIMETER ) : String {
 		return path.substr(0, path.lastIndexOf(pathDelimeter));
 	}
 	
-	public function getFileName( path : String ) : String {
+	public static function getFileName( path : String, pathDelimeter = PATH_DELIMETER ) : String {
 		var fragments = path.split(pathDelimeter);
 		return fragments[fragments.length - 1];
 	}
 	
-	public function getFileNameWithoutExtension( path : String ) : String {
+	public static function getFileNameWithoutExtension( path : String, fileExtensionDelimeter = FILE_EXTENSION_DELIMETER ) : String {
 		return getFileName(path).split(fileExtensionDelimeter)[0];
 	}
 
