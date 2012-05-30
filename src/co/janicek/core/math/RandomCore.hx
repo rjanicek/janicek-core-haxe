@@ -3,7 +3,7 @@ package co.janicek.core.math;
 import co.janicek.core.math.MathCore;
 
 /**
- * Pseudo random number generator (PRNG) using a functional design.
+ * Pseudo random number generator (PRNG) using a functional style.
 */
 class RandomCore {
 	
