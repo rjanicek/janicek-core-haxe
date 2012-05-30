@@ -3,7 +3,10 @@ janicek-core-haxe
 
 My personal collection of Haxe core libraries.
 
-Functional style used where possible.
+Functional style used where possible:
+* Simple types.
+* Functions are grouped into libraries using static classes.
+* Libraries are as pure as possible, no state or side effects.
 
 See spec classes in test directory tree for examples of how to use the libraries.
 
