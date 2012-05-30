@@ -24,7 +24,7 @@ class Main {
 		new PerlinSpec();
 		new RandomCoreSpec();
 
-		Jasmine.getEnv().addReporter(Jasmine.newTrivialReporter());
+		Jasmine.getEnv().addReporter(Jasmine.newHtmlReporter());
 		Jasmine.getEnv().execute();
 		trace("Done testing.");		
 	}

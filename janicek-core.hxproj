@@ -17,7 +17,7 @@
   <classpaths>
     <class path="src" />
     <class path="test" />
-    <class path="libs\jasmine-haxe" />
+    <class path="lib\jasmine-haxe" />
   </classpaths>
   <!-- Build options -->
   <build>
