@@ -323,11 +323,7 @@ co.janicek.core.PathCoreSpec.prototype = {
 }
 co.janicek.core.PerlinNoiseSpec = $hxClasses["co.janicek.core.PerlinNoiseSpec"] = function() {
 	jasmine.J.describe("PerlinNoise",function() {
-		jasmine.J.describe("new( seed = 666, octaves = 4, falloff = 0.5 )",function() {
-			jasmine.J.it("should make perlin noise maker",function() {
-			});
-		});
-		jasmine.J.describe("make(width:Int, height:Int, _x:Float, _y:Float, _z:Float, ?_ ):Array<Array<Int>>",function() {
+		jasmine.J.describe("makePerlinNoise(width:Int, height:Int, _x:Float, _y:Float, _z:Float, seed = 666, octaves = 4, falloff = 0.5, ?_  ) : Array<Array<Int>>",function() {
 			jasmine.J.it("should make perlin noise data",function() {
 				var data = co.janicek.core.math.PerlinNoise.makePerlinNoise(100,100,1.0,1.0,1.0);
 				jasmine.J.expect(data).not.toBeNull();
