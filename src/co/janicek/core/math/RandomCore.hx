@@ -14,7 +14,7 @@ class RandomCore {
 	 * Make a non deterministic random seed using standard libraries.
 	 * @return Non deterministic random seed.
 	 */
-	public static function makeRandomSeed():Int {
+	public static function makeRandomSeed() : Int {
         return Math.floor(Math.random() * MPM);
     }
 	
@@ -25,7 +25,7 @@ class RandomCore {
 	 * @link http://en.wikipedia.org/wiki/Lehmer_random_number_generator
 	 * @return Returns the next pseudo-random int value .
 	 */
-	public static inline function nextParkMiller(seed:Int):Int {
+	public static inline function nextParkMiller( seed : Int ) : Int {
 		return cast ((seed * MINSTD) % MPM);
 	}
 
@@ -36,7 +36,7 @@ class RandomCore {
 	 * @link https://github.com/aduros/flambe/blob/master/src/flambe/util/Random.hx
 	 * @return Returns an integer in [0, INT_MAX)
      */
-    public static inline function nextLCG(seed:Int) : Int {
+    public static inline function nextLCG( seed : Int ) : Int {
         // These constants borrowed from glibc
         // Force float multiplication here to avoid overflow in Flash (and keep parity with JS)
         return cast ((1103515245.0 * seed + 12345) % MPM);
@@ -45,28 +45,28 @@ class RandomCore {
 	/**
 	 * Returns the pseudo-random double value x in the range 0 <= x < 1.
 	 */
-	public static inline function toFloat(seed:Int):Float {
+	public static inline function toFloat( seed : Int ) : Float {
 		return seed / MPM;
 	}
 	
 	/**
+	 * Returns a pseudo-random boolean value (coin flip).
+	 */
+	public static inline function toBool( seed : Int ) : Bool {
+		return toFloat(seed) > 0.5;
+	}
+	
+		/**
 	 * Returns a pseudo-random double value x in the range min <= x <= max.
 	 */
-	public static inline function toFloatRange(seed:Int, min:Float, max:Float):Float {
+	public static inline function toFloatRange( seed : Int, min : Float, max : Float ) : Float {
 		return min + (max - min) * toFloat(seed);
 	}
 	
 	/**
 	 * Returns a pseudo-random integral value x in the range min <= x <= max.
 	 */
-	public static inline function toIntRange(seed:Int, min:Int, max:Int):Int {
+	public static inline function toIntRange( seed : Int, min : Int, max : Int ) : Int {
 		return Math.round((min - 0.4999) + ((max + 0.4999) - (min - 0.4999)) * toFloat(seed));
-	}
-	
-	/**
-	 * Returns a pseudo-random boolean value (coin flip).
-	 */
-	public static inline function toBool(seed:Int):Bool {
-		return toFloat(seed) > 0.5;
 	}
 }
