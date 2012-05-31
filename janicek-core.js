@@ -325,13 +325,11 @@ co.janicek.core.PerlinNoiseSpec = $hxClasses["co.janicek.core.PerlinNoiseSpec"] 
 	jasmine.J.describe("PerlinNoise",function() {
 		jasmine.J.describe("new( seed = 666, octaves = 4, falloff = 0.5 )",function() {
 			jasmine.J.it("should make perlin noise maker",function() {
-				var pn = new co.janicek.core.math.PerlinNoise();
-				jasmine.J.expect(pn).not.toBeNull();
 			});
 		});
 		jasmine.J.describe("make(width:Int, height:Int, _x:Float, _y:Float, _z:Float, ?_ ):Array<Array<Int>>",function() {
 			jasmine.J.it("should make perlin noise data",function() {
-				var data = new co.janicek.core.math.PerlinNoise().make(100,100,1.0,1.0,1.0);
+				var data = co.janicek.core.math.PerlinNoise.makePerlinNoise(100,100,1.0,1.0,1.0);
 				jasmine.J.expect(data).not.toBeNull();
 			});
 		});
@@ -637,126 +635,105 @@ co.janicek.core.math.MathCore.radiansToDegrees = function(radians) {
 co.janicek.core.math.MathCore.prototype = {
 	__class__: co.janicek.core.math.MathCore
 }
-co.janicek.core.math.PerlinNoise = $hxClasses["co.janicek.core.math.PerlinNoise"] = function(seed,octaves,falloff) {
+co.janicek.core.math.PerlinNoise = $hxClasses["co.janicek.core.math.PerlinNoise"] = function() { }
+co.janicek.core.math.PerlinNoise.__name__ = ["co","janicek","core","math","PerlinNoise"];
+co.janicek.core.math.PerlinNoise.makePerlinNoise = function(width,height,_x,_y,_z,seed,octaves,falloff,_) {
 	if(falloff == null) falloff = 0.5;
 	if(octaves == null) octaves = 4;
 	if(seed == null) seed = 666;
-	this.octaves = octaves;
-	this.baseFactor = 0.015625;
-	this.seedOffset(seed);
-	this.octFreqPers(falloff);
-};
-co.janicek.core.math.PerlinNoise.__name__ = ["co","janicek","core","math","PerlinNoise"];
-co.janicek.core.math.PerlinNoise.prototype = {
-	octaves: null
-	,aOctFreq: null
-	,aOctPers: null
-	,fPersMax: null
-	,iXoffset: null
-	,iYoffset: null
-	,iZoffset: null
-	,baseFactor: null
-	,make: function(width,height,_x,_y,_z,_) {
-		var bitmap = new Array();
-		var baseX;
-		baseX = _x * this.baseFactor + this.iXoffset;
-		_y = _y * this.baseFactor + this.iYoffset;
-		_z = _z * this.baseFactor + this.iZoffset;
-		var p = co.janicek.core.math.PerlinNoise.P;
-		var octaves = this.octaves;
-		var aOctFreq = this.aOctFreq;
-		var aOctPers = this.aOctPers;
-		var _g = 0;
-		while(_g < height) {
-			var py = _g++;
-			_x = baseX;
-			var _g1 = 0;
-			while(_g1 < width) {
-				var px = _g1++;
-				var s = 0.;
-				var _g2 = 0;
-				while(_g2 < octaves) {
-					var i = _g2++;
-					var fFreq = aOctFreq[i];
-					var fPers = aOctPers[i];
-					var x = _x * fFreq;
-					var y = _y * fFreq;
-					var z = _z * fFreq;
-					var xf = x - x % 1;
-					var yf = y - y % 1;
-					var zf = z - z % 1;
-					var X = (xf | 0) & 255;
-					var Y = (yf | 0) & 255;
-					var Z = (zf | 0) & 255;
-					x -= xf;
-					y -= yf;
-					z -= zf;
-					var u = x * x * x * (x * (x * 6 - 15) + 10);
-					var v = y * y * y * (y * (y * 6 - 15) + 10);
-					var w = z * z * z * (z * (z * 6 - 15) + 10);
-					var A = p[X] + Y;
-					var AA = p[A] + Z;
-					var AB = p[A + 1] + Z;
-					var B = p[X + 1] + Y;
-					var BA = p[B] + Z;
-					var BB = p[B + 1] + Z;
-					var x1 = x - 1;
-					var y1 = y - 1;
-					var z1 = z - 1;
-					var hash = p[BB + 1] & 15;
-					var g1 = ((hash & 1) == 0?hash < 8?x1:y1:hash < 8?-x1:-y1) + ((hash & 2) == 0?hash < 4?y1:hash == 12?x1:z1:hash < 4?-y1:hash == 14?-x1:-z1);
-					hash = p[AB + 1] & 15;
-					var g2 = ((hash & 1) == 0?hash < 8?x:y1:hash < 8?-x:-y1) + ((hash & 2) == 0?hash < 4?y1:hash == 12?x:z1:hash < 4?-y1:hash == 14?-x:-z1);
-					hash = p[BA + 1] & 15;
-					var g3 = ((hash & 1) == 0?hash < 8?x1:y:hash < 8?-x1:-y) + ((hash & 2) == 0?hash < 4?y:hash == 12?x1:z1:hash < 4?-y:hash == 14?-x1:-z1);
-					hash = p[AA + 1] & 15;
-					var g4 = ((hash & 1) == 0?hash < 8?x:y:hash < 8?-x:-y) + ((hash & 2) == 0?hash < 4?y:hash == 12?x:z1:hash < 4?-y:hash == 14?-x:-z1);
-					hash = p[BB] & 15;
-					var g5 = ((hash & 1) == 0?hash < 8?x1:y1:hash < 8?-x1:-y1) + ((hash & 2) == 0?hash < 4?y1:hash == 12?x1:z:hash < 4?-y1:hash == 14?-x1:-z);
-					hash = p[AB] & 15;
-					var g6 = ((hash & 1) == 0?hash < 8?x:y1:hash < 8?-x:-y1) + ((hash & 2) == 0?hash < 4?y1:hash == 12?x:z:hash < 4?-y1:hash == 14?-x:-z);
-					hash = p[BA] & 15;
-					var g7 = ((hash & 1) == 0?hash < 8?x1:y:hash < 8?-x1:-y) + ((hash & 2) == 0?hash < 4?y:hash == 12?x1:z:hash < 4?-y:hash == 14?-x1:-z);
-					hash = p[AA] & 15;
-					var g8 = ((hash & 1) == 0?hash < 8?x:y:hash < 8?-x:-y) + ((hash & 2) == 0?hash < 4?y:hash == 12?x:z:hash < 4?-y:hash == 14?-x:-z);
-					g2 += u * (g1 - g2);
-					g4 += u * (g3 - g4);
-					g6 += u * (g5 - g6);
-					g8 += u * (g7 - g8);
-					g4 += v * (g2 - g4);
-					g8 += v * (g6 - g8);
-					s += (g8 + w * (g4 - g8)) * fPers;
-				}
-				var color = (s * this.fPersMax + 1) * 128 | 0;
-				co.janicek.core.array.Array2dCore.set(bitmap,px,py,-16777216 | color << 16 | color << 8 | color);
-				_x += this.baseFactor;
+	var baseFactor = 0.015625;
+	var iXoffset = seed = seed * 16807. % 2147483647 | 0;
+	var iYoffset = seed = seed * 16807. % 2147483647 | 0;
+	var iZoffset = seed = seed * 16807. % 2147483647 | 0;
+	var aOctFreq = [];
+	var aOctPers = [];
+	var fPersMax = 0.0;
+	var fFreq, fPers;
+	var _g = 0;
+	while(_g < octaves) {
+		var i = _g++;
+		fFreq = Math.pow(2,i);
+		fPers = Math.pow(falloff,i);
+		fPersMax += fPers;
+		aOctFreq.push(fFreq);
+		aOctPers.push(fPers);
+	}
+	fPersMax = 1 / fPersMax;
+	var bitmap = new Array();
+	var baseX = _x * baseFactor + iXoffset;
+	_y = _y * baseFactor + iYoffset;
+	_z = _z * baseFactor + iZoffset;
+	var _g = 0;
+	while(_g < height) {
+		var py = _g++;
+		_x = baseX;
+		var _g1 = 0;
+		while(_g1 < width) {
+			var px = _g1++;
+			var s = 0.;
+			var _g2 = 0;
+			while(_g2 < octaves) {
+				var i = _g2++;
+				var fFreq1 = aOctFreq[i];
+				var fPers1 = aOctPers[i];
+				var x = _x * fFreq1;
+				var y = _y * fFreq1;
+				var z = _z * fFreq1;
+				var xf = x - x % 1;
+				var yf = y - y % 1;
+				var zf = z - z % 1;
+				var X = (xf | 0) & 255;
+				var Y = (yf | 0) & 255;
+				var Z = (zf | 0) & 255;
+				x -= xf;
+				y -= yf;
+				z -= zf;
+				var u = x * x * x * (x * (x * 6 - 15) + 10);
+				var v = y * y * y * (y * (y * 6 - 15) + 10);
+				var w = z * z * z * (z * (z * 6 - 15) + 10);
+				var A = co.janicek.core.math.PerlinNoise.p[X] + Y;
+				var AA = co.janicek.core.math.PerlinNoise.p[A] + Z;
+				var AB = co.janicek.core.math.PerlinNoise.p[A + 1] + Z;
+				var B = co.janicek.core.math.PerlinNoise.p[X + 1] + Y;
+				var BA = co.janicek.core.math.PerlinNoise.p[B] + Z;
+				var BB = co.janicek.core.math.PerlinNoise.p[B + 1] + Z;
+				var x1 = x - 1;
+				var y1 = y - 1;
+				var z1 = z - 1;
+				var hash = co.janicek.core.math.PerlinNoise.p[BB + 1] & 15;
+				var g1 = ((hash & 1) == 0?hash < 8?x1:y1:hash < 8?-x1:-y1) + ((hash & 2) == 0?hash < 4?y1:hash == 12?x1:z1:hash < 4?-y1:hash == 14?-x1:-z1);
+				hash = co.janicek.core.math.PerlinNoise.p[AB + 1] & 15;
+				var g2 = ((hash & 1) == 0?hash < 8?x:y1:hash < 8?-x:-y1) + ((hash & 2) == 0?hash < 4?y1:hash == 12?x:z1:hash < 4?-y1:hash == 14?-x:-z1);
+				hash = co.janicek.core.math.PerlinNoise.p[BA + 1] & 15;
+				var g3 = ((hash & 1) == 0?hash < 8?x1:y:hash < 8?-x1:-y) + ((hash & 2) == 0?hash < 4?y:hash == 12?x1:z1:hash < 4?-y:hash == 14?-x1:-z1);
+				hash = co.janicek.core.math.PerlinNoise.p[AA + 1] & 15;
+				var g4 = ((hash & 1) == 0?hash < 8?x:y:hash < 8?-x:-y) + ((hash & 2) == 0?hash < 4?y:hash == 12?x:z1:hash < 4?-y:hash == 14?-x:-z1);
+				hash = co.janicek.core.math.PerlinNoise.p[BB] & 15;
+				var g5 = ((hash & 1) == 0?hash < 8?x1:y1:hash < 8?-x1:-y1) + ((hash & 2) == 0?hash < 4?y1:hash == 12?x1:z:hash < 4?-y1:hash == 14?-x1:-z);
+				hash = co.janicek.core.math.PerlinNoise.p[AB] & 15;
+				var g6 = ((hash & 1) == 0?hash < 8?x:y1:hash < 8?-x:-y1) + ((hash & 2) == 0?hash < 4?y1:hash == 12?x:z:hash < 4?-y1:hash == 14?-x:-z);
+				hash = co.janicek.core.math.PerlinNoise.p[BA] & 15;
+				var g7 = ((hash & 1) == 0?hash < 8?x1:y:hash < 8?-x1:-y) + ((hash & 2) == 0?hash < 4?y:hash == 12?x1:z:hash < 4?-y:hash == 14?-x1:-z);
+				hash = co.janicek.core.math.PerlinNoise.p[AA] & 15;
+				var g8 = ((hash & 1) == 0?hash < 8?x:y:hash < 8?-x:-y) + ((hash & 2) == 0?hash < 4?y:hash == 12?x:z:hash < 4?-y:hash == 14?-x:-z);
+				g2 += u * (g1 - g2);
+				g4 += u * (g3 - g4);
+				g6 += u * (g5 - g6);
+				g8 += u * (g7 - g8);
+				g4 += v * (g2 - g4);
+				g8 += v * (g6 - g8);
+				s += (g8 + w * (g4 - g8)) * fPers1;
 			}
-			_y += this.baseFactor;
+			var color = (s * fPersMax + 1) * 128 | 0;
+			co.janicek.core.array.Array2dCore.set(bitmap,px,py,-16777216 | color << 16 | color << 8 | color);
+			_x += baseFactor;
 		}
-		return bitmap;
+		_y += baseFactor;
 	}
-	,octFreqPers: function(fPersistence) {
-		var fFreq, fPers;
-		this.aOctFreq = [];
-		this.aOctPers = [];
-		this.fPersMax = 0;
-		var _g1 = 0, _g = this.octaves;
-		while(_g1 < _g) {
-			var i = _g1++;
-			fFreq = Math.pow(2,i);
-			fPers = Math.pow(fPersistence,i);
-			this.fPersMax += fPers;
-			this.aOctFreq.push(fFreq);
-			this.aOctPers.push(fPers);
-		}
-		this.fPersMax = 1 / this.fPersMax;
-	}
-	,seedOffset: function(iSeed) {
-		this.iXoffset = iSeed = iSeed * 16807. % 2147483647 | 0;
-		this.iYoffset = iSeed = iSeed * 16807. % 2147483647 | 0;
-		this.iZoffset = iSeed = iSeed * 16807. % 2147483647 | 0;
-	}
-	,__class__: co.janicek.core.math.PerlinNoise
+	return bitmap;
+}
+co.janicek.core.math.PerlinNoise.prototype = {
+	__class__: co.janicek.core.math.PerlinNoise
 }
 co.janicek.core.math.RandomCore = $hxClasses["co.janicek.core.math.RandomCore"] = function() { }
 co.janicek.core.math.RandomCore.__name__ = ["co","janicek","core","math","RandomCore"];
@@ -1242,7 +1219,7 @@ js.Boot.__init();
 }
 co.janicek.core.BaseCode64.BASE_64_ENCODINGS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 co.janicek.core.BaseCode64.BASE_64_PADDING = "=";
-co.janicek.core.math.PerlinNoise.P = [151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,190,6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,88,237,149,56,87,174,20,125,136,171,168,68,175,74,165,71,134,139,48,27,166,77,146,158,231,83,111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244,102,143,54,65,25,63,161,1,216,80,73,209,76,132,187,208,89,18,169,200,196,135,130,116,188,159,86,164,100,109,198,173,186,3,64,52,217,226,250,124,123,5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,189,28,42,223,183,170,213,119,248,152,2,44,154,163,70,221,153,101,155,167,43,172,9,129,22,39,253,19,98,108,110,79,113,224,232,178,185,112,104,218,246,97,228,251,34,242,193,238,210,144,12,191,179,162,241,81,51,145,235,249,14,239,107,49,192,214,31,181,199,106,157,184,84,204,176,115,121,50,45,127,4,150,254,138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180,151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,190,6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,88,237,149,56,87,174,20,125,136,171,168,68,175,74,165,71,134,139,48,27,166,77,146,158,231,83,111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244,102,143,54,65,25,63,161,1,216,80,73,209,76,132,187,208,89,18,169,200,196,135,130,116,188,159,86,164,100,109,198,173,186,3,64,52,217,226,250,124,123,5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,189,28,42,223,183,170,213,119,248,152,2,44,154,163,70,221,153,101,155,167,43,172,9,129,22,39,253,19,98,108,110,79,113,224,232,178,185,112,104,218,246,97,228,251,34,242,193,238,210,144,12,191,179,162,241,81,51,145,235,249,14,239,107,49,192,214,31,181,199,106,157,184,84,204,176,115,121,50,45,127,4,150,254,138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180];
+co.janicek.core.math.PerlinNoise.p = [151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,190,6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,88,237,149,56,87,174,20,125,136,171,168,68,175,74,165,71,134,139,48,27,166,77,146,158,231,83,111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244,102,143,54,65,25,63,161,1,216,80,73,209,76,132,187,208,89,18,169,200,196,135,130,116,188,159,86,164,100,109,198,173,186,3,64,52,217,226,250,124,123,5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,189,28,42,223,183,170,213,119,248,152,2,44,154,163,70,221,153,101,155,167,43,172,9,129,22,39,253,19,98,108,110,79,113,224,232,178,185,112,104,218,246,97,228,251,34,242,193,238,210,144,12,191,179,162,241,81,51,145,235,249,14,239,107,49,192,214,31,181,199,106,157,184,84,204,176,115,121,50,45,127,4,150,254,138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180,151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,190,6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,88,237,149,56,87,174,20,125,136,171,168,68,175,74,165,71,134,139,48,27,166,77,146,158,231,83,111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244,102,143,54,65,25,63,161,1,216,80,73,209,76,132,187,208,89,18,169,200,196,135,130,116,188,159,86,164,100,109,198,173,186,3,64,52,217,226,250,124,123,5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,189,28,42,223,183,170,213,119,248,152,2,44,154,163,70,221,153,101,155,167,43,172,9,129,22,39,253,19,98,108,110,79,113,224,232,178,185,112,104,218,246,97,228,251,34,242,193,238,210,144,12,191,179,162,241,81,51,145,235,249,14,239,107,49,192,214,31,181,199,106,157,184,84,204,176,115,121,50,45,127,4,150,254,138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180];
 co.janicek.core.math.RandomCore.MPM = 2147483647.0;
 co.janicek.core.math.RandomCore.MINSTD = 16807.0;
 js.Lib.onerror = null;
