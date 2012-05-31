@@ -6,6 +6,13 @@ function $extend(from, fields) {
 }
 var Lambda = $hxClasses["Lambda"] = function() { }
 Lambda.__name__ = ["Lambda"];
+Lambda.iter = function(it,f) {
+	var $it0 = it.iterator();
+	while( $it0.hasNext() ) {
+		var x = $it0.next();
+		f(x);
+	}
+}
 Lambda.count = function(it,pred) {
 	var n = 0;
 	if(pred == null) {
@@ -22,6 +29,9 @@ Lambda.count = function(it,pred) {
 		}
 	}
 	return n;
+}
+Lambda.empty = function(it) {
+	return !it.iterator().hasNext();
 }
 Lambda.prototype = {
 	__class__: Lambda
@@ -73,30 +83,86 @@ var co = co || {}
 if(!co.janicek) co.janicek = {}
 if(!co.janicek.core) co.janicek.core = {}
 co.janicek.core.Array2dSpec = $hxClasses["co.janicek.core.Array2dSpec"] = function() {
-	jasmine.J.describe("Array2D",function() {
-		jasmine.J.it("should set and get value at index",function() {
-			var a = new Array();
-			jasmine.J.expect(co.janicek.core.array.Array2dCore.get(a,0,0)).toBeNull();
-			co.janicek.core.array.Array2dCore.set(a,0,0,1);
-			jasmine.J.expect(co.janicek.core.array.Array2dCore.get(a,0,0)).toBe(1);
+	jasmine.J.describe("Array2DCore",function() {
+		jasmine.J.describe("get<T>( a : Array<Array<T>>, x : Int, y : Int) : T",function() {
+			jasmine.J.it("should get value at index",function() {
+				var a = [[1]];
+				jasmine.J.expect(co.janicek.core.array.Array2dCore.get(a,0,0)).toEqual(1);
+			});
 		});
-		jasmine.J.it("should have valid iterator",function() {
-			var a = new Array();
-			jasmine.J.expect(Lambda.count(co.janicek.core.array.Array2dCore.indexes(a))).toBe(0);
-			co.janicek.core.array.Array2dCore.set(a,0,0,1);
-			jasmine.J.expect(Lambda.count(co.janicek.core.array.Array2dCore.indexes(a))).toBe(1);
-			co.janicek.core.array.Array2dCore.set(a,1,1,1);
-			jasmine.J.expect(Lambda.count(co.janicek.core.array.Array2dCore.indexes(a))).toBe(2);
-			co.janicek.core.array.Array2dCore.set(a,10,10,1);
-			jasmine.J.expect(Lambda.count(co.janicek.core.array.Array2dCore.indexes(a))).toBe(3);
+		jasmine.J.describe("set<T>( a : Array<Array<T>>, x : Int, y : Int, value : T ) : Array<Array<T>>",function() {
+			jasmine.J.it("should set value at index",function() {
+				var a = new Array();
+				jasmine.J.expect(co.janicek.core.array.Array2dCore.get(a,0,0)).toBeNull();
+				co.janicek.core.array.Array2dCore.set(a,0,0,1);
+				jasmine.J.expect(co.janicek.core.array.Array2dCore.get(a,0,0)).toBe(1);
+			});
 		});
-		jasmine.J.it("should have valid dimensions",function() {
-			var a = new Array();
-			jasmine.J.expect(co.janicek.core.array.Array2dCore.dimensions(a).x).toBe(0);
-			jasmine.J.expect(co.janicek.core.array.Array2dCore.dimensions(a).y).toBe(0);
-			co.janicek.core.array.Array2dCore.set(a,5,5,1);
-			jasmine.J.expect(co.janicek.core.array.Array2dCore.dimensions(a).x).toBe(6);
-			jasmine.J.expect(co.janicek.core.array.Array2dCore.dimensions(a).y).toBe(6);
+		jasmine.J.describe("foreachY<T>( a : Array<Array<T>>, f : Array<T> -> Void ) : Void",function() {
+			jasmine.J.it("should iterate y indexes (rows)",function() {
+				var a = [[1],[2]];
+				var row = 0;
+				co.janicek.core.array.Array2dCore.foreachY(a,function(y) {
+					jasmine.J.expect(co.janicek.core.array.Array2dCore.get(a,0,row)).toEqual(y[0]);
+					row++;
+				});
+				jasmine.J.expect(row).toEqual(a.length);
+			});
+		});
+		jasmine.J.describe("foreachXY<T>( a : Array<Array<T>>, f : Int -> Int -> T -> Void) : Void",function() {
+			jasmine.J.it("should iterate x,y indexes (cells)",function() {
+				var a = [[1,2],[3,4]];
+				co.janicek.core.array.Array2dCore.foreachXY(a,function(x,y,value) {
+					jasmine.J.expect(co.janicek.core.array.Array2dCore.get(a,x,y)).toEqual(value);
+				});
+			});
+		});
+		jasmine.J.describe("any<T>( a : Array<Array<T>>, f : T -> Bool ) : Array2dIndex",function() {
+			jasmine.J.it("should find index of anything in array",function() {
+				var a = [[1,2],[3,4]];
+				var index = co.janicek.core.array.Array2dCore.any(a,function(value) {
+					return value == 4;
+				});
+				jasmine.J.expect(index).toEqual({ x : 1, y : 1});
+			});
+		});
+		jasmine.J.describe("dimensions<T>( array : Array<Array<T>> ) : Array2dIndex",function() {
+			jasmine.J.it("should get valid dimensions of array",function() {
+				var a = new Array();
+				jasmine.J.expect(co.janicek.core.array.Array2dCore.dimensions(a)).toEqual({ x : 0, y : 0});
+				co.janicek.core.array.Array2dCore.set(a,5,5,1);
+				jasmine.J.expect(co.janicek.core.array.Array2dCore.dimensions(a)).toEqual({ x : 6, y : 6});
+			});
+		});
+		jasmine.J.describe("values<T>( array : Array<Array<T>> ) : Iterable<T>",function() {
+			jasmine.J.it("should produce array value iterator",function() {
+				var a = new Array();
+				jasmine.J.expect(Lambda.empty(co.janicek.core.array.Array2dCore.values(a))).toBeTruthy();
+				jasmine.J.expect(Lambda.count(co.janicek.core.array.Array2dCore.values(a))).toEqual(0);
+				co.janicek.core.array.Array2dCore.set(a,0,0,1);
+				jasmine.J.expect(Lambda.count(co.janicek.core.array.Array2dCore.values(a))).toEqual(1);
+				Lambda.iter(co.janicek.core.array.Array2dCore.values(a),function(value) {
+					jasmine.J.expect(value).toEqual(1);
+				});
+				co.janicek.core.array.Array2dCore.set(a,10,10,1);
+				jasmine.J.expect(Lambda.count(co.janicek.core.array.Array2dCore.values(a))).toEqual(2);
+			});
+		});
+		jasmine.J.describe("indexes<T>( array : Array<Array<T>> ) : Iterable<Array2dIndex>",function() {
+			jasmine.J.it("should produce array index iterator",function() {
+				var a = new Array();
+				jasmine.J.expect(Lambda.empty(co.janicek.core.array.Array2dCore.indexes(a))).toBeTruthy();
+				jasmine.J.expect(Lambda.count(co.janicek.core.array.Array2dCore.indexes(a))).toBe(0);
+				co.janicek.core.array.Array2dCore.set(a,0,0,1);
+				jasmine.J.expect(Lambda.count(co.janicek.core.array.Array2dCore.indexes(a))).toBe(1);
+				Lambda.iter(co.janicek.core.array.Array2dCore.indexes(a),function(index) {
+					jasmine.J.expect(index).toEqual({ x : 0, y : 0});
+				});
+				co.janicek.core.array.Array2dCore.set(a,1,1,1);
+				jasmine.J.expect(Lambda.count(co.janicek.core.array.Array2dCore.indexes(a))).toBe(2);
+				co.janicek.core.array.Array2dCore.set(a,10,10,1);
+				jasmine.J.expect(Lambda.count(co.janicek.core.array.Array2dCore.indexes(a))).toBe(3);
+			});
 		});
 	});
 };
@@ -417,14 +483,14 @@ co.janicek.core.StringCoreSpec.prototype = {
 if(!co.janicek.core.array) co.janicek.core.array = {}
 co.janicek.core.array.Array2dCore = $hxClasses["co.janicek.core.array.Array2dCore"] = function() { }
 co.janicek.core.array.Array2dCore.__name__ = ["co","janicek","core","array","Array2dCore"];
+co.janicek.core.array.Array2dCore.get = function(a,x,y) {
+	if(a[y] == null) return null;
+	return a[y][x];
+}
 co.janicek.core.array.Array2dCore.set = function(a,x,y,value) {
 	if(a[y] == null) a[y] = new Array();
 	a[y][x] = value;
 	return a;
-}
-co.janicek.core.array.Array2dCore.get = function(a,x,y) {
-	if(a[y] == null) return null;
-	return a[y][x];
 }
 co.janicek.core.array.Array2dCore.foreachY = function(a,f) {
 	var _g = 0;
@@ -434,6 +500,37 @@ co.janicek.core.array.Array2dCore.foreachY = function(a,f) {
 		if(y != null) f(y);
 	}
 }
+co.janicek.core.array.Array2dCore.foreachXY = function(a,f) {
+	var _g1 = 0, _g = a.length;
+	while(_g1 < _g) {
+		var yIndex = _g1++;
+		if(a[yIndex] != null) {
+			var _g3 = 0, _g2 = a[yIndex].length;
+			while(_g3 < _g2) {
+				var xIndex = _g3++;
+				var value = a[yIndex][xIndex];
+				if(value != null) f(xIndex,yIndex,value);
+			}
+		}
+	}
+}
+co.janicek.core.array.Array2dCore.any = function(a,f) {
+	var _g1 = 0, _g = a.length;
+	while(_g1 < _g) {
+		var yIndex = _g1++;
+		if(a[yIndex] != null) {
+			var _g3 = 0, _g2 = a[yIndex].length;
+			while(_g3 < _g2) {
+				var xIndex = _g3++;
+				var value = a[yIndex][xIndex];
+				if(value != null) {
+					if(f(value)) return { x : xIndex, y : yIndex};
+				}
+			}
+		}
+	}
+	return null;
+}
 co.janicek.core.array.Array2dCore.dimensions = function(array) {
 	var height = array.length;
 	var width = 0;
@@ -441,6 +538,11 @@ co.janicek.core.array.Array2dCore.dimensions = function(array) {
 		width = Math.max(width,y.length);
 	});
 	return { x : width, y : height};
+}
+co.janicek.core.array.Array2dCore.values = function(array) {
+	return { iterator : function() {
+		return new co.janicek.core.array.Array2dValueIterator(array);
+	}};
 }
 co.janicek.core.array.Array2dCore.indexes = function(array) {
 	return { iterator : function() {
@@ -484,6 +586,38 @@ co.janicek.core.array.Array2dIterator.prototype = {
 		return n;
 	}
 	,__class__: co.janicek.core.array.Array2dIterator
+}
+co.janicek.core.array.Array2dValueIterator = $hxClasses["co.janicek.core.array.Array2dValueIterator"] = function(a) {
+	this.yIterator = a.iterator();
+	this.xIterator = null;
+	this.nextValue = null;
+};
+co.janicek.core.array.Array2dValueIterator.__name__ = ["co","janicek","core","array","Array2dValueIterator"];
+co.janicek.core.array.Array2dValueIterator.prototype = {
+	yIterator: null
+	,xIterator: null
+	,nextValue: null
+	,hasNext: function() {
+		if(this.nextValue != null) return true;
+		if(this.xIterator != null) while(this.xIterator.hasNext()) {
+			this.nextValue = this.xIterator.next();
+			if(this.nextValue != null) return true;
+		}
+		while(this.yIterator.hasNext()) {
+			var z = this.yIterator.next();
+			if(z != null) {
+				this.xIterator = z.iterator();
+				return this.hasNext();
+			}
+		}
+		return false;
+	}
+	,next: function() {
+		var n = this.nextValue;
+		this.nextValue = null;
+		return n;
+	}
+	,__class__: co.janicek.core.array.Array2dValueIterator
 }
 if(!co.janicek.core.math) co.janicek.core.math = {}
 co.janicek.core.math.MathCore = $hxClasses["co.janicek.core.math.MathCore"] = function() { }
