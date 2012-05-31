@@ -39,8 +39,8 @@ Lambda.prototype = {
 var Main = $hxClasses["Main"] = function() { }
 Main.__name__ = ["Main"];
 Main.main = function() {
-	haxe.Firebug.redirectTraces();
-	haxe.Log.trace("Testing...",{ fileName : "Main.hx", lineNumber : 22, className : "Main", methodName : "main"});
+	if(!js.Lib.isIE) haxe.Firebug.redirectTraces();
+	haxe.Log.trace("Testing...",{ fileName : "Main.hx", lineNumber : 24, className : "Main", methodName : "main"});
 	new co.janicek.core.Array2dSpec();
 	new co.janicek.core.BaseCode64Spec();
 	new co.janicek.core.MathCoreSpec();
@@ -50,7 +50,7 @@ Main.main = function() {
 	new co.janicek.core.StringCoreSpec();
 	jasmine.Jasmine.getEnv().addReporter(jasmine.Jasmine.newHtmlReporter());
 	jasmine.Jasmine.getEnv().execute();
-	haxe.Log.trace("Done testing.",{ fileName : "Main.hx", lineNumber : 34, className : "Main", methodName : "main"});
+	haxe.Log.trace("Done testing.",{ fileName : "Main.hx", lineNumber : 36, className : "Main", methodName : "main"});
 }
 Main.prototype = {
 	__class__: Main
