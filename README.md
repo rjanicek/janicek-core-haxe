@@ -8,6 +8,8 @@ Functional style used where possible:
 * Functions are grouped into libraries using static classes.
 * Libraries are as pure as possible, no state or side effects.
 
+Tested on JavaScript, but should work with other platforms.
+
 See spec classes in test directory tree for examples of how to use the libraries.
 
 Make sure you run ``git submodule update --init`` to clone the dependent libraries.
