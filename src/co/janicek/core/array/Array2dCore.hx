@@ -28,6 +28,16 @@ class Array2dCore {
 		return a;
 	}
 	
+	/**
+	 * Compute two dimensional indices of a flat index based on array width and block size.
+	 */
+	public static function getIndices( index : Int, width : Int, blockSize = 1 ) : Array2dIndex {
+		return {
+			x : Std.int(index / blockSize) % width,
+			y : Std.int((index / blockSize) / width)
+		}
+	}
+	
 	public static function foreachY<T>( a : Array<Array<T>>, f : Array<T> -> Void ) : Void {
 		for (y in a) {
 			if (y != null) {

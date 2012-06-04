@@ -1,5 +1,7 @@
 package co.janicek.core.math;
 
+using Lambda;
+
 class MathCore {
 
 	/**
@@ -30,5 +32,17 @@ class MathCore {
 	public static function radiansToDegrees( radians : Float ) : Float {
 		return (radians * 180) / Math.PI;
 	}
+	
+	public static function average( numbers : Array<Float> ) : Float {
+		return numbers.fold(function(number, total) {
+			return total + number;
+		}, 0) / numbers.length;
+	}
+	
+	public static function averageInt( numbers : Array<Int> ) : Float {
+		return numbers.fold(function(number, total) {
+			return total + number;
+		}, 0) / numbers.length;
+	}	
 	
 }

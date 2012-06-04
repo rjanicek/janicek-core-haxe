@@ -38,6 +38,20 @@ class MathCoreSpec {
 					J.expect(3.141592653589793.radiansToDegrees()).toBe(180);
 				});
 			});
+			
+			J.describe("average( numbers : Array<Float> ) : Float", function() {
+				J.it("should calculate average from array of Floats", function() {
+					J.expect([0.0, 0.5, 1].average()).toEqual(0.5);
+				});
+			});
+			
+			J.describe("averageInt( numbers : Array<Int> ) : Float", function() {
+				J.it("should calculate average from array of Ints", function() {
+					J.expect([1, 2, 3].averageInt()).toEqual(2);
+				});
+			});
+			
+			
 		});
 
 	}

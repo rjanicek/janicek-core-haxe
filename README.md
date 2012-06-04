@@ -6,7 +6,7 @@ My personal collection of Haxe core libraries.
 Functional style used where possible:
 * Simple types.
 * Functions are grouped into libraries using static classes.
-* Libraries are as pure as possible, no state or side effects.
+* Libraries are as pure as possible, avoid state and side effects.
 
 Tested on JavaScript, but should work with other platforms.
 
