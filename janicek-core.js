@@ -13,6 +13,14 @@ Lambda.iter = function(it,f) {
 		f(x);
 	}
 }
+Lambda.fold = function(it,f,first) {
+	var $it0 = it.iterator();
+	while( $it0.hasNext() ) {
+		var x = $it0.next();
+		first = f(x,first);
+	}
+	return first;
+}
 Lambda.count = function(it,pred) {
 	var n = 0;
 	if(pred == null) {
@@ -96,6 +104,20 @@ co.janicek.core.Array2dSpec = $hxClasses["co.janicek.core.Array2dSpec"] = functi
 				jasmine.J.expect(co.janicek.core.array.Array2dCore.get(a,0,0)).toBeNull();
 				co.janicek.core.array.Array2dCore.set(a,0,0,1);
 				jasmine.J.expect(co.janicek.core.array.Array2dCore.get(a,0,0)).toBe(1);
+			});
+		});
+		jasmine.J.describe("getIndices( index : Int, width : Int, blockSize = 1 ) : Array2dIndex",function() {
+			jasmine.J.it("should compute 2d indices from array dimensions",function() {
+				jasmine.J.expect(co.janicek.core.array.Array2dCore.getIndices(0,10,1)).toEqual({ x : 0, y : 0});
+				jasmine.J.expect(co.janicek.core.array.Array2dCore.getIndices(9,10,1)).toEqual({ x : 9, y : 0});
+				jasmine.J.expect(co.janicek.core.array.Array2dCore.getIndices(99,10,1)).toEqual({ x : 9, y : 9});
+				jasmine.J.expect(co.janicek.core.array.Array2dCore.getIndices(90,10,1)).toEqual({ x : 0, y : 9});
+				jasmine.J.expect(co.janicek.core.array.Array2dCore.getIndices(0,10,2)).toEqual({ x : 0, y : 0});
+				jasmine.J.expect(co.janicek.core.array.Array2dCore.getIndices(18,10,2)).toEqual({ x : 9, y : 0});
+				jasmine.J.expect(co.janicek.core.array.Array2dCore.getIndices(198,10,2)).toEqual({ x : 9, y : 9});
+				jasmine.J.expect(co.janicek.core.array.Array2dCore.getIndices(180,10,2)).toEqual({ x : 0, y : 9});
+				jasmine.J.expect(co.janicek.core.array.Array2dCore.getIndices(0,46,4)).toEqual({ x : 0, y : 0});
+				jasmine.J.expect(co.janicek.core.array.Array2dCore.getIndices(5,6,1)).toEqual({ x : 5, y : 0});
 			});
 		});
 		jasmine.J.describe("foreachY<T>( a : Array<Array<T>>, f : Array<T> -> Void ) : Void",function() {
@@ -266,6 +288,16 @@ co.janicek.core.MathCoreSpec = $hxClasses["co.janicek.core.MathCoreSpec"] = func
 		jasmine.J.describe("radiansToDegrees( radians : Float ) : Float",function() {
 			jasmine.J.it("should convert radians to degrees",function() {
 				jasmine.J.expect(co.janicek.core.math.MathCore.radiansToDegrees(3.141592653589793)).toBe(180);
+			});
+		});
+		jasmine.J.describe("average( numbers : Array<Float> ) : Float",function() {
+			jasmine.J.it("should calculate average from array of Floats",function() {
+				jasmine.J.expect(co.janicek.core.math.MathCore.average([0.0,0.5,1])).toEqual(0.5);
+			});
+		});
+		jasmine.J.describe("averageInt( numbers : Array<Int> ) : Float",function() {
+			jasmine.J.it("should calculate average from array of Ints",function() {
+				jasmine.J.expect(co.janicek.core.math.MathCore.averageInt([1,2,3])).toEqual(2);
 			});
 		});
 	});
@@ -486,6 +518,10 @@ co.janicek.core.array.Array2dCore.set = function(a,x,y,value) {
 	a[y][x] = value;
 	return a;
 }
+co.janicek.core.array.Array2dCore.getIndices = function(index,width,blockSize) {
+	if(blockSize == null) blockSize = 1;
+	return { x : (index / blockSize | 0) % width, y : index / blockSize / width | 0};
+}
 co.janicek.core.array.Array2dCore.foreachY = function(a,f) {
 	var _g = 0;
 	while(_g < a.length) {
@@ -627,6 +663,16 @@ co.janicek.core.math.MathCore.degreesToRadians = function(degrees) {
 }
 co.janicek.core.math.MathCore.radiansToDegrees = function(radians) {
 	return radians * 180 / Math.PI;
+}
+co.janicek.core.math.MathCore.average = function(numbers) {
+	return Lambda.fold(numbers,function(number,total) {
+		return total + number;
+	},0) / numbers.length;
+}
+co.janicek.core.math.MathCore.averageInt = function(numbers) {
+	return Lambda.fold(numbers,function(number,total) {
+		return total + number;
+	},0) / numbers.length;
 }
 co.janicek.core.math.MathCore.prototype = {
 	__class__: co.janicek.core.math.MathCore
