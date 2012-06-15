@@ -32,20 +32,20 @@ class Array2dSpec {
 				});
 			});
 			
-			J.describe("indexTo2D( index : Int, width : Int, height : Int, elementSize = 1 ) : Array2dIndex", function() {
+			J.describe("getIndices( index : Int, width : Int, blockSize = 1 ) : Array2dIndex", function() {
 				J.it("should compute 2d indices from array dimensions", function() {
-					J.expect(Array2dCore.indexTo2D(0, 10, 10, 1)).toEqual( { x:0, y:0 } );
-					J.expect(Array2dCore.indexTo2D(9, 10, 10, 1)).toEqual( { x:9, y:0 } );
-					J.expect(Array2dCore.indexTo2D(99, 10, 10, 1)).toEqual( { x:9, y:9 } );
-					J.expect(Array2dCore.indexTo2D(90, 10, 10, 1)).toEqual( { x:0, y:9 } );
+					J.expect(Array2dCore.getIndices(0, 10, 1)).toEqual( { x:0, y:0 } );
+					J.expect(Array2dCore.getIndices(9, 10, 1)).toEqual( { x:9, y:0 } );
+					J.expect(Array2dCore.getIndices(99, 10, 1)).toEqual( { x:9, y:9 } );
+					J.expect(Array2dCore.getIndices(90, 10, 1)).toEqual( { x:0, y:9 } );
 					
-					J.expect(Array2dCore.indexTo2D(0, 10, 10, 2)).toEqual( { x:0, y:0 } );
-					J.expect(Array2dCore.indexTo2D(9 * 2, 10, 10, 2)).toEqual( { x:9, y:0 } );
-					J.expect(Array2dCore.indexTo2D(99 * 2, 10, 10, 2)).toEqual( { x:9, y:9 } );
-					J.expect(Array2dCore.indexTo2D(90 * 2, 10, 10, 2)).toEqual( { x:0, y:9 } );
+					J.expect(Array2dCore.getIndices(0, 10, 2)).toEqual( { x:0, y:0 } );
+					J.expect(Array2dCore.getIndices(9 * 2, 10, 2)).toEqual( { x:9, y:0 } );
+					J.expect(Array2dCore.getIndices(99 * 2, 10, 2)).toEqual( { x:9, y:9 } );
+					J.expect(Array2dCore.getIndices(90 * 2, 10, 2)).toEqual( { x:0, y:9 } );
 					
-					J.expect(Array2dCore.indexTo2D(0, 46, 45, 4)).toEqual( { x:0, y:0 } );
-					J.expect(Array2dCore.indexTo2D(5, 6, 5, 1)).toEqual( { x:5, y:0 } );
+					J.expect(Array2dCore.getIndices(0, 46, 4)).toEqual( { x:0, y:0 } );
+					J.expect(Array2dCore.getIndices(5, 6, 1)).toEqual( { x:5, y:0 } );
 				});
 			});
 

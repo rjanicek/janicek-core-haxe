@@ -1,4 +1,4 @@
-package core.debug;
+package co.janicek.core.html;
 
 /**
  * Console API
