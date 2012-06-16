@@ -18,6 +18,7 @@
     <class path="src" />
     <class path="test" />
     <class path="lib\jasmine-haxe" />
+    <class path="lib\html5-haxe" />
   </classpaths>
   <!-- Build options -->
   <build>
