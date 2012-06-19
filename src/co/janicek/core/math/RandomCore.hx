@@ -69,4 +69,12 @@ class RandomCore {
 	public static inline function toIntRange( seed : Int, min : Int, max : Int ) : Int {
 		return Math.round((min - 0.4999) + ((max + 0.4999) - (min - 0.4999)) * toFloat(seed));
 	}
+	
+	/**
+	 * Converts a string to a seed.
+	 * Lets you use words as seeds.
+	 */
+	public static function stringToSeed( s : String ) : Int {
+        return Std.int(HashCore.djb2(s) % MPM);
+	}
 }

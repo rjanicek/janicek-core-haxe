@@ -118,6 +118,12 @@ class RandomCoreSpec {
 				});
 			});
 			
+			J.describe("stringToSeed( s : String ) : Int", function() {
+				J.it("should convert a string to a seed", function() {
+					J.expect("random seed".stringToSeed()).toBeDefined();
+				});
+			});
+			
 		});
 	}
 	
