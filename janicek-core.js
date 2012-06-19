@@ -71,6 +71,12 @@ Std.string = function(s) {
 Std["int"] = function(x) {
 	return x | 0;
 }
+Std.parseInt = function(x) {
+	var v = parseInt(x,10);
+	if(v == 0 && x.charCodeAt(1) == 120) v = parseInt(x);
+	if(isNaN(v)) return null;
+	return v;
+}
 Std.prototype = {
 	__class__: Std
 }
@@ -466,6 +472,11 @@ co.janicek.core.RandomCoreSpec = $hxClasses["co.janicek.core.RandomCoreSpec"] = 
 				}
 			});
 		});
+		jasmine.J.describe("stringToSeed( s : String ) : Int",function() {
+			jasmine.J.it("should convert a string to a seed",function() {
+				jasmine.J.expect(co.janicek.core.math.RandomCore.stringToSeed("random seed")).toBeDefined();
+			});
+		});
 	});
 };
 co.janicek.core.RandomCoreSpec.__name__ = ["co","janicek","core","RandomCoreSpec"];
@@ -478,10 +489,17 @@ co.janicek.core.StringCore.removeFromEnd = function(string,pattern) {
 	if(StringTools.endsWith(string,pattern)) return string.substr(0,string.lastIndexOf(pattern));
 	return string;
 }
+co.janicek.core.StringCore.contains = function(string,pattern) {
+	return string.indexOf(pattern) != -1;
+}
 co.janicek.core.StringCore.isNullOrEmpty = function(string) {
 	if(string == null) return true;
 	if(string.length == 0) return true;
 	return false;
+}
+co.janicek.core.StringCore.isInteger = function(s) {
+	if(co.janicek.core.StringCore.contains(s,".")) return false;
+	return Std.parseInt(s) != null;
 }
 co.janicek.core.StringCore.prototype = {
 	__class__: co.janicek.core.StringCore
@@ -498,6 +516,18 @@ co.janicek.core.StringCoreSpec = $hxClasses["co.janicek.core.StringCoreSpec"] = 
 				jasmine.J.expect(co.janicek.core.StringCore.isNullOrEmpty("")).toBeTruthy();
 				jasmine.J.expect(co.janicek.core.StringCore.isNullOrEmpty(null)).toBeTruthy();
 				jasmine.J.expect(co.janicek.core.StringCore.isNullOrEmpty("not null or empty")).toBeFalsy();
+			});
+		});
+		jasmine.J.describe("isInteger( s : String ) : Bool",function() {
+			jasmine.J.it("should return true is string is an Integer",function() {
+				jasmine.J.expect(co.janicek.core.StringCore.isInteger("0")).toBeTruthy();
+				jasmine.J.expect(co.janicek.core.StringCore.isInteger("1")).toBeTruthy();
+				jasmine.J.expect(co.janicek.core.StringCore.isInteger("-1")).toBeTruthy();
+			});
+			jasmine.J.it("should return false if string is not an Integer",function() {
+				jasmine.J.expect(co.janicek.core.StringCore.isInteger("")).toBeFalsy();
+				jasmine.J.expect(co.janicek.core.StringCore.isInteger(" ")).toBeFalsy();
+				jasmine.J.expect(co.janicek.core.StringCore.isInteger("0.0")).toBeFalsy();
 			});
 		});
 	});
@@ -650,6 +680,20 @@ co.janicek.core.array.Array2dValueIterator.prototype = {
 	,__class__: co.janicek.core.array.Array2dValueIterator
 }
 if(!co.janicek.core.math) co.janicek.core.math = {}
+co.janicek.core.math.HashCore = $hxClasses["co.janicek.core.math.HashCore"] = function() { }
+co.janicek.core.math.HashCore.__name__ = ["co","janicek","core","math","HashCore"];
+co.janicek.core.math.HashCore.djb2 = function(s) {
+	var hash = 5381;
+	var _g1 = 0, _g = s.length;
+	while(_g1 < _g) {
+		var i = _g1++;
+		hash = (hash << 5) + hash + s.charCodeAt(i);
+	}
+	return hash;
+}
+co.janicek.core.math.HashCore.prototype = {
+	__class__: co.janicek.core.math.HashCore
+}
 co.janicek.core.math.MathCore = $hxClasses["co.janicek.core.math.MathCore"] = function() { }
 co.janicek.core.math.MathCore.__name__ = ["co","janicek","core","math","MathCore"];
 co.janicek.core.math.MathCore.isEven = function(n) {
@@ -799,6 +843,9 @@ co.janicek.core.math.RandomCore.toFloatRange = function(seed,min,max) {
 }
 co.janicek.core.math.RandomCore.toIntRange = function(seed,min,max) {
 	return Math.round(min - 0.4999 + (max + 0.4999 - (min - 0.4999)) * (seed / 2147483647.0));
+}
+co.janicek.core.math.RandomCore.stringToSeed = function(s) {
+	return co.janicek.core.math.HashCore.djb2(s) % 2147483647.0 | 0;
 }
 co.janicek.core.math.RandomCore.prototype = {
 	__class__: co.janicek.core.math.RandomCore
