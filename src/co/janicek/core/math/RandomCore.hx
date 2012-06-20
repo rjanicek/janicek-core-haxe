@@ -7,8 +7,15 @@ import co.janicek.core.math.MathCore;
 */
 class RandomCore {
 	
-	private inline static var MPM = 2147483647.0; // (a Mersenne prime M31) modulus constant = 2^31 - 1 = 0x7ffffffe
-	private inline static var MINSTD = 16807.0; // (a primitive root modulo M31)
+	/**
+	 * (a Mersenne prime M31) modulus constant = 2^31 - 1 = 0x7ffffffe
+	 */
+	private inline static var MPM = 2147483647.0;
+	
+	/**
+	 * (a primitive root modulo M31)
+	 */
+	private inline static var MINSTD = 16807.0;
 
 	/**
 	 * Make a non deterministic random seed using standard libraries.

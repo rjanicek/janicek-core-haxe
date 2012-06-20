@@ -17,13 +17,13 @@ class StringCoreSpec {
 	public function new() {
 		J.describe("StringCore", function() {
 			
-			J.describe("removeFromEnd( string : String, pattern : String ) : String", function () {
+			J.describe("removeFromEnd()", function () {
 				J.it("should remove one string from the end of another string", function() {
 					J.expect(StringCore.removeFromEnd("ab", "b")).toEqual("a");
 				});
 			});
 			
-			J.describe("isNullOrEmpty( string : String ) : Bool", function () {
+			J.describe("isNullOrEmpty()", function () {
 				J.it("should check if string is null or empty", function() {
 					J.expect(StringCore.isNullOrEmpty("")).toBeTruthy();
 					J.expect(StringCore.isNullOrEmpty(null)).toBeTruthy();
@@ -31,7 +31,7 @@ class StringCoreSpec {
 				});
 			});
 			
-			J.describe("isInteger( s : String ) : Bool", function () {
+			J.describe("isInteger()", function () {
 				J.it("should return true is string is an Integer", function() {
 					J.expect("0".isInteger()).toBeTruthy();
 					J.expect("1".isInteger()).toBeTruthy();

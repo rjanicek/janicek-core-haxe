@@ -97,7 +97,7 @@ class CanvasCore {
 	 * @param	context Canvas drawing context.
 	 * @param	randomSeed Random seed to use to make random noise.
 	 * @param	noiseLevel Value between 1 and 255
-	 * @param	grayScale = True to change all color channels by same amount so only brightness of pixel is changed and not color. Doesn't affect alpha. (Default = false)
+	 * @param	grayScale True to change all color channels by same amount so only brightness of pixel is changed and not color. Doesn't affect alpha. (Default = false)
 	 * @param	red Add noise to red channel. (Default = true)
 	 * @param	green Add noise to green channel. (Default = true)
 	 * @param	blue Add noise to blue channel. (Default = true)

@@ -13,19 +13,19 @@ class PathCoreSpec {
 	public function new() {
 		J.describe("PathCore", function() {
 			
-			J.describe("getDirectoryName( path : String, pathDelimeter = \"/\" ) : String", function(){
+			J.describe("getDirectoryName()", function(){
 				J.it("should get directory name from path that includes filename", function() {
 					J.expect("a/b.txt".getDirectoryName()).toEqual("a");
 				});
 			});
 			
-			J.describe("getFileName( path : String, pathDelimeter = \"/\" ) : String", function(){
+			J.describe("getFileName()", function(){
 				J.it("should get file name from path", function() {
 					J.expect("a/b.txt".getFileName()).toEqual("b.txt");
 				});
 			});
 			
-			J.describe("removeFileNameExtension( path : String, fileExtensionDelimeter = \".\" ) : String", function(){
+			J.describe("removeFileNameExtension()", function(){
 				J.it("should remove exentsion from path", function() {
 					J.expect("a/b.txt".removeFileNameExtension()).toEqual("a/b");
 				});

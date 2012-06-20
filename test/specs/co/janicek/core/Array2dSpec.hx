@@ -16,14 +16,14 @@ class Array2dSpec {
 	public function new() {
 		J.describe("Array2DCore", function() {
 			
-			J.describe("get<T>( a : Array<Array<T>>, x : Int, y : Int) : T", function() {
+			J.describe("get()", function() {
 				J.it("should get value at index", function() {
 					var a = [[1]];
 					J.expect(a.get(0, 0)).toEqual(1);
 				});
 			});
 
-			J.describe("set<T>( a : Array<Array<T>>, x : Int, y : Int, value : T ) : Array<Array<T>>", function() {
+			J.describe("set()", function() {
 				J.it("should set value at index", function() {
 					var a = new Array<Array<Int>>();
 					J.expect(a.get(0, 0)).toBeNull();
@@ -32,7 +32,7 @@ class Array2dSpec {
 				});
 			});
 			
-			J.describe("getIndices( index : Int, width : Int, blockSize = 1 ) : Array2dIndex", function() {
+			J.describe("getIndices()", function() {
 				J.it("should compute 2d indices from array dimensions", function() {
 					J.expect(Array2dCore.getIndices(0, 10, 1)).toEqual( { x:0, y:0 } );
 					J.expect(Array2dCore.getIndices(9, 10, 1)).toEqual( { x:9, y:0 } );
@@ -49,7 +49,7 @@ class Array2dSpec {
 				});
 			});
 
-			J.describe("foreachY<T>( a : Array<Array<T>>, f : Array<T> -> Void ) : Void", function() {
+			J.describe("foreachY()", function() {
 				J.it("should iterate y indexes (rows)", function() {
 					var a = [
 						[1],
@@ -64,7 +64,7 @@ class Array2dSpec {
 				});
 			});
 
-			J.describe("foreachXY<T>( a : Array<Array<T>>, f : Int -> Int -> T -> Void) : Void", function() {
+			J.describe("foreachXY()", function() {
 				J.it("should iterate x,y indexes (cells)", function() {
 					var a = [
 						[1, 2],
@@ -76,7 +76,7 @@ class Array2dSpec {
 				});
 			});
 
-			J.describe("any<T>( a : Array<Array<T>>, f : T -> Bool ) : Array2dIndex", function() {
+			J.describe("any()", function() {
 				J.it("should find index of anything in array", function() {
 					var a = [
 						[1, 2],
@@ -88,7 +88,7 @@ class Array2dSpec {
 				});
 			});
 
-			J.describe("dimensions<T>( array : Array<Array<T>> ) : Array2dIndex", function() {
+			J.describe("dimensions()", function() {
 				J.it("should get valid dimensions of array", function() {
 					var a = new Array<Array<Int>>();
 					J.expect(a.dimensions()).toEqual( { x:0, y:0 } );
@@ -97,7 +97,7 @@ class Array2dSpec {
 				});
 			});
 			
-			J.describe("values<T>( array : Array<Array<T>> ) : Iterable<T>", function() {
+			J.describe("values()", function() {
 				J.it("should produce array value iterator", function() {
 					var a = new Array<Array<Int>>();
 					J.expect(a.values().empty()).toBeTruthy();
@@ -112,7 +112,7 @@ class Array2dSpec {
 				});
 			});
 
-			J.describe("indexes<T>( array : Array<Array<T>> ) : Iterable<Array2dIndex>", function() {
+			J.describe("indexes()", function() {
 				J.it("should produce array index iterator", function() {
 					var a = new Array<Array<Int>>();
 					J.expect(a.indexes().empty()).toBeTruthy();

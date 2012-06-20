@@ -17,12 +17,6 @@
 ::else::
  ::set packageName=full::
 ::end::
-			<div id="packages-header">
-				<ul>
-					<li class="overview"><a href="::rootRelative::../uml/::packageName::.html" title="::full::" target="classFrame">Class Diagram</a></li>
-				</ul>
-			</div>
-
 			<ul class="packages">
 ::foreach i types::
 				<li class="::i.type::"><a href="::rootRelative::../types/::i.subdir::::i.name::::config.htmlFileExtension::" title="::i.name::" target="classFrame">::i.name::</a></li>

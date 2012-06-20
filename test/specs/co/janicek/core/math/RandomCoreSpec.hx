@@ -15,13 +15,13 @@ class RandomCoreSpec {
 	public function new() {
 		J.describe("RandomCore", function() {
 			
-			J.describe("makeRandomSeed() : Int", function() {
+			J.describe("makeRandomSeed()", function() {
 				J.it("should make a non deterministic random seed", function() {
 					J.expect(RandomCore.makeRandomSeed()).toBeDefined();
 				});
 			});
 			
-			J.describe("nextParkMiller( seed : Int ) : Int", function() {
+			J.describe("nextParkMiller()", function() {
 				J.it("should generate a random int using Park Miller algorithm", function() {
 					var seed = 1;
 					var original = seed;
@@ -53,7 +53,7 @@ class RandomCoreSpec {
 				});
 			});
 			
-			J.describe("nextLCG( seed : Int ) : Int", function() {
+			J.describe("nextLCG()", function() {
 				J.it("should generate the same LCG sequence", function() {
 					var seed = 1;
 					var length = 1000;
@@ -80,19 +80,19 @@ class RandomCoreSpec {
 				});
 			});
 			
-			J.describe("toFloat( seed : Int ) : Float", function() {
+			J.describe("toFloat()", function() {
 				J.it("should convert random seed to a Float value between 0.0 and 1.0", function() {
 					J.expect(1.nextParkMiller().toFloat()).toBeDefined();
 				});
 			});
 			
-			J.describe("toBool( seed : Int ) : Bool", function() {
+			J.describe("toBool()", function() {
 				J.it("should convert random seed to a Bool value (coin flip)", function() {
 					J.expect(1.nextParkMiller().toBool()).toBeDefined();
 				});
 			});
 			
-			J.describe("toIntRange( seed : Int, min : Int, max : Int ) : Int", function() {
+			J.describe("toIntRange()", function() {
 				J.it("should generate an Int in range", function() {
 					var iterations = 100;
 					var seed = 1;
@@ -105,7 +105,7 @@ class RandomCoreSpec {
 				});
 			});
 			
-			J.describe("toFloatRange( seed : Int, min : Float, max : Float ) : Float", function() {
+			J.describe("toFloatRange()", function() {
 				J.it("should generate a Float in range", function() {
 					var iterations = 100;
 					var seed = 1;
@@ -118,7 +118,7 @@ class RandomCoreSpec {
 				});
 			});
 			
-			J.describe("stringToSeed( s : String ) : Int", function() {
+			J.describe("stringToSeed()", function() {
 				J.it("should convert a string to a seed", function() {
 					J.expect("random seed".stringToSeed()).toBeDefined();
 				});

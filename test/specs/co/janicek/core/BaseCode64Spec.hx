@@ -24,19 +24,19 @@ class BaseCode64Spec {
 				J.expect( Std.string(BaseCode64.base64DecodeBytesData(encodedData))).toEqual(Std.string(bytesData));
 			});
 			
-			J.describe("base64EncodeBytesData( bytesData : BytesData ) : String", function() {
+			J.describe("base64EncodeBytesData()", function() {
 				J.it("should encode byte data", function() {
 					J.expect(Bytes.ofString("bytes").getData().base64EncodeBytesData());
 				});
 			});
 			
-			J.describe("base64DecodeBytesData( base64 : String ) : BytesData", function() {
+			J.describe("base64DecodeBytesData()", function() {
 				J.it("should decode byte data", function() {
 					J.expect(Bytes.ofString("bytes").getData().base64EncodeBytesData().base64DecodeBytesData());
 				});
 			});
 			
-			J.describe("base64EncodeString( string : String ) : String", function() {
+			J.describe("base64EncodeString()", function() {
 				J.it("should encode strings", function() {
 					J.expect("pleasure.".base64EncodeString()).toEqual("cGxlYXN1cmUu");
 					J.expect("leasure.".base64EncodeString()).toEqual("bGVhc3VyZS4=");
@@ -46,7 +46,7 @@ class BaseCode64Spec {
 				});
 			});
 			
-			J.describe("base64DecodeString( base64 : String ) : String", function() {
+			J.describe("base64DecodeString()", function() {
 				J.it("should decode strings", function() {
 					J.expect("pleasure.".base64EncodeString().base64DecodeString()).toEqual("pleasure.");
 				});
