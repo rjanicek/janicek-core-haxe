@@ -1,4 +1,4 @@
-package co.janicek.core;
+package specs.co.janicek.core;
 
 using co.janicek.core.BaseCode64;
 

@@ -1,2 +1,4 @@
 *.js.map
+/bin/api
 /bin/janicek-core.js
+/doc/bin

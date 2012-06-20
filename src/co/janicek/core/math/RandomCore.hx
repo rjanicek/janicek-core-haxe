@@ -20,9 +20,9 @@ class RandomCore {
 	
 	/**
 	 * Park-Miller-Carta algorithm.
-	 * @link http://lab.polygonal.de/?p=162
-	 * @link http://code.google.com/p/polygonal/source/browse/trunk/src/lib/de/polygonal/core/math/random/ParkMiller.hx?r=547 
-	 * @link http://en.wikipedia.org/wiki/Lehmer_random_number_generator
+	 * @see http://lab.polygonal.de/?p=162
+	 * @see http://code.google.com/p/polygonal/source/browse/trunk/src/lib/de/polygonal/core/math/random/ParkMiller.hx?r=547 
+	 * @see http://en.wikipedia.org/wiki/Lehmer_random_number_generator
 	 * @return Returns the next pseudo-random int value .
 	 */
 	public static inline function nextParkMiller( seed : Int ) : Int {
@@ -32,8 +32,8 @@ class RandomCore {
     /**
 	 * Linear congruential generator using GLIBC constants.
      * 
-	 * @link http://en.wikipedia.org/wiki/Linear_congruential_generator
-	 * @link https://github.com/aduros/flambe/blob/master/src/flambe/util/Random.hx
+	 * @see http://en.wikipedia.org/wiki/Linear_congruential_generator
+	 * @see https://github.com/aduros/flambe/blob/master/src/flambe/util/Random.hx
 	 * @return Returns an integer in [0, INT_MAX)
      */
     public static inline function nextLCG( seed : Int ) : Int {

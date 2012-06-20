@@ -14,7 +14,7 @@ using co.janicek.core.math.RandomCore;
 using co.janicek.core.array.Array2dCore;
 
 /**
- * ...
+ * Functions for working with HTML Canvas.
  * @author Richard Janicek
  */
 
@@ -92,8 +92,19 @@ class CanvasCore {
 		return pixelData;
 	}
 	
-	public static function addNoiseToCanvas(context:CanvasRenderingContext2D, width:Float, height:Float, randomSeed:Int, noiseLevel:Int, grayScale = false, red = true, green = true, blue = true, alpha = false) {
-		var imageData = context.getImageData(0, 0, width, height);
+	/**
+	 * Add noise to canvas.
+	 * @param	context Canvas drawing context.
+	 * @param	randomSeed Random seed to use to make random noise.
+	 * @param	noiseLevel Value between 1 and 255
+	 * @param	grayScale = True to change all color channels by same amount so only brightness of pixel is changed and not color. Doesn't affect alpha. (Default = false)
+	 * @param	red Add noise to red channel. (Default = true)
+	 * @param	green Add noise to green channel. (Default = true)
+	 * @param	blue Add noise to blue channel. (Default = true)
+	 * @param	alpha Add noise to alpha channel. (Default = false)
+	 */
+	public static function addNoiseToCanvas( context : CanvasRenderingContext2D, randomSeed : Int, noiseLevel : Int, grayScale = false, red = true, green = true, blue = true, alpha = false) : Void {
+		var imageData = context.getImageData(0, 0, context.canvas.width, context.canvas.height);
 		imageData = addNoise(imageData, randomSeed, noiseLevel, grayScale, red, green, blue, alpha);
 		context.putImageData(imageData, 0, 0);
 	}	
@@ -101,6 +112,11 @@ class CanvasCore {
 	// ------------------------------------------------------------------------
 	// Images
 	
+	/**
+	 * Load an image from a URL.
+	 * @param	url Image to load.
+	 * @param	f Called when image is loaded.
+	 */
 	public static function loadImage( url : String, f : Image -> Void ) : Void {
 		var image:Image = cast Lib.document.createElement("img");
 		image.onload = function() {
@@ -109,6 +125,10 @@ class CanvasCore {
 		image.src = url;
 	}
 	
+	/**
+	 * Get image data from an HTML image.
+	 * Injects a canvas into DOM to perform the conversion.
+	 */
 	public static function getImageData( image : Image ) : ImageData {
 		var canvas:Canvas = cast Lib.document.createElement("canvas");
 		canvas.width = image.width;
@@ -120,17 +140,21 @@ class CanvasCore {
 	}
 	
 	/**
-	 * Converts HTML5 image data to a 2D Array of Bool.
-	 * @param	array
-	 * @param	threshold Ints > threshold
+	 * Convert image to monochrome bitmap boolean array.
+	 * Converts HTML5 image data to a 2D Array of Bool by comparing the average of each color channel to a
+	 * threshold value to determine which color channels are converted to 0 and 1.
+	 * @param	threshold Value between 0 and 255.
 	 */
-	public static function makeAverageThresholdBitmap( imageData : ImageData, threshold : Int, invert = false ) : Array<Array<Bool>> {
+	public static function makeAverageThresholdBitmap( imageData : ImageData, threshold : Int ) : Array<Array<Bool>> {
 		threshold = threshold.clampInt(0, 255);
 		return makeBitmap(imageData, function(red, green, blue, alpha) {
-			return invert ? [red, green, blue].averageInt() < threshold : [red, green, blue].averageInt() > threshold;
+			return [red, green, blue].averageInt() > threshold;
 		});
 	}
 	
+	/**
+	 * Make a boolean array from html image data.
+	 */
 	public static function makeBitmap( imageData : ImageData, f : Int -> Int -> Int -> Int -> Bool ) : Array<Array<Bool>> {
 		var array = new Array<Array<Bool>>();
 		renderCanvasPixelArray(imageData, function(index, red, green, blue, alpha) {
@@ -139,6 +163,13 @@ class CanvasCore {
 			return null;
 		});
 		return array;
+	}
+	
+	public static function invertBitmap( bitmap : Array<Array<Bool>> ) : Array<Array<Bool>> {
+		bitmap.foreachXY(function (x, y, value) {
+			bitmap.set(x, y, !value);
+		});
+		return bitmap;
 	}
 
 }

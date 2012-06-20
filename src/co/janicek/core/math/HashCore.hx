@@ -1,7 +1,7 @@
 package co.janicek.core.math;
 
 /**
- * Hashing Algorithims
+ * Hashing Algorithms
  * 
  * @author Richard Janicek
  */
@@ -9,10 +9,10 @@ package co.janicek.core.math;
 class HashCore {
 
 	/**
-	 * Compute string hash using djb2 algorithim.
+	 * Compute string hash using djb2 algorithm.
 	 * 
 	 * Has a good balance of being extremely fast, while providing a reasonable distribution of hash values.
-	 * @link http://www.cse.yorku.ca/~oz/hash.html
+	 * @see http://www.cse.yorku.ca/~oz/hash.html
 	 */
 	public static function djb2( s : String ) : Int {
 		var hash = 5381;
@@ -23,12 +23,12 @@ class HashCore {
 	}
 	
 	/**
-	 * Compute string hash using sdbm algorithim.
+	 * Compute string hash using sdbm algorithm.
 	 * 
 	 * This algorithm was created for sdbm (a public-domain reimplementation of ndbm) database library.
 	 * It was found to do well in scrambling bits, causing better distribution of the keys and fewer splits.
 	 * It also happens to be a good general hashing function with good distribution.
-	 * @link http://www.cse.yorku.ca/~oz/hash.html
+	 * @see http://www.cse.yorku.ca/~oz/hash.html
 	 */
 	public static function sdbm( s : String ) : Int {
 		var hash = 0;
@@ -40,7 +40,7 @@ class HashCore {
 	
 	/**
 	 * Java's String.hashCode() method implemented in Haxe.
-	 * @link http://docs.oracle.com/javase/1.4.2/docs/api/java/lang/String.html#hashCode%28%29
+	 * @see http://docs.oracle.com/javase/1.4.2/docs/api/java/lang/String.html#hashCode%28%29
 	 */
 	public static function javaHashCode( s : String ) : Int {
 		var hash = 0;

@@ -1,4 +1,4 @@
-package co.janicek.core;
+package specs.co.janicek.core.math;
 
 import co.janicek.core.math.RandomCore;
 import jasmine.J;

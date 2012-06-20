@@ -1,4 +1,4 @@
-package co.janicek.core;
+package specs.co.janicek.core;
 import jasmine.J;
 
 using co.janicek.core.PathCore;

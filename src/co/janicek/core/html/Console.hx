@@ -2,7 +2,7 @@ package co.janicek.core.html;
 
 /**
  * Console API
- * @link http://getfirebug.com/wiki/index.php/Console_API
+ * @see http://getfirebug.com/wiki/index.php/Console_API
  */
 
 @:native("console")

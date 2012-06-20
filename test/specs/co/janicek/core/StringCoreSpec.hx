@@ -1,5 +1,7 @@
-package co.janicek.core;
+package specs.co.janicek.core;
+
 import co.janicek.core.math.MathCore;
+import co.janicek.core.StringCore;
 import jasmine.J;
 
 using co.janicek.core.math.MathCore;

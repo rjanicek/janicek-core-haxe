@@ -1,4 +1,4 @@
-package co.janicek.core;
+package specs.co.janicek.core;
 
 import co.janicek.core.array.Array2dCore;
 import jasmine.J;
