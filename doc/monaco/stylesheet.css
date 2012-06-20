@@ -38,7 +38,6 @@ body {
 	// line-height: 1; // Too ugly :)
 	color: black;
 	background: white;
-	background-image: url(images/header.png);
 	background-position: top right;
 	background-repeat: no-repeat;
 }
@@ -81,7 +80,7 @@ a, a:active, a:visited {
 }
 
 #class-frame, #enum-frame, #todo, #overview {
-	margin: 110px 20px;
+	margin: 10px 20px;
 }
 
 #class-frame h1, #enum-frame h1 {
@@ -128,7 +127,6 @@ ul.types, ul.packages, #packages-header ul{
 
 #header{
 	display: block;
-	//background-image: url(images/header.png);
 	height:110px;
 }
 img #logo{

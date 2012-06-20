@@ -14,6 +14,8 @@ See spec classes in test directory tree for examples of how to use the libraries
 
 Make sure you run ``git submodule update --init`` to clone the dependent libraries.
 
+API -> http://rjanicek.github.com/janicek-core-haxe/api
+
 Specs -> http://rjanicek.github.com/janicek-core-haxe
 
 GitHub -> https://github.com/rjanicek/janicek-core-haxe
