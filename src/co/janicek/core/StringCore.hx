@@ -24,7 +24,7 @@ class StringCore {
 	 * @param	pattern Pattern to find in test string.
 	 * @return	True if string contains pattern, else false.
 	 */
-	public static function contains(string:String, pattern:String):Bool {
+	public static function contains( string : String, pattern : String ) : Bool {
 		return string.indexOf(pattern) != -1;
 	}
 
@@ -32,7 +32,7 @@ class StringCore {
 	 * Test if sting is null or empty.
 	 * @return True if string is null or empty.
 	 */
-	public static function isNullOrEmpty( string : String ) : Bool {
+	public static function isNullOrEmpty( string : Null<String> ) : Bool {
 		if (string == null) {
 			return true;
 		}

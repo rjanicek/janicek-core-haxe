@@ -5,13 +5,17 @@ import co.janicek.core.math.MathCore;
 import html5.Canvas;
 import html5.CanvasPixelArray;
 import html5.CanvasRenderingContext2D;
+import html5.File;
+import html5.FileReader;
 import html5.Image;
 import html5.ImageData;
 import js.Lib;
 
+using co.janicek.core.array.Array2dCore;
+using co.janicek.core.html.CanvasCore;
 using co.janicek.core.math.MathCore;
 using co.janicek.core.math.RandomCore;
-using co.janicek.core.array.Array2dCore;
+using Std;
 
 /**
  * Functions for working with HTML Canvas.
@@ -27,7 +31,6 @@ class CanvasCore {
 	public static inline var CANVAS_ALPHA_OFFSET = 3;
 
 	/**
-	 * Higher order function.
 	 * Iterate canvas pixel array color channels.
 	 * Functor is called with red, green, blue, and alpha channel values for each pixel.
 	 * Functor can return new color channel values which will be assigned to pixel. Null values are ignored.
@@ -118,16 +121,26 @@ class CanvasCore {
 	 * @param	f Called when image is loaded.
 	 */
 	public static function loadImage( url : String, f : Image -> Void ) : Void {
-		var image:Image = cast Lib.document.createElement("img");
+		var image:Image = new Image();
 		image.onload = function() {
 			f(image);
 		}
 		image.src = url;
 	}
-	
+
+	/**
+	 * Load a file into an image.
+	 */
+	public static function loadFileIntoImage( file : File, img : Image ) : Void {
+		var reader = new FileReader();
+		reader.onload = function(event) {
+			img.src = event.target.result;
+		}
+		reader.readAsDataURL(file);
+	}
+
 	/**
 	 * Get image data from an HTML image.
-	 * Injects a canvas into DOM to perform the conversion.
 	 */
 	public static function getImageData( image : Image ) : ImageData {
 		var canvas:Canvas = cast Lib.document.createElement("canvas");
@@ -140,6 +153,42 @@ class CanvasCore {
 	}
 	
 	/**
+	 * Make image data URL from image data.
+	 */
+	public static function makeImageDataUrlFromImageData( imageData : ImageData ) : String {
+		var canvas:Canvas = cast Lib.document.createElement("canvas");
+		canvas.width = imageData.width.int();
+		canvas.height = imageData.height.int();
+		canvas.getContext("2d").putImageData(imageData, 0, 0);
+		return canvas.toDataURL();
+	}
+	
+	// ------------------------------------------------------------------------
+	// Monochrome Converters
+	
+	/**
+	 * Converts HTML5 image data to monochrome image data by comparing the average of each color channel to a
+	 * threshold value to determine which color channels are converted to target monochrome colors.
+	 * @param	threshold Value between 0 and 255.
+	 * @param	lessthanThresholdColor Color to use for pixels below threshold.
+	 * @param	greaterthanOrEqualToThresholdColor Color to use for pixels equal to or above threshold.
+	 * @param	alpha Optioal alpha to assign to result pixels. (default = 1.0)
+	 */
+	public static function makeAverageThresholdImageData( imageData : ImageData, threshold : Int, lessthanThresholdColor : Int, greaterthanOrEqualToThresholdColor : Int, alpha = 1.0) : ImageData {
+		var intAlpha = HtmlColorCore.colorFraction(alpha);
+		imageData.renderCanvasPixelArray(function(index, red, green, blue, alpha) {
+			var color = [red, green, blue].averageInt() >= threshold ? greaterthanOrEqualToThresholdColor : lessthanThresholdColor;
+			return {
+					red : HtmlColorCore.getRedComponent(color),
+					green : HtmlColorCore.getGreenComponent(color),
+					blue : HtmlColorCore.getBlueComponent(color),
+					alpha : intAlpha
+			}
+		});
+		return imageData;
+	}
+	
+	/**
 	 * Convert image to monochrome bitmap boolean array.
 	 * Converts HTML5 image data to a 2D Array of Bool by comparing the average of each color channel to a
 	 * threshold value to determine which color channels are converted to 0 and 1.
@@ -148,7 +197,7 @@ class CanvasCore {
 	public static function makeAverageThresholdBitmap( imageData : ImageData, threshold : Int ) : Array<Array<Bool>> {
 		threshold = threshold.clampInt(0, 255);
 		return makeBitmap(imageData, function(red, green, blue, alpha) {
-			return [red, green, blue].averageInt() > threshold;
+			return [red, green, blue].averageInt() >= threshold;
 		});
 	}
 	
@@ -165,6 +214,11 @@ class CanvasCore {
 		return array;
 	}
 	
+	/**
+	 * Inverts an array of bool.
+	 * @param	bitmap Array of bool to invert.
+	 * @return	Inverted array of bool.
+	 */
 	public static function invertBitmap( bitmap : Array<Array<Bool>> ) : Array<Array<Bool>> {
 		bitmap.foreachXY(function (x, y, value) {
 			bitmap.set(x, y, !value);

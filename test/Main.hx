@@ -6,7 +6,7 @@ import specs.co.janicek.core.math.MathCoreSpec;
 import specs.co.janicek.core.PathCoreSpec;
 import specs.co.janicek.core.math.PerlinNoiseSpec;
 import specs.co.janicek.core.math.RandomCoreSpec;
-import specs.co.janicek.core.html.ColorCoreSpec;
+import specs.co.janicek.core.html.HtmlColorCoreSpec;
 import co.janicek.core.StringCore;
 import specs.co.janicek.core.StringCoreSpec;
 import haxe.Firebug;
@@ -29,7 +29,7 @@ class Main {
 		new Array2dSpec();
 		new BaseCode64Spec();
 		new CanvasCoreSpec();
-		new ColorCoreSpec();
+		new HtmlColorCoreSpec();
 		new HashCoreSpec();
 		new MathCoreSpec();
 		new PathCoreSpec();
