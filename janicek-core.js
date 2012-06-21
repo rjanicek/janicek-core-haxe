@@ -4,14 +4,108 @@ function $extend(from, fields) {
 	for (var name in fields) proto[name] = fields[name];
 	return proto;
 }
+var IntIter = $hxClasses["IntIter"] = function(min,max) {
+	this.min = min;
+	this.max = max;
+};
+IntIter.__name__ = ["IntIter"];
+IntIter.prototype = {
+	min: null
+	,max: null
+	,hasNext: function() {
+		return this.min < this.max;
+	}
+	,next: function() {
+		return this.min++;
+	}
+	,__class__: IntIter
+}
 var Lambda = $hxClasses["Lambda"] = function() { }
 Lambda.__name__ = ["Lambda"];
+Lambda.array = function(it) {
+	var a = new Array();
+	var $it0 = it.iterator();
+	while( $it0.hasNext() ) {
+		var i = $it0.next();
+		a.push(i);
+	}
+	return a;
+}
+Lambda.list = function(it) {
+	var l = new List();
+	var $it0 = it.iterator();
+	while( $it0.hasNext() ) {
+		var i = $it0.next();
+		l.add(i);
+	}
+	return l;
+}
+Lambda.map = function(it,f) {
+	var l = new List();
+	var $it0 = it.iterator();
+	while( $it0.hasNext() ) {
+		var x = $it0.next();
+		l.add(f(x));
+	}
+	return l;
+}
+Lambda.mapi = function(it,f) {
+	var l = new List();
+	var i = 0;
+	var $it0 = it.iterator();
+	while( $it0.hasNext() ) {
+		var x = $it0.next();
+		l.add(f(i++,x));
+	}
+	return l;
+}
+Lambda.has = function(it,elt,cmp) {
+	if(cmp == null) {
+		var $it0 = it.iterator();
+		while( $it0.hasNext() ) {
+			var x = $it0.next();
+			if(x == elt) return true;
+		}
+	} else {
+		var $it1 = it.iterator();
+		while( $it1.hasNext() ) {
+			var x = $it1.next();
+			if(cmp(x,elt)) return true;
+		}
+	}
+	return false;
+}
+Lambda.exists = function(it,f) {
+	var $it0 = it.iterator();
+	while( $it0.hasNext() ) {
+		var x = $it0.next();
+		if(f(x)) return true;
+	}
+	return false;
+}
+Lambda.foreach = function(it,f) {
+	var $it0 = it.iterator();
+	while( $it0.hasNext() ) {
+		var x = $it0.next();
+		if(!f(x)) return false;
+	}
+	return true;
+}
 Lambda.iter = function(it,f) {
 	var $it0 = it.iterator();
 	while( $it0.hasNext() ) {
 		var x = $it0.next();
 		f(x);
 	}
+}
+Lambda.filter = function(it,f) {
+	var l = new List();
+	var $it0 = it.iterator();
+	while( $it0.hasNext() ) {
+		var x = $it0.next();
+		if(f(x)) l.add(x);
+	}
+	return l;
 }
 Lambda.fold = function(it,f,first) {
 	var $it0 = it.iterator();
@@ -41,30 +135,173 @@ Lambda.count = function(it,pred) {
 Lambda.empty = function(it) {
 	return !it.iterator().hasNext();
 }
+Lambda.indexOf = function(it,v) {
+	var i = 0;
+	var $it0 = it.iterator();
+	while( $it0.hasNext() ) {
+		var v2 = $it0.next();
+		if(v == v2) return i;
+		i++;
+	}
+	return -1;
+}
+Lambda.concat = function(a,b) {
+	var l = new List();
+	var $it0 = a.iterator();
+	while( $it0.hasNext() ) {
+		var x = $it0.next();
+		l.add(x);
+	}
+	var $it1 = b.iterator();
+	while( $it1.hasNext() ) {
+		var x = $it1.next();
+		l.add(x);
+	}
+	return l;
+}
 Lambda.prototype = {
 	__class__: Lambda
+}
+var List = $hxClasses["List"] = function() {
+	this.length = 0;
+};
+List.__name__ = ["List"];
+List.prototype = {
+	h: null
+	,q: null
+	,length: null
+	,add: function(item) {
+		var x = [item];
+		if(this.h == null) this.h = x; else this.q[1] = x;
+		this.q = x;
+		this.length++;
+	}
+	,push: function(item) {
+		var x = [item,this.h];
+		this.h = x;
+		if(this.q == null) this.q = x;
+		this.length++;
+	}
+	,first: function() {
+		return this.h == null?null:this.h[0];
+	}
+	,last: function() {
+		return this.q == null?null:this.q[0];
+	}
+	,pop: function() {
+		if(this.h == null) return null;
+		var x = this.h[0];
+		this.h = this.h[1];
+		if(this.h == null) this.q = null;
+		this.length--;
+		return x;
+	}
+	,isEmpty: function() {
+		return this.h == null;
+	}
+	,clear: function() {
+		this.h = null;
+		this.q = null;
+		this.length = 0;
+	}
+	,remove: function(v) {
+		var prev = null;
+		var l = this.h;
+		while(l != null) {
+			if(l[0] == v) {
+				if(prev == null) this.h = l[1]; else prev[1] = l[1];
+				if(this.q == l) this.q = prev;
+				this.length--;
+				return true;
+			}
+			prev = l;
+			l = l[1];
+		}
+		return false;
+	}
+	,iterator: function() {
+		return { h : this.h, hasNext : function() {
+			return this.h != null;
+		}, next : function() {
+			if(this.h == null) return null;
+			var x = this.h[0];
+			this.h = this.h[1];
+			return x;
+		}};
+	}
+	,toString: function() {
+		var s = new StringBuf();
+		var first = true;
+		var l = this.h;
+		s.b[s.b.length] = "{";
+		while(l != null) {
+			if(first) first = false; else s.b[s.b.length] = ", ";
+			s.add(Std.string(l[0]));
+			l = l[1];
+		}
+		s.b[s.b.length] = "}";
+		return s.b.join("");
+	}
+	,join: function(sep) {
+		var s = new StringBuf();
+		var first = true;
+		var l = this.h;
+		while(l != null) {
+			if(first) first = false; else s.b[s.b.length] = sep == null?"null":sep;
+			s.add(l[0]);
+			l = l[1];
+		}
+		return s.b.join("");
+	}
+	,filter: function(f) {
+		var l2 = new List();
+		var l = this.h;
+		while(l != null) {
+			var v = l[0];
+			l = l[1];
+			if(f(v)) l2.add(v);
+		}
+		return l2;
+	}
+	,map: function(f) {
+		var b = new List();
+		var l = this.h;
+		while(l != null) {
+			var v = l[0];
+			l = l[1];
+			b.add(f(v));
+		}
+		return b;
+	}
+	,__class__: List
 }
 var Main = $hxClasses["Main"] = function() { }
 Main.__name__ = ["Main"];
 Main.main = function() {
 	if(!js.Lib.isIE) haxe.Firebug.redirectTraces();
-	haxe.Log.trace("Testing...",{ fileName : "Main.hx", lineNumber : 24, className : "Main", methodName : "main"});
-	new co.janicek.core.Array2dSpec();
-	new co.janicek.core.BaseCode64Spec();
-	new co.janicek.core.MathCoreSpec();
-	new co.janicek.core.PathCoreSpec();
-	new co.janicek.core.PerlinNoiseSpec();
-	new co.janicek.core.RandomCoreSpec();
-	new co.janicek.core.StringCoreSpec();
+	haxe.Log.trace("Testing...",{ fileName : "Main.hx", lineNumber : 27, className : "Main", methodName : "main"});
+	new specs.co.janicek.core.Array2dSpec();
+	new specs.co.janicek.core.BaseCode64Spec();
+	new specs.co.janicek.core.html.CanvasCoreSpec();
+	new specs.co.janicek.core.html.ColorCoreSpec();
+	new specs.co.janicek.core.math.HashCoreSpec();
+	new specs.co.janicek.core.math.MathCoreSpec();
+	new specs.co.janicek.core.PathCoreSpec();
+	new specs.co.janicek.core.math.PerlinNoiseSpec();
+	new specs.co.janicek.core.math.RandomCoreSpec();
+	new specs.co.janicek.core.StringCoreSpec();
 	jasmine.Jasmine.getEnv().addReporter(jasmine.Jasmine.newHtmlReporter());
 	jasmine.Jasmine.getEnv().execute();
-	haxe.Log.trace("Done testing.",{ fileName : "Main.hx", lineNumber : 36, className : "Main", methodName : "main"});
+	haxe.Log.trace("Done testing.",{ fileName : "Main.hx", lineNumber : 42, className : "Main", methodName : "main"});
 }
 Main.prototype = {
 	__class__: Main
 }
 var Std = $hxClasses["Std"] = function() { }
 Std.__name__ = ["Std"];
+Std["is"] = function(v,t) {
+	return js.Boot.__instanceof(v,t);
+}
 Std.string = function(s) {
 	return js.Boot.__string_rec(s,"");
 }
@@ -77,18 +314,120 @@ Std.parseInt = function(x) {
 	if(isNaN(v)) return null;
 	return v;
 }
+Std.parseFloat = function(x) {
+	return parseFloat(x);
+}
+Std.random = function(x) {
+	return Math.floor(Math.random() * x);
+}
 Std.prototype = {
 	__class__: Std
 }
+var StringBuf = $hxClasses["StringBuf"] = function() {
+	this.b = new Array();
+};
+StringBuf.__name__ = ["StringBuf"];
+StringBuf.prototype = {
+	add: function(x) {
+		this.b[this.b.length] = x == null?"null":x;
+	}
+	,addSub: function(s,pos,len) {
+		this.b[this.b.length] = s.substr(pos,len);
+	}
+	,addChar: function(c) {
+		this.b[this.b.length] = String.fromCharCode(c);
+	}
+	,toString: function() {
+		return this.b.join("");
+	}
+	,b: null
+	,__class__: StringBuf
+}
 var StringTools = $hxClasses["StringTools"] = function() { }
 StringTools.__name__ = ["StringTools"];
+StringTools.urlEncode = function(s) {
+	return encodeURIComponent(s);
+}
+StringTools.urlDecode = function(s) {
+	return decodeURIComponent(s.split("+").join(" "));
+}
+StringTools.htmlEscape = function(s) {
+	return s.split("&").join("&amp;").split("<").join("&lt;").split(">").join("&gt;");
+}
+StringTools.htmlUnescape = function(s) {
+	return s.split("&gt;").join(">").split("&lt;").join("<").split("&amp;").join("&");
+}
+StringTools.startsWith = function(s,start) {
+	return s.length >= start.length && s.substr(0,start.length) == start;
+}
 StringTools.endsWith = function(s,end) {
 	var elen = end.length;
 	var slen = s.length;
 	return slen >= elen && s.substr(slen - elen,elen) == end;
 }
+StringTools.isSpace = function(s,pos) {
+	var c = s.charCodeAt(pos);
+	return c >= 9 && c <= 13 || c == 32;
+}
+StringTools.ltrim = function(s) {
+	var l = s.length;
+	var r = 0;
+	while(r < l && StringTools.isSpace(s,r)) r++;
+	if(r > 0) return s.substr(r,l - r); else return s;
+}
+StringTools.rtrim = function(s) {
+	var l = s.length;
+	var r = 0;
+	while(r < l && StringTools.isSpace(s,l - r - 1)) r++;
+	if(r > 0) return s.substr(0,l - r); else return s;
+}
+StringTools.trim = function(s) {
+	return StringTools.ltrim(StringTools.rtrim(s));
+}
+StringTools.rpad = function(s,c,l) {
+	var sl = s.length;
+	var cl = c.length;
+	while(sl < l) if(l - sl < cl) {
+		s += c.substr(0,l - sl);
+		sl = l;
+	} else {
+		s += c;
+		sl += cl;
+	}
+	return s;
+}
+StringTools.lpad = function(s,c,l) {
+	var ns = "";
+	var sl = s.length;
+	if(sl >= l) return s;
+	var cl = c.length;
+	while(sl < l) if(l - sl < cl) {
+		ns += c.substr(0,l - sl);
+		sl = l;
+	} else {
+		ns += c;
+		sl += cl;
+	}
+	return ns + s;
+}
+StringTools.replace = function(s,sub,by) {
+	return s.split(sub).join(by);
+}
+StringTools.hex = function(n,digits) {
+	var s = "";
+	var hexChars = "0123456789ABCDEF";
+	do {
+		s = hexChars.charAt(n & 15) + s;
+		n >>>= 4;
+	} while(n > 0);
+	if(digits != null) while(s.length < digits) s = "0" + s;
+	return s;
+}
 StringTools.fastCodeAt = function(s,index) {
 	return s.cca(index);
+}
+StringTools.isEOF = function(c) {
+	return c != c;
 }
 StringTools.prototype = {
 	__class__: StringTools
@@ -96,108 +435,6 @@ StringTools.prototype = {
 var co = co || {}
 if(!co.janicek) co.janicek = {}
 if(!co.janicek.core) co.janicek.core = {}
-co.janicek.core.Array2dSpec = $hxClasses["co.janicek.core.Array2dSpec"] = function() {
-	jasmine.J.describe("Array2DCore",function() {
-		jasmine.J.describe("get<T>( a : Array<Array<T>>, x : Int, y : Int) : T",function() {
-			jasmine.J.it("should get value at index",function() {
-				var a = [[1]];
-				jasmine.J.expect(co.janicek.core.array.Array2dCore.get(a,0,0)).toEqual(1);
-			});
-		});
-		jasmine.J.describe("set<T>( a : Array<Array<T>>, x : Int, y : Int, value : T ) : Array<Array<T>>",function() {
-			jasmine.J.it("should set value at index",function() {
-				var a = new Array();
-				jasmine.J.expect(co.janicek.core.array.Array2dCore.get(a,0,0)).toBeNull();
-				co.janicek.core.array.Array2dCore.set(a,0,0,1);
-				jasmine.J.expect(co.janicek.core.array.Array2dCore.get(a,0,0)).toBe(1);
-			});
-		});
-		jasmine.J.describe("getIndices( index : Int, width : Int, blockSize = 1 ) : Array2dIndex",function() {
-			jasmine.J.it("should compute 2d indices from array dimensions",function() {
-				jasmine.J.expect(co.janicek.core.array.Array2dCore.getIndices(0,10,1)).toEqual({ x : 0, y : 0});
-				jasmine.J.expect(co.janicek.core.array.Array2dCore.getIndices(9,10,1)).toEqual({ x : 9, y : 0});
-				jasmine.J.expect(co.janicek.core.array.Array2dCore.getIndices(99,10,1)).toEqual({ x : 9, y : 9});
-				jasmine.J.expect(co.janicek.core.array.Array2dCore.getIndices(90,10,1)).toEqual({ x : 0, y : 9});
-				jasmine.J.expect(co.janicek.core.array.Array2dCore.getIndices(0,10,2)).toEqual({ x : 0, y : 0});
-				jasmine.J.expect(co.janicek.core.array.Array2dCore.getIndices(18,10,2)).toEqual({ x : 9, y : 0});
-				jasmine.J.expect(co.janicek.core.array.Array2dCore.getIndices(198,10,2)).toEqual({ x : 9, y : 9});
-				jasmine.J.expect(co.janicek.core.array.Array2dCore.getIndices(180,10,2)).toEqual({ x : 0, y : 9});
-				jasmine.J.expect(co.janicek.core.array.Array2dCore.getIndices(0,46,4)).toEqual({ x : 0, y : 0});
-				jasmine.J.expect(co.janicek.core.array.Array2dCore.getIndices(5,6,1)).toEqual({ x : 5, y : 0});
-			});
-		});
-		jasmine.J.describe("foreachY<T>( a : Array<Array<T>>, f : Array<T> -> Void ) : Void",function() {
-			jasmine.J.it("should iterate y indexes (rows)",function() {
-				var a = [[1],[2]];
-				var row = 0;
-				co.janicek.core.array.Array2dCore.foreachY(a,function(y) {
-					jasmine.J.expect(co.janicek.core.array.Array2dCore.get(a,0,row)).toEqual(y[0]);
-					row++;
-				});
-				jasmine.J.expect(row).toEqual(a.length);
-			});
-		});
-		jasmine.J.describe("foreachXY<T>( a : Array<Array<T>>, f : Int -> Int -> T -> Void) : Void",function() {
-			jasmine.J.it("should iterate x,y indexes (cells)",function() {
-				var a = [[1,2],[3,4]];
-				co.janicek.core.array.Array2dCore.foreachXY(a,function(x,y,value) {
-					jasmine.J.expect(co.janicek.core.array.Array2dCore.get(a,x,y)).toEqual(value);
-				});
-			});
-		});
-		jasmine.J.describe("any<T>( a : Array<Array<T>>, f : T -> Bool ) : Array2dIndex",function() {
-			jasmine.J.it("should find index of anything in array",function() {
-				var a = [[1,2],[3,4]];
-				var index = co.janicek.core.array.Array2dCore.any(a,function(value) {
-					return value == 4;
-				});
-				jasmine.J.expect(index).toEqual({ x : 1, y : 1});
-			});
-		});
-		jasmine.J.describe("dimensions<T>( array : Array<Array<T>> ) : Array2dIndex",function() {
-			jasmine.J.it("should get valid dimensions of array",function() {
-				var a = new Array();
-				jasmine.J.expect(co.janicek.core.array.Array2dCore.dimensions(a)).toEqual({ x : 0, y : 0});
-				co.janicek.core.array.Array2dCore.set(a,5,5,1);
-				jasmine.J.expect(co.janicek.core.array.Array2dCore.dimensions(a)).toEqual({ x : 6, y : 6});
-			});
-		});
-		jasmine.J.describe("values<T>( array : Array<Array<T>> ) : Iterable<T>",function() {
-			jasmine.J.it("should produce array value iterator",function() {
-				var a = new Array();
-				jasmine.J.expect(Lambda.empty(co.janicek.core.array.Array2dCore.values(a))).toBeTruthy();
-				jasmine.J.expect(Lambda.count(co.janicek.core.array.Array2dCore.values(a))).toEqual(0);
-				co.janicek.core.array.Array2dCore.set(a,0,0,1);
-				jasmine.J.expect(Lambda.count(co.janicek.core.array.Array2dCore.values(a))).toEqual(1);
-				Lambda.iter(co.janicek.core.array.Array2dCore.values(a),function(value) {
-					jasmine.J.expect(value).toEqual(1);
-				});
-				co.janicek.core.array.Array2dCore.set(a,10,10,1);
-				jasmine.J.expect(Lambda.count(co.janicek.core.array.Array2dCore.values(a))).toEqual(2);
-			});
-		});
-		jasmine.J.describe("indexes<T>( array : Array<Array<T>> ) : Iterable<Array2dIndex>",function() {
-			jasmine.J.it("should produce array index iterator",function() {
-				var a = new Array();
-				jasmine.J.expect(Lambda.empty(co.janicek.core.array.Array2dCore.indexes(a))).toBeTruthy();
-				jasmine.J.expect(Lambda.count(co.janicek.core.array.Array2dCore.indexes(a))).toBe(0);
-				co.janicek.core.array.Array2dCore.set(a,0,0,1);
-				jasmine.J.expect(Lambda.count(co.janicek.core.array.Array2dCore.indexes(a))).toBe(1);
-				Lambda.iter(co.janicek.core.array.Array2dCore.indexes(a),function(index) {
-					jasmine.J.expect(index).toEqual({ x : 0, y : 0});
-				});
-				co.janicek.core.array.Array2dCore.set(a,1,1,1);
-				jasmine.J.expect(Lambda.count(co.janicek.core.array.Array2dCore.indexes(a))).toBe(2);
-				co.janicek.core.array.Array2dCore.set(a,10,10,1);
-				jasmine.J.expect(Lambda.count(co.janicek.core.array.Array2dCore.indexes(a))).toBe(3);
-			});
-		});
-	});
-};
-co.janicek.core.Array2dSpec.__name__ = ["co","janicek","core","Array2dSpec"];
-co.janicek.core.Array2dSpec.prototype = {
-	__class__: co.janicek.core.Array2dSpec
-}
 co.janicek.core.BaseCode64 = $hxClasses["co.janicek.core.BaseCode64"] = function() { }
 co.janicek.core.BaseCode64.__name__ = ["co","janicek","core","BaseCode64"];
 co.janicek.core.BaseCode64.base64EncodeBytesData = function(bytesData) {
@@ -227,91 +464,6 @@ co.janicek.core.BaseCode64.base64DecodeString = function(base64) {
 co.janicek.core.BaseCode64.prototype = {
 	__class__: co.janicek.core.BaseCode64
 }
-co.janicek.core.BaseCode64Spec = $hxClasses["co.janicek.core.BaseCode64Spec"] = function() {
-	jasmine.J.describe("BaseCode64",function() {
-		jasmine.J.it("should encode and decode every byte value",function() {
-			var byteValueStart = 0;
-			var byteCount = 256;
-			var bytes = haxe.io.Bytes.alloc(byteCount);
-			var _g = 0;
-			while(_g < byteCount) {
-				var i = _g++;
-				bytes.b[i] = byteValueStart + i & 255;
-			}
-			var bytesData = bytes.b;
-			var encodedData = co.janicek.core.BaseCode64.base64EncodeBytesData(bytesData);
-			jasmine.J.expect(Std.string(co.janicek.core.BaseCode64.base64DecodeBytesData(encodedData))).toEqual(Std.string(bytesData));
-		});
-		jasmine.J.describe("base64EncodeBytesData( bytesData : BytesData ) : String",function() {
-			jasmine.J.it("should encode byte data",function() {
-				jasmine.J.expect(co.janicek.core.BaseCode64.base64EncodeBytesData(haxe.io.Bytes.ofString("bytes").b));
-			});
-		});
-		jasmine.J.describe("base64DecodeBytesData( base64 : String ) : BytesData",function() {
-			jasmine.J.it("should decode byte data",function() {
-				jasmine.J.expect(co.janicek.core.BaseCode64.base64DecodeBytesData(co.janicek.core.BaseCode64.base64EncodeBytesData(haxe.io.Bytes.ofString("bytes").b)));
-			});
-		});
-		jasmine.J.describe("base64EncodeString( string : String ) : String",function() {
-			jasmine.J.it("should encode strings",function() {
-				jasmine.J.expect(co.janicek.core.BaseCode64.base64EncodeString("pleasure.")).toEqual("cGxlYXN1cmUu");
-				jasmine.J.expect(co.janicek.core.BaseCode64.base64EncodeString("leasure.")).toEqual("bGVhc3VyZS4=");
-				jasmine.J.expect(co.janicek.core.BaseCode64.base64EncodeString("easure.")).toEqual("ZWFzdXJlLg==");
-				jasmine.J.expect(co.janicek.core.BaseCode64.base64EncodeString("asure.")).toEqual("YXN1cmUu");
-				jasmine.J.expect(co.janicek.core.BaseCode64.base64EncodeString("sure.")).toEqual("c3VyZS4=");
-			});
-		});
-		jasmine.J.describe("base64DecodeString( base64 : String ) : String",function() {
-			jasmine.J.it("should decode strings",function() {
-				jasmine.J.expect(co.janicek.core.BaseCode64.base64DecodeString(co.janicek.core.BaseCode64.base64EncodeString("pleasure."))).toEqual("pleasure.");
-			});
-		});
-	});
-};
-co.janicek.core.BaseCode64Spec.__name__ = ["co","janicek","core","BaseCode64Spec"];
-co.janicek.core.BaseCode64Spec.prototype = {
-	__class__: co.janicek.core.BaseCode64Spec
-}
-co.janicek.core.MathCoreSpec = $hxClasses["co.janicek.core.MathCoreSpec"] = function() {
-	jasmine.J.describe("MathCore",function() {
-		jasmine.J.describe("isEven( n : Int ) : Bool",function() {
-			jasmine.J.it("should test if Int is even",function() {
-				jasmine.J.expect(co.janicek.core.math.MathCore.isEven(1)).toBeFalsy();
-				jasmine.J.expect(co.janicek.core.math.MathCore.isEven(2)).toBeTruthy();
-			});
-		});
-		jasmine.J.describe("isOdd( n : Int ) : Bool",function() {
-			jasmine.J.it("should test if Int is odd",function() {
-				jasmine.J.expect(co.janicek.core.math.MathCore.isOdd(1)).toBeTruthy();
-				jasmine.J.expect(co.janicek.core.math.MathCore.isOdd(2)).toBeFalsy();
-			});
-		});
-		jasmine.J.describe("degreesToRadians( degrees : Float ) : Float",function() {
-			jasmine.J.it("should convert degrees to radians",function() {
-				jasmine.J.expect(co.janicek.core.math.MathCore.degreesToRadians(180)).toBe(3.141592653589793);
-			});
-		});
-		jasmine.J.describe("radiansToDegrees( radians : Float ) : Float",function() {
-			jasmine.J.it("should convert radians to degrees",function() {
-				jasmine.J.expect(co.janicek.core.math.MathCore.radiansToDegrees(3.141592653589793)).toBe(180);
-			});
-		});
-		jasmine.J.describe("average( numbers : Array<Float> ) : Float",function() {
-			jasmine.J.it("should calculate average from array of Floats",function() {
-				jasmine.J.expect(co.janicek.core.math.MathCore.average([0.0,0.5,1])).toEqual(0.5);
-			});
-		});
-		jasmine.J.describe("averageInt( numbers : Array<Int> ) : Float",function() {
-			jasmine.J.it("should calculate average from array of Ints",function() {
-				jasmine.J.expect(co.janicek.core.math.MathCore.averageInt([1,2,3])).toEqual(2);
-			});
-		});
-	});
-};
-co.janicek.core.MathCoreSpec.__name__ = ["co","janicek","core","MathCoreSpec"];
-co.janicek.core.MathCoreSpec.prototype = {
-	__class__: co.janicek.core.MathCoreSpec
-}
 co.janicek.core.PathCore = $hxClasses["co.janicek.core.PathCore"] = function() { }
 co.janicek.core.PathCore.__name__ = ["co","janicek","core","PathCore"];
 co.janicek.core.PathCore.getDirectoryName = function(path,pathDelimeter) {
@@ -329,159 +481,6 @@ co.janicek.core.PathCore.removeFileNameExtension = function(path,fileExtensionDe
 }
 co.janicek.core.PathCore.prototype = {
 	__class__: co.janicek.core.PathCore
-}
-co.janicek.core.PathCoreSpec = $hxClasses["co.janicek.core.PathCoreSpec"] = function() {
-	jasmine.J.describe("PathCore",function() {
-		jasmine.J.describe("getDirectoryName( path : String, pathDelimeter = \"/\" ) : String",function() {
-			jasmine.J.it("should get directory name from path that includes filename",function() {
-				jasmine.J.expect(co.janicek.core.PathCore.getDirectoryName("a/b.txt")).toEqual("a");
-			});
-		});
-		jasmine.J.describe("getFileName( path : String, pathDelimeter = \"/\" ) : String",function() {
-			jasmine.J.it("should get file name from path",function() {
-				jasmine.J.expect(co.janicek.core.PathCore.getFileName("a/b.txt")).toEqual("b.txt");
-			});
-		});
-		jasmine.J.describe("removeFileNameExtension( path : String, fileExtensionDelimeter = \".\" ) : String",function() {
-			jasmine.J.it("should remove exentsion from path",function() {
-				jasmine.J.expect(co.janicek.core.PathCore.removeFileNameExtension("a/b.txt")).toEqual("a/b");
-			});
-			jasmine.J.it("should remove exentsion from file name",function() {
-				jasmine.J.expect(co.janicek.core.PathCore.removeFileNameExtension("b.txt")).toEqual("b");
-			});
-			jasmine.J.it("should not remove exentsion from file name without an extension",function() {
-				jasmine.J.expect(co.janicek.core.PathCore.removeFileNameExtension("filename")).toEqual("filename");
-			});
-		});
-	});
-};
-co.janicek.core.PathCoreSpec.__name__ = ["co","janicek","core","PathCoreSpec"];
-co.janicek.core.PathCoreSpec.prototype = {
-	__class__: co.janicek.core.PathCoreSpec
-}
-co.janicek.core.PerlinNoiseSpec = $hxClasses["co.janicek.core.PerlinNoiseSpec"] = function() {
-	jasmine.J.describe("PerlinNoise",function() {
-		jasmine.J.describe("makePerlinNoise(width:Int, height:Int, _x:Float, _y:Float, _z:Float, seed = 666, octaves = 4, falloff = 0.5, ?_  ) : Array<Array<Int>>",function() {
-			jasmine.J.it("should make perlin noise data",function() {
-				var data = co.janicek.core.math.PerlinNoise.makePerlinNoise(100,100,1.0,1.0,1.0);
-				jasmine.J.expect(data).not.toBeNull();
-			});
-		});
-	});
-};
-co.janicek.core.PerlinNoiseSpec.__name__ = ["co","janicek","core","PerlinNoiseSpec"];
-co.janicek.core.PerlinNoiseSpec.prototype = {
-	__class__: co.janicek.core.PerlinNoiseSpec
-}
-co.janicek.core.RandomCoreSpec = $hxClasses["co.janicek.core.RandomCoreSpec"] = function() {
-	jasmine.J.describe("RandomCore",function() {
-		jasmine.J.describe("makeRandomSeed() : Int",function() {
-			jasmine.J.it("should make a non deterministic random seed",function() {
-				jasmine.J.expect(co.janicek.core.math.RandomCore.makeRandomSeed()).toBeDefined();
-			});
-		});
-		jasmine.J.describe("nextParkMiller( seed : Int ) : Int",function() {
-			jasmine.J.it("should generate a random int using Park Miller algorithm",function() {
-				var seed = 1;
-				var original = seed;
-				seed = seed * 16807.0 % 2147483647.0;
-				jasmine.J.expect(seed).not.toBe(original);
-			});
-			jasmine.J.it("should generate the same Park Miller sequence on every machine",function() {
-				var seed = 1;
-				var length = 1000;
-				var _g = 0;
-				while(_g < length) {
-					var step = _g++;
-					seed = seed * 16807.0 % 2147483647.0;
-				}
-				jasmine.J.expect(seed).toBe(522329230);
-			});
-			jasmine.J.it("should generate a statistically even Park Miller distribution",function() {
-				var seed = 1;
-				var total = 0.0;
-				var length = 1000;
-				var _g = 0;
-				while(_g < length) {
-					var step = _g++;
-					seed = seed * 16807.0 % 2147483647.0;
-					total += seed / 2147483647.0;
-				}
-				jasmine.J.expect(total / length).toBeGreaterThan(0.45);
-				jasmine.J.expect(total / length).toBeLessThan(0.55);
-			});
-		});
-		jasmine.J.describe("nextLCG( seed : Int ) : Int",function() {
-			jasmine.J.it("should generate the same LCG sequence",function() {
-				var seed = 1;
-				var length = 1000;
-				var _g = 0;
-				while(_g < length) {
-					var step = _g++;
-					seed = (1103515245.0 * seed + 12345) % 2147483647.0;
-				}
-				jasmine.J.expect(seed).toBe(1157381547);
-			});
-			jasmine.J.it("should generate an even LCG distribution",function() {
-				var seed = 1;
-				var total = 0.0;
-				var length = 1000;
-				var _g = 0;
-				while(_g < length) {
-					var step = _g++;
-					seed = (1103515245.0 * seed + 12345) % 2147483647.0;
-					total += seed / 2147483647.0;
-				}
-				jasmine.J.expect(total / length).toBeGreaterThan(0.45);
-				jasmine.J.expect(total / length).toBeLessThan(0.55);
-			});
-		});
-		jasmine.J.describe("toFloat( seed : Int ) : Float",function() {
-			jasmine.J.it("should convert random seed to a Float value between 0.0 and 1.0",function() {
-				jasmine.J.expect(16807.0 % 2147483647.0 / 2147483647.0).toBeDefined();
-			});
-		});
-		jasmine.J.describe("toBool( seed : Int ) : Bool",function() {
-			jasmine.J.it("should convert random seed to a Bool value (coin flip)",function() {
-				jasmine.J.expect(16807.0 % 2147483647.0 / 2147483647.0 > 0.5).toBeDefined();
-			});
-		});
-		jasmine.J.describe("toIntRange( seed : Int, min : Int, max : Int ) : Int",function() {
-			jasmine.J.it("should generate an Int in range",function() {
-				var iterations = 100;
-				var seed = 1;
-				var _g = 0;
-				while(_g < iterations) {
-					var step = _g++;
-					seed = seed * 16807.0 % 2147483647.0;
-					jasmine.J.expect(Math.round(-0.4999 + 10.9998 * (seed / 2147483647.0))).toBeGreaterThan(-1);
-					jasmine.J.expect(Math.round(-0.4999 + 10.9998 * (seed / 2147483647.0))).toBeLessThan(11);
-				}
-			});
-		});
-		jasmine.J.describe("toFloatRange( seed : Int, min : Float, max : Float ) : Float",function() {
-			jasmine.J.it("should generate a Float in range",function() {
-				var iterations = 100;
-				var seed = 1;
-				var _g = 0;
-				while(_g < iterations) {
-					var step = _g++;
-					seed = seed * 16807.0 % 2147483647.0;
-					jasmine.J.expect(seed / 2147483647.0).toBeGreaterThan(-0.1);
-					jasmine.J.expect(seed / 2147483647.0).toBeLessThan(1.1);
-				}
-			});
-		});
-		jasmine.J.describe("stringToSeed( s : String ) : Int",function() {
-			jasmine.J.it("should convert a string to a seed",function() {
-				jasmine.J.expect(co.janicek.core.math.RandomCore.stringToSeed("random seed")).toBeDefined();
-			});
-		});
-	});
-};
-co.janicek.core.RandomCoreSpec.__name__ = ["co","janicek","core","RandomCoreSpec"];
-co.janicek.core.RandomCoreSpec.prototype = {
-	__class__: co.janicek.core.RandomCoreSpec
 }
 co.janicek.core.StringCore = $hxClasses["co.janicek.core.StringCore"] = function() { }
 co.janicek.core.StringCore.__name__ = ["co","janicek","core","StringCore"];
@@ -503,38 +502,6 @@ co.janicek.core.StringCore.isInteger = function(s) {
 }
 co.janicek.core.StringCore.prototype = {
 	__class__: co.janicek.core.StringCore
-}
-co.janicek.core.StringCoreSpec = $hxClasses["co.janicek.core.StringCoreSpec"] = function() {
-	jasmine.J.describe("StringCore",function() {
-		jasmine.J.describe("removeFromEnd( string : String, pattern : String ) : String",function() {
-			jasmine.J.it("should remove one string from the end of another string",function() {
-				jasmine.J.expect(co.janicek.core.StringCore.removeFromEnd("ab","b")).toEqual("a");
-			});
-		});
-		jasmine.J.describe("isNullOrEmpty( string : String ) : Bool",function() {
-			jasmine.J.it("should check if string is null or empty",function() {
-				jasmine.J.expect(co.janicek.core.StringCore.isNullOrEmpty("")).toBeTruthy();
-				jasmine.J.expect(co.janicek.core.StringCore.isNullOrEmpty(null)).toBeTruthy();
-				jasmine.J.expect(co.janicek.core.StringCore.isNullOrEmpty("not null or empty")).toBeFalsy();
-			});
-		});
-		jasmine.J.describe("isInteger( s : String ) : Bool",function() {
-			jasmine.J.it("should return true is string is an Integer",function() {
-				jasmine.J.expect(co.janicek.core.StringCore.isInteger("0")).toBeTruthy();
-				jasmine.J.expect(co.janicek.core.StringCore.isInteger("1")).toBeTruthy();
-				jasmine.J.expect(co.janicek.core.StringCore.isInteger("-1")).toBeTruthy();
-			});
-			jasmine.J.it("should return false if string is not an Integer",function() {
-				jasmine.J.expect(co.janicek.core.StringCore.isInteger("")).toBeFalsy();
-				jasmine.J.expect(co.janicek.core.StringCore.isInteger(" ")).toBeFalsy();
-				jasmine.J.expect(co.janicek.core.StringCore.isInteger("0.0")).toBeFalsy();
-			});
-		});
-	});
-};
-co.janicek.core.StringCoreSpec.__name__ = ["co","janicek","core","StringCoreSpec"];
-co.janicek.core.StringCoreSpec.prototype = {
-	__class__: co.janicek.core.StringCoreSpec
 }
 if(!co.janicek.core.array) co.janicek.core.array = {}
 co.janicek.core.array.Array2dCore = $hxClasses["co.janicek.core.array.Array2dCore"] = function() { }
@@ -679,6 +646,122 @@ co.janicek.core.array.Array2dValueIterator.prototype = {
 	}
 	,__class__: co.janicek.core.array.Array2dValueIterator
 }
+if(!co.janicek.core.html) co.janicek.core.html = {}
+co.janicek.core.html.CanvasCore = $hxClasses["co.janicek.core.html.CanvasCore"] = function() { }
+co.janicek.core.html.CanvasCore.__name__ = ["co","janicek","core","html","CanvasCore"];
+co.janicek.core.html.CanvasCore.renderCanvasPixelArray = function(imageData,f) {
+	var pixels = imageData.data;
+	var index;
+	var _g1 = 0, _g = pixels.length / 4 | 0;
+	while(_g1 < _g) {
+		var i = _g1++;
+		index = i * 4;
+		var newValues = f(index,pixels[index],pixels[index + 1],pixels[index + 2],pixels[index + 3]);
+		if(newValues != null) {
+			if(newValues.red != null) pixels[index] = newValues.red;
+			if(newValues.green != null) pixels[index + 1] = newValues.green;
+			if(newValues.blue != null) pixels[index + 2] = newValues.blue;
+			if(newValues.alpha != null) pixels[index + 3] = newValues.alpha;
+		}
+	}
+}
+co.janicek.core.html.CanvasCore.addNoise = function(pixelData,randomSeed,noiseLevel,grayScale,changeRed,changeGreen,changeBlue,changeAlpha) {
+	if(changeAlpha == null) changeAlpha = false;
+	if(changeBlue == null) changeBlue = true;
+	if(changeGreen == null) changeGreen = true;
+	if(changeRed == null) changeRed = true;
+	if(grayScale == null) grayScale = false;
+	noiseLevel = co.janicek.core.math.MathCore.clampInt(noiseLevel,1,255);
+	var delta;
+	co.janicek.core.html.CanvasCore.renderCanvasPixelArray(pixelData,function(index,red,green,blue,alpha) {
+		delta = co.janicek.core.math.RandomCore.toIntRange(randomSeed = randomSeed * 16807.0 % 2147483647.0,-noiseLevel,noiseLevel);
+		var newColors = { red : null, green : null, blue : null, alpha : null};
+		if(changeRed) newColors.red = red + delta;
+		if(changeGreen) newColors.green = green + (grayScale?delta:co.janicek.core.math.RandomCore.toIntRange(randomSeed = randomSeed * 16807.0 % 2147483647.0,-noiseLevel,noiseLevel));
+		if(changeBlue) newColors.blue = blue + (grayScale?delta:co.janicek.core.math.RandomCore.toIntRange(randomSeed = randomSeed * 16807.0 % 2147483647.0,-noiseLevel,noiseLevel));
+		if(changeAlpha) newColors.alpha = alpha + co.janicek.core.math.RandomCore.toIntRange(randomSeed = randomSeed * 16807.0 % 2147483647.0,-noiseLevel,noiseLevel);
+		return newColors;
+	});
+	return pixelData;
+}
+co.janicek.core.html.CanvasCore.addNoiseToCanvas = function(context,randomSeed,noiseLevel,grayScale,red,green,blue,alpha) {
+	if(alpha == null) alpha = false;
+	if(blue == null) blue = true;
+	if(green == null) green = true;
+	if(red == null) red = true;
+	if(grayScale == null) grayScale = false;
+	var imageData = context.getImageData(0,0,context.canvas.width,context.canvas.height);
+	imageData = co.janicek.core.html.CanvasCore.addNoise(imageData,randomSeed,noiseLevel,grayScale,red,green,blue,alpha);
+	context.putImageData(imageData,0,0);
+}
+co.janicek.core.html.CanvasCore.loadImage = function(url,f) {
+	var image = js.Lib.document.createElement("img");
+	image.onload = function() {
+		f(image);
+	};
+	image.src = url;
+}
+co.janicek.core.html.CanvasCore.getImageData = function(image) {
+	var canvas = js.Lib.document.createElement("canvas");
+	canvas.width = image.width;
+	canvas.height = image.height;
+	var ctx = canvas.getContext("2d");
+	ctx.drawImage(image,0,0);
+	var imageData = ctx.getImageData(0,0,canvas.width,canvas.height);
+	return imageData;
+}
+co.janicek.core.html.CanvasCore.makeAverageThresholdBitmap = function(imageData,threshold) {
+	threshold = co.janicek.core.math.MathCore.clampInt(threshold,0,255);
+	return co.janicek.core.html.CanvasCore.makeBitmap(imageData,function(red,green,blue,alpha) {
+		return co.janicek.core.math.MathCore.averageInt([red,green,blue]) > threshold;
+	});
+}
+co.janicek.core.html.CanvasCore.makeBitmap = function(imageData,f) {
+	var array = new Array();
+	co.janicek.core.html.CanvasCore.renderCanvasPixelArray(imageData,function(index,red,green,blue,alpha) {
+		var indices = co.janicek.core.array.Array2dCore.getIndices(index,imageData.width | 0,4);
+		co.janicek.core.array.Array2dCore.set(array,indices.x,indices.y,f(red,green,blue,alpha));
+		return null;
+	});
+	return array;
+}
+co.janicek.core.html.CanvasCore.invertBitmap = function(bitmap) {
+	co.janicek.core.array.Array2dCore.foreachXY(bitmap,function(x,y,value) {
+		co.janicek.core.array.Array2dCore.set(bitmap,x,y,!value);
+	});
+	return bitmap;
+}
+co.janicek.core.html.CanvasCore.prototype = {
+	__class__: co.janicek.core.html.CanvasCore
+}
+co.janicek.core.html.ColorCore = $hxClasses["co.janicek.core.html.ColorCore"] = function() { }
+co.janicek.core.html.ColorCore.__name__ = ["co","janicek","core","html","ColorCore"];
+co.janicek.core.html.ColorCore.interpolateColor = function(color0,color1,f) {
+	var r = (1 - f) * (color0 >> 16) + f * (color1 >> 16) | 0;
+	var g = (1 - f) * (color0 >> 8 & 255) + f * (color1 >> 8 & 255) | 0;
+	var b = (1 - f) * (color0 & 255) + f * (color1 & 255) | 0;
+	if(r > 255) r = 255;
+	if(g > 255) g = 255;
+	if(b > 255) b = 255;
+	return r << 16 | g << 8 | b;
+}
+co.janicek.core.html.ColorCore.intToHexColor = function(color) {
+	return "#" + StringTools.hex(color,6);
+}
+co.janicek.core.html.ColorCore.rgba = function(red,green,blue,alpha) {
+	var core = "" + red + "," + green + "," + blue;
+	return alpha == null?"rgb(" + core + ")":"rgba(" + core + "," + alpha + ")";
+}
+co.janicek.core.html.ColorCore.rgbaFraction = function(red,green,blue,alpha) {
+	var core = "" + red * 100 + "%," + green * 100 + "%," + blue * 100 + "%";
+	return alpha == null?"rgb(" + core + ")":"rgba(" + core + "," + alpha + ")";
+}
+co.janicek.core.html.ColorCore.colorFraction = function(fraction) {
+	return 255 * fraction | 0;
+}
+co.janicek.core.html.ColorCore.prototype = {
+	__class__: co.janicek.core.html.ColorCore
+}
 if(!co.janicek.core.math) co.janicek.core.math = {}
 co.janicek.core.math.HashCore = $hxClasses["co.janicek.core.math.HashCore"] = function() { }
 co.janicek.core.math.HashCore.__name__ = ["co","janicek","core","math","HashCore"];
@@ -688,6 +771,26 @@ co.janicek.core.math.HashCore.djb2 = function(s) {
 	while(_g1 < _g) {
 		var i = _g1++;
 		hash = (hash << 5) + hash + s.charCodeAt(i);
+	}
+	return hash;
+}
+co.janicek.core.math.HashCore.sdbm = function(s) {
+	var hash = 0;
+	var _g1 = 0, _g = s.length;
+	while(_g1 < _g) {
+		var i = _g1++;
+		hash = s.charCodeAt(i) + (hash << 6) + (hash << 16) - hash;
+	}
+	return hash;
+}
+co.janicek.core.math.HashCore.javaHashCode = function(s) {
+	var hash = 0;
+	if(s.length == 0) return hash;
+	var _g1 = 0, _g = s.length;
+	while(_g1 < _g) {
+		var i = _g1++;
+		hash = (hash << 5) - hash + s.charCodeAt(i);
+		hash = hash & hash;
 	}
 	return hash;
 }
@@ -701,6 +804,12 @@ co.janicek.core.math.MathCore.isEven = function(n) {
 }
 co.janicek.core.math.MathCore.isOdd = function(n) {
 	return !co.janicek.core.math.MathCore.isEven(n);
+}
+co.janicek.core.math.MathCore.clampInt = function(value,min,max) {
+	return value < min?0:value > max?max:value;
+}
+co.janicek.core.math.MathCore.clamp = function(value,min,max) {
+	return value < min?0:value > max?max:value;
 }
 co.janicek.core.math.MathCore.degreesToRadians = function(degrees) {
 	return degrees * Math.PI / 180;
@@ -860,6 +969,14 @@ haxe.BaseCode = $hxClasses["haxe.BaseCode"] = function(base) {
 	this.nbits = nbits;
 };
 haxe.BaseCode.__name__ = ["haxe","BaseCode"];
+haxe.BaseCode.encode = function(s,base) {
+	var b = new haxe.BaseCode(haxe.io.Bytes.ofString(base));
+	return b.encodeString(s);
+}
+haxe.BaseCode.decode = function(s,base) {
+	var b = new haxe.BaseCode(haxe.io.Bytes.ofString(base));
+	return b.decodeString(s);
+}
 haxe.BaseCode.prototype = {
 	base: null
 	,nbits: null
@@ -924,10 +1041,23 @@ haxe.BaseCode.prototype = {
 		}
 		return out;
 	}
+	,encodeString: function(s) {
+		return this.encodeBytes(haxe.io.Bytes.ofString(s)).toString();
+	}
+	,decodeString: function(s) {
+		return this.decodeBytes(haxe.io.Bytes.ofString(s)).toString();
+	}
 	,__class__: haxe.BaseCode
 }
 haxe.Firebug = $hxClasses["haxe.Firebug"] = function() { }
 haxe.Firebug.__name__ = ["haxe","Firebug"];
+haxe.Firebug.detect = function() {
+	try {
+		return console != null && console.error != null;
+	} catch( e ) {
+		return false;
+	}
+}
 haxe.Firebug.redirectTraces = function() {
 	haxe.Log.trace = haxe.Firebug.trace;
 	js.Lib.onerror = haxe.Firebug.onError;
@@ -956,8 +1086,46 @@ haxe.Log.__name__ = ["haxe","Log"];
 haxe.Log.trace = function(v,infos) {
 	js.Boot.__trace(v,infos);
 }
+haxe.Log.clear = function() {
+	js.Boot.__clear_trace();
+}
 haxe.Log.prototype = {
 	__class__: haxe.Log
+}
+haxe.Timer = $hxClasses["haxe.Timer"] = function(time_ms) {
+	var me = this;
+	this.id = window.setInterval(function() {
+		me.run();
+	},time_ms);
+};
+haxe.Timer.__name__ = ["haxe","Timer"];
+haxe.Timer.delay = function(f,time_ms) {
+	var t = new haxe.Timer(time_ms);
+	t.run = function() {
+		t.stop();
+		f();
+	};
+	return t;
+}
+haxe.Timer.measure = function(f,pos) {
+	var t0 = haxe.Timer.stamp();
+	var r = f();
+	haxe.Log.trace(haxe.Timer.stamp() - t0 + "s",pos);
+	return r;
+}
+haxe.Timer.stamp = function() {
+	return Date.now().getTime() / 1000;
+}
+haxe.Timer.prototype = {
+	id: null
+	,stop: function() {
+		if(this.id == null) return;
+		window.clearInterval(this.id);
+		this.id = null;
+	}
+	,run: function() {
+	}
+	,__class__: haxe.Timer
 }
 if(!haxe.io) haxe.io = {}
 haxe.io.Bytes = $hxClasses["haxe.io.Bytes"] = function(length,b) {
@@ -1008,6 +1176,39 @@ haxe.io.Bytes.prototype = {
 	,set: function(pos,v) {
 		this.b[pos] = v & 255;
 	}
+	,blit: function(pos,src,srcpos,len) {
+		if(pos < 0 || srcpos < 0 || len < 0 || pos + len > this.length || srcpos + len > src.length) throw haxe.io.Error.OutsideBounds;
+		var b1 = this.b;
+		var b2 = src.b;
+		if(b1 == b2 && pos > srcpos) {
+			var i = len;
+			while(i > 0) {
+				i--;
+				b1[i + pos] = b2[i + srcpos];
+			}
+			return;
+		}
+		var _g = 0;
+		while(_g < len) {
+			var i = _g++;
+			b1[i + pos] = b2[i + srcpos];
+		}
+	}
+	,sub: function(pos,len) {
+		if(pos < 0 || len < 0 || pos + len > this.length) throw haxe.io.Error.OutsideBounds;
+		return new haxe.io.Bytes(len,this.b.slice(pos,pos + len));
+	}
+	,compare: function(other) {
+		var b1 = this.b;
+		var b2 = other.b;
+		var len = this.length < other.length?this.length:other.length;
+		var _g = 0;
+		while(_g < len) {
+			var i = _g++;
+			if(b1[i] != b2[i]) return b1[i] - b2[i];
+		}
+		return this.length - other.length;
+	}
 	,readString: function(pos,len) {
 		if(pos < 0 || len < 0 || pos + len > this.length) throw haxe.io.Error.OutsideBounds;
 		var s = "";
@@ -1034,6 +1235,24 @@ haxe.io.Bytes.prototype = {
 	,toString: function() {
 		return this.readString(0,this.length);
 	}
+	,toHex: function() {
+		var s = new StringBuf();
+		var chars = [];
+		var str = "0123456789abcdef";
+		var _g1 = 0, _g = str.length;
+		while(_g1 < _g) {
+			var i = _g1++;
+			chars.push(str.charCodeAt(i));
+		}
+		var _g1 = 0, _g = this.length;
+		while(_g1 < _g) {
+			var i = _g1++;
+			var c = this.b[i];
+			s.b[s.b.length] = String.fromCharCode(chars[c >> 4]);
+			s.b[s.b.length] = String.fromCharCode(chars[c & 15]);
+		}
+		return s.b.join("");
+	}
 	,getData: function() {
 		return this.b;
 	}
@@ -1053,14 +1272,38 @@ haxe.io.Error.Custom = function(e) { var $x = ["Custom",3,e]; $x.__enum__ = haxe
 var jasmine = jasmine || {}
 jasmine.J = $hxClasses["jasmine.J"] = function() { }
 jasmine.J.__name__ = ["jasmine","J"];
+jasmine.J.beforeEach = function(beforeEachFunction) {
+	beforeEach(beforeEachFunction);
+}
+jasmine.J.afterEach = function(afterEachFunction) {
+	afterEach(afterEachFunction);
+}
 jasmine.J.describe = function(description,specDefinitions) {
 	describe(description, specDefinitions);
+}
+jasmine.J.xdescribe = function(description,specDefinitions) {
+	xdescribe(description, specDefinitions);
 }
 jasmine.J.it = function(description,func) {
 	it(description, func);
 }
+jasmine.J.xit = function(description,func) {
+	xit(description, func);
+}
 jasmine.J.expect = function(actual) {
 	return expect(actual);
+}
+jasmine.J.runs = function(func) {
+	runs(func);
+}
+jasmine.J.waits = function(timeoutMilliseconds) {
+	waits(timeoutMilliseconds);
+}
+jasmine.J.waitsFor = function(func,message,timeoutMilliseconds) {
+	waitsFor(func, message, timeoutMilliseconds);
+}
+jasmine.J.spyOn = function(x,method) {
+	return spyOn(x, method);
 }
 jasmine.J.prototype = {
 	__class__: jasmine.J
@@ -1070,8 +1313,14 @@ jasmine.Jasmine.__name__ = ["jasmine","Jasmine"];
 jasmine.Jasmine.getEnv = function() {
 	return jasmine.getEnv();
 }
+jasmine.Jasmine.newTrivialReporter = function() {
+	return new jasmine.TrivialReporter();
+}
 jasmine.Jasmine.newHtmlReporter = function() {
 	return new jasmine.HtmlReporter();
+}
+jasmine.Jasmine.createSpy = function(name) {
+	return jasmine.createSpy(name);
 }
 jasmine.Jasmine.prototype = {
 	__class__: jasmine.Jasmine
@@ -1087,6 +1336,10 @@ js.Boot.__trace = function(v,i) {
 	msg += js.Boot.__string_rec(v,"");
 	var d = document.getElementById("haxe:trace");
 	if(d != null) d.innerHTML += js.Boot.__unhtml(msg) + "<br/>"; else if(typeof(console) != "undefined" && console.log != null) console.log(msg);
+}
+js.Boot.__clear_trace = function() {
+	var d = document.getElementById("haxe:trace");
+	if(d != null) d.innerHTML = "";
 }
 js.Boot.__string_rec = function(o,s) {
 	if(o == null) return "null";
@@ -1259,14 +1512,537 @@ js.Lib.isIE = null;
 js.Lib.isOpera = null;
 js.Lib.document = null;
 js.Lib.window = null;
+js.Lib.alert = function(v) {
+	alert(js.Boot.__string_rec(v,""));
+}
+js.Lib.eval = function(code) {
+	return eval(code);
+}
 js.Lib.setErrorHandler = function(f) {
 	js.Lib.onerror = f;
 }
 js.Lib.prototype = {
 	__class__: js.Lib
 }
+var specs = specs || {}
+if(!specs.co) specs.co = {}
+if(!specs.co.janicek) specs.co.janicek = {}
+if(!specs.co.janicek.core) specs.co.janicek.core = {}
+specs.co.janicek.core.Array2dSpec = $hxClasses["specs.co.janicek.core.Array2dSpec"] = function() {
+	jasmine.J.describe("Array2DCore",function() {
+		jasmine.J.describe("get()",function() {
+			jasmine.J.it("should get value at index",function() {
+				var a = [[1]];
+				jasmine.J.expect(co.janicek.core.array.Array2dCore.get(a,0,0)).toEqual(1);
+			});
+		});
+		jasmine.J.describe("set()",function() {
+			jasmine.J.it("should set value at index",function() {
+				var a = new Array();
+				jasmine.J.expect(co.janicek.core.array.Array2dCore.get(a,0,0)).toBeNull();
+				co.janicek.core.array.Array2dCore.set(a,0,0,1);
+				jasmine.J.expect(co.janicek.core.array.Array2dCore.get(a,0,0)).toBe(1);
+			});
+		});
+		jasmine.J.describe("getIndices()",function() {
+			jasmine.J.it("should compute 2d indices from array dimensions",function() {
+				jasmine.J.expect(co.janicek.core.array.Array2dCore.getIndices(0,10,1)).toEqual({ x : 0, y : 0});
+				jasmine.J.expect(co.janicek.core.array.Array2dCore.getIndices(9,10,1)).toEqual({ x : 9, y : 0});
+				jasmine.J.expect(co.janicek.core.array.Array2dCore.getIndices(99,10,1)).toEqual({ x : 9, y : 9});
+				jasmine.J.expect(co.janicek.core.array.Array2dCore.getIndices(90,10,1)).toEqual({ x : 0, y : 9});
+				jasmine.J.expect(co.janicek.core.array.Array2dCore.getIndices(0,10,2)).toEqual({ x : 0, y : 0});
+				jasmine.J.expect(co.janicek.core.array.Array2dCore.getIndices(18,10,2)).toEqual({ x : 9, y : 0});
+				jasmine.J.expect(co.janicek.core.array.Array2dCore.getIndices(198,10,2)).toEqual({ x : 9, y : 9});
+				jasmine.J.expect(co.janicek.core.array.Array2dCore.getIndices(180,10,2)).toEqual({ x : 0, y : 9});
+				jasmine.J.expect(co.janicek.core.array.Array2dCore.getIndices(0,46,4)).toEqual({ x : 0, y : 0});
+				jasmine.J.expect(co.janicek.core.array.Array2dCore.getIndices(5,6,1)).toEqual({ x : 5, y : 0});
+			});
+		});
+		jasmine.J.describe("foreachY()",function() {
+			jasmine.J.it("should iterate y indexes (rows)",function() {
+				var a = [[1],[2]];
+				var row = 0;
+				co.janicek.core.array.Array2dCore.foreachY(a,function(y) {
+					jasmine.J.expect(co.janicek.core.array.Array2dCore.get(a,0,row)).toEqual(y[0]);
+					row++;
+				});
+				jasmine.J.expect(row).toEqual(a.length);
+			});
+		});
+		jasmine.J.describe("foreachXY()",function() {
+			jasmine.J.it("should iterate x,y indexes (cells)",function() {
+				var a = [[1,2],[3,4]];
+				co.janicek.core.array.Array2dCore.foreachXY(a,function(x,y,value) {
+					jasmine.J.expect(co.janicek.core.array.Array2dCore.get(a,x,y)).toEqual(value);
+				});
+			});
+		});
+		jasmine.J.describe("any()",function() {
+			jasmine.J.it("should find index of anything in array",function() {
+				var a = [[1,2],[3,4]];
+				var index = co.janicek.core.array.Array2dCore.any(a,function(value) {
+					return value == 4;
+				});
+				jasmine.J.expect(index).toEqual({ x : 1, y : 1});
+			});
+		});
+		jasmine.J.describe("dimensions()",function() {
+			jasmine.J.it("should get valid dimensions of array",function() {
+				var a = new Array();
+				jasmine.J.expect(co.janicek.core.array.Array2dCore.dimensions(a)).toEqual({ x : 0, y : 0});
+				co.janicek.core.array.Array2dCore.set(a,5,5,1);
+				jasmine.J.expect(co.janicek.core.array.Array2dCore.dimensions(a)).toEqual({ x : 6, y : 6});
+			});
+		});
+		jasmine.J.describe("values()",function() {
+			jasmine.J.it("should produce array value iterator",function() {
+				var a = new Array();
+				jasmine.J.expect(Lambda.empty(co.janicek.core.array.Array2dCore.values(a))).toBeTruthy();
+				jasmine.J.expect(Lambda.count(co.janicek.core.array.Array2dCore.values(a))).toEqual(0);
+				co.janicek.core.array.Array2dCore.set(a,0,0,1);
+				jasmine.J.expect(Lambda.count(co.janicek.core.array.Array2dCore.values(a))).toEqual(1);
+				Lambda.iter(co.janicek.core.array.Array2dCore.values(a),function(value) {
+					jasmine.J.expect(value).toEqual(1);
+				});
+				co.janicek.core.array.Array2dCore.set(a,10,10,1);
+				jasmine.J.expect(Lambda.count(co.janicek.core.array.Array2dCore.values(a))).toEqual(2);
+			});
+		});
+		jasmine.J.describe("indexes()",function() {
+			jasmine.J.it("should produce array index iterator",function() {
+				var a = new Array();
+				jasmine.J.expect(Lambda.empty(co.janicek.core.array.Array2dCore.indexes(a))).toBeTruthy();
+				jasmine.J.expect(Lambda.count(co.janicek.core.array.Array2dCore.indexes(a))).toBe(0);
+				co.janicek.core.array.Array2dCore.set(a,0,0,1);
+				jasmine.J.expect(Lambda.count(co.janicek.core.array.Array2dCore.indexes(a))).toBe(1);
+				Lambda.iter(co.janicek.core.array.Array2dCore.indexes(a),function(index) {
+					jasmine.J.expect(index).toEqual({ x : 0, y : 0});
+				});
+				co.janicek.core.array.Array2dCore.set(a,1,1,1);
+				jasmine.J.expect(Lambda.count(co.janicek.core.array.Array2dCore.indexes(a))).toBe(2);
+				co.janicek.core.array.Array2dCore.set(a,10,10,1);
+				jasmine.J.expect(Lambda.count(co.janicek.core.array.Array2dCore.indexes(a))).toBe(3);
+			});
+		});
+	});
+};
+specs.co.janicek.core.Array2dSpec.__name__ = ["specs","co","janicek","core","Array2dSpec"];
+specs.co.janicek.core.Array2dSpec.prototype = {
+	__class__: specs.co.janicek.core.Array2dSpec
+}
+specs.co.janicek.core.BaseCode64Spec = $hxClasses["specs.co.janicek.core.BaseCode64Spec"] = function() {
+	jasmine.J.describe("BaseCode64",function() {
+		jasmine.J.it("should encode and decode every byte value",function() {
+			var byteValueStart = 0;
+			var byteCount = 256;
+			var bytes = haxe.io.Bytes.alloc(byteCount);
+			var _g = 0;
+			while(_g < byteCount) {
+				var i = _g++;
+				bytes.b[i] = byteValueStart + i & 255;
+			}
+			var bytesData = bytes.b;
+			var encodedData = co.janicek.core.BaseCode64.base64EncodeBytesData(bytesData);
+			jasmine.J.expect(Std.string(co.janicek.core.BaseCode64.base64DecodeBytesData(encodedData))).toEqual(Std.string(bytesData));
+		});
+		jasmine.J.describe("base64EncodeBytesData()",function() {
+			jasmine.J.it("should encode byte data",function() {
+				jasmine.J.expect(co.janicek.core.BaseCode64.base64EncodeBytesData(haxe.io.Bytes.ofString("bytes").b));
+			});
+		});
+		jasmine.J.describe("base64DecodeBytesData()",function() {
+			jasmine.J.it("should decode byte data",function() {
+				jasmine.J.expect(co.janicek.core.BaseCode64.base64DecodeBytesData(co.janicek.core.BaseCode64.base64EncodeBytesData(haxe.io.Bytes.ofString("bytes").b)));
+			});
+		});
+		jasmine.J.describe("base64EncodeString()",function() {
+			jasmine.J.it("should encode strings",function() {
+				jasmine.J.expect(co.janicek.core.BaseCode64.base64EncodeString("pleasure.")).toEqual("cGxlYXN1cmUu");
+				jasmine.J.expect(co.janicek.core.BaseCode64.base64EncodeString("leasure.")).toEqual("bGVhc3VyZS4=");
+				jasmine.J.expect(co.janicek.core.BaseCode64.base64EncodeString("easure.")).toEqual("ZWFzdXJlLg==");
+				jasmine.J.expect(co.janicek.core.BaseCode64.base64EncodeString("asure.")).toEqual("YXN1cmUu");
+				jasmine.J.expect(co.janicek.core.BaseCode64.base64EncodeString("sure.")).toEqual("c3VyZS4=");
+			});
+		});
+		jasmine.J.describe("base64DecodeString()",function() {
+			jasmine.J.it("should decode strings",function() {
+				jasmine.J.expect(co.janicek.core.BaseCode64.base64DecodeString(co.janicek.core.BaseCode64.base64EncodeString("pleasure."))).toEqual("pleasure.");
+			});
+		});
+	});
+};
+specs.co.janicek.core.BaseCode64Spec.__name__ = ["specs","co","janicek","core","BaseCode64Spec"];
+specs.co.janicek.core.BaseCode64Spec.prototype = {
+	__class__: specs.co.janicek.core.BaseCode64Spec
+}
+specs.co.janicek.core.PathCoreSpec = $hxClasses["specs.co.janicek.core.PathCoreSpec"] = function() {
+	jasmine.J.describe("PathCore",function() {
+		jasmine.J.describe("getDirectoryName()",function() {
+			jasmine.J.it("should get directory name from path that includes filename",function() {
+				jasmine.J.expect(co.janicek.core.PathCore.getDirectoryName("a/b.txt")).toEqual("a");
+			});
+		});
+		jasmine.J.describe("getFileName()",function() {
+			jasmine.J.it("should get file name from path",function() {
+				jasmine.J.expect(co.janicek.core.PathCore.getFileName("a/b.txt")).toEqual("b.txt");
+			});
+		});
+		jasmine.J.describe("removeFileNameExtension()",function() {
+			jasmine.J.it("should remove exentsion from path",function() {
+				jasmine.J.expect(co.janicek.core.PathCore.removeFileNameExtension("a/b.txt")).toEqual("a/b");
+			});
+			jasmine.J.it("should remove exentsion from file name",function() {
+				jasmine.J.expect(co.janicek.core.PathCore.removeFileNameExtension("b.txt")).toEqual("b");
+			});
+			jasmine.J.it("should not remove exentsion from file name without an extension",function() {
+				jasmine.J.expect(co.janicek.core.PathCore.removeFileNameExtension("filename")).toEqual("filename");
+			});
+		});
+	});
+};
+specs.co.janicek.core.PathCoreSpec.__name__ = ["specs","co","janicek","core","PathCoreSpec"];
+specs.co.janicek.core.PathCoreSpec.prototype = {
+	__class__: specs.co.janicek.core.PathCoreSpec
+}
+specs.co.janicek.core.StringCoreSpec = $hxClasses["specs.co.janicek.core.StringCoreSpec"] = function() {
+	jasmine.J.describe("StringCore",function() {
+		jasmine.J.describe("removeFromEnd()",function() {
+			jasmine.J.it("should remove one string from the end of another string",function() {
+				jasmine.J.expect(co.janicek.core.StringCore.removeFromEnd("ab","b")).toEqual("a");
+			});
+		});
+		jasmine.J.describe("isNullOrEmpty()",function() {
+			jasmine.J.it("should check if string is null or empty",function() {
+				jasmine.J.expect(co.janicek.core.StringCore.isNullOrEmpty("")).toBeTruthy();
+				jasmine.J.expect(co.janicek.core.StringCore.isNullOrEmpty(null)).toBeTruthy();
+				jasmine.J.expect(co.janicek.core.StringCore.isNullOrEmpty("not null or empty")).toBeFalsy();
+			});
+		});
+		jasmine.J.describe("isInteger()",function() {
+			jasmine.J.it("should return true is string is an Integer",function() {
+				jasmine.J.expect(co.janicek.core.StringCore.isInteger("0")).toBeTruthy();
+				jasmine.J.expect(co.janicek.core.StringCore.isInteger("1")).toBeTruthy();
+				jasmine.J.expect(co.janicek.core.StringCore.isInteger("-1")).toBeTruthy();
+			});
+			jasmine.J.it("should return false if string is not an Integer",function() {
+				jasmine.J.expect(co.janicek.core.StringCore.isInteger("")).toBeFalsy();
+				jasmine.J.expect(co.janicek.core.StringCore.isInteger(" ")).toBeFalsy();
+				jasmine.J.expect(co.janicek.core.StringCore.isInteger("0.0")).toBeFalsy();
+			});
+		});
+	});
+};
+specs.co.janicek.core.StringCoreSpec.__name__ = ["specs","co","janicek","core","StringCoreSpec"];
+specs.co.janicek.core.StringCoreSpec.prototype = {
+	__class__: specs.co.janicek.core.StringCoreSpec
+}
+if(!specs.co.janicek.core.html) specs.co.janicek.core.html = {}
+specs.co.janicek.core.html.CanvasCoreSpec = $hxClasses["specs.co.janicek.core.html.CanvasCoreSpec"] = function() {
+	jasmine.J.describe("CanvasCore",function() {
+		jasmine.J.describe("loadImage()",function() {
+			jasmine.J.it("should load an image from a URL",function() {
+				co.janicek.core.html.CanvasCore.loadImage("images/3x3-checker-pattern.png",function(image) {
+					jasmine.J.expect(image.complete).toBeTruthy();
+					jasmine.J.expect(image.width).toEqual(3);
+					jasmine.J.expect(image.height).toEqual(3);
+				});
+			});
+		});
+		jasmine.J.describe("getImageData()",function() {
+			jasmine.J.it("should get ImageData from an Image",function() {
+				co.janicek.core.html.CanvasCore.loadImage("images/3x3-checker-pattern.png",function(image) {
+					var imageData = co.janicek.core.html.CanvasCore.getImageData(image);
+					jasmine.J.expect(imageData.width).toEqual(3);
+					jasmine.J.expect(imageData.height).toEqual(3);
+					jasmine.J.expect(imageData.data.length).toEqual(36);
+				});
+			});
+		});
+		jasmine.J.describe("makeBitmap()",function() {
+			jasmine.J.it("should convert html5 ImageData to an Array of Bool",function() {
+				co.janicek.core.html.CanvasCore.loadImage("images/3x3-checker-pattern.png",function(image) {
+					var imageData = co.janicek.core.html.CanvasCore.getImageData(image);
+					var bitmap = co.janicek.core.html.CanvasCore.invertBitmap(co.janicek.core.html.CanvasCore.makeAverageThresholdBitmap(imageData,127));
+					var o = false;
+					var x = true;
+					var checkerboard = [[x,o,x],[o,x,o],[x,o,x]];
+					jasmine.J.expect(bitmap).toEqual(checkerboard);
+				});
+			});
+		});
+	});
+};
+specs.co.janicek.core.html.CanvasCoreSpec.__name__ = ["specs","co","janicek","core","html","CanvasCoreSpec"];
+specs.co.janicek.core.html.CanvasCoreSpec.prototype = {
+	__class__: specs.co.janicek.core.html.CanvasCoreSpec
+}
+specs.co.janicek.core.html.ColorCoreSpec = $hxClasses["specs.co.janicek.core.html.ColorCoreSpec"] = function() {
+	jasmine.J.describe("ColorCore",function() {
+		jasmine.J.describe("rgba()",function() {
+			jasmine.J.it("should make html rgb string",function() {
+				jasmine.J.expect(co.janicek.core.html.ColorCore.rgba(0,0,0)).toEqual("rgb(0,0,0)");
+			});
+			jasmine.J.it("should make html rgba string",function() {
+				jasmine.J.expect(co.janicek.core.html.ColorCore.rgba(0,0,0,0)).toEqual("rgba(0,0,0,0)");
+			});
+			jasmine.J.it("should make html rgba string for decimal alpha",function() {
+				jasmine.J.expect(co.janicek.core.html.ColorCore.rgba(0,0,0,0.5)).toEqual("rgba(0,0,0,0.5)");
+			});
+		});
+		jasmine.J.describe("rgbaFraction()",function() {
+			jasmine.J.it("should make html rgb string",function() {
+				jasmine.J.expect(co.janicek.core.html.ColorCore.rgbaFraction(0.0,0.5,1)).toEqual("rgb(0%,50%,100%)");
+			});
+			jasmine.J.it("should make html rgba string",function() {
+				jasmine.J.expect(co.janicek.core.html.ColorCore.rgbaFraction(0.0,0.5,1.0,0)).toEqual("rgba(0%,50%,100%,0)");
+			});
+			jasmine.J.it("should make html rgba string for decimal alpha",function() {
+				jasmine.J.expect(co.janicek.core.html.ColorCore.rgbaFraction(0.0,0.5,1.0,0.5)).toEqual("rgba(0%,50%,100%,0.5)");
+			});
+		});
+		jasmine.J.describe("colorFraction()",function() {
+			jasmine.J.it("should calculate a color fraction",function() {
+				jasmine.J.expect(0. | 0).toEqual(0);
+				jasmine.J.expect(127.5 | 0).toEqual(127);
+				jasmine.J.expect(255. | 0).toEqual(255);
+			});
+		});
+		jasmine.J.describe("intToHexColor()",function() {
+			jasmine.J.it("should make a HTML hex color codes",function() {
+				jasmine.J.expect(co.janicek.core.html.ColorCore.intToHexColor(0)).toEqual("#000000");
+				jasmine.J.expect(co.janicek.core.html.ColorCore.intToHexColor(16777215)).toEqual("#FFFFFF");
+			});
+		});
+	});
+};
+specs.co.janicek.core.html.ColorCoreSpec.__name__ = ["specs","co","janicek","core","html","ColorCoreSpec"];
+specs.co.janicek.core.html.ColorCoreSpec.prototype = {
+	__class__: specs.co.janicek.core.html.ColorCoreSpec
+}
+if(!specs.co.janicek.core.math) specs.co.janicek.core.math = {}
+specs.co.janicek.core.math.HashCoreSpec = $hxClasses["specs.co.janicek.core.math.HashCoreSpec"] = function() {
+	jasmine.J.describe("HashCore",function() {
+		jasmine.J.describe("djb2()",function() {
+			jasmine.J.it("should make djb2 hash",function() {
+				jasmine.J.expect(co.janicek.core.math.HashCore.djb2("text")).toBeDefined();
+			});
+		});
+	});
+};
+specs.co.janicek.core.math.HashCoreSpec.__name__ = ["specs","co","janicek","core","math","HashCoreSpec"];
+specs.co.janicek.core.math.HashCoreSpec.prototype = {
+	__class__: specs.co.janicek.core.math.HashCoreSpec
+}
+specs.co.janicek.core.math.MathCoreSpec = $hxClasses["specs.co.janicek.core.math.MathCoreSpec"] = function() {
+	jasmine.J.describe("MathCore",function() {
+		jasmine.J.describe("average()",function() {
+			jasmine.J.it("should calculate average from array of Floats",function() {
+				jasmine.J.expect(co.janicek.core.math.MathCore.average([0.0,0.5,1])).toEqual(0.5);
+			});
+		});
+		jasmine.J.describe("averageInt()",function() {
+			jasmine.J.it("should calculate average from array of Ints",function() {
+				jasmine.J.expect(co.janicek.core.math.MathCore.averageInt([1,2,3])).toEqual(2);
+			});
+		});
+		jasmine.J.describe("degreesToRadians()",function() {
+			jasmine.J.it("should convert degrees to radians",function() {
+				jasmine.J.expect(co.janicek.core.math.MathCore.degreesToRadians(180)).toBe(3.141592653589793);
+			});
+		});
+		jasmine.J.describe("isEven()",function() {
+			jasmine.J.it("should test if Int is even",function() {
+				jasmine.J.expect(co.janicek.core.math.MathCore.isEven(1)).toBeFalsy();
+				jasmine.J.expect(co.janicek.core.math.MathCore.isEven(2)).toBeTruthy();
+			});
+		});
+		jasmine.J.describe("isOdd()",function() {
+			jasmine.J.it("should test if Int is odd",function() {
+				jasmine.J.expect(co.janicek.core.math.MathCore.isOdd(1)).toBeTruthy();
+				jasmine.J.expect(co.janicek.core.math.MathCore.isOdd(2)).toBeFalsy();
+			});
+		});
+		jasmine.J.describe("radiansToDegrees()",function() {
+			jasmine.J.it("should convert radians to degrees",function() {
+				jasmine.J.expect(co.janicek.core.math.MathCore.radiansToDegrees(3.141592653589793)).toBe(180);
+			});
+		});
+	});
+};
+specs.co.janicek.core.math.MathCoreSpec.__name__ = ["specs","co","janicek","core","math","MathCoreSpec"];
+specs.co.janicek.core.math.MathCoreSpec.prototype = {
+	__class__: specs.co.janicek.core.math.MathCoreSpec
+}
+specs.co.janicek.core.math.PerlinNoiseSpec = $hxClasses["specs.co.janicek.core.math.PerlinNoiseSpec"] = function() {
+	jasmine.J.describe("PerlinNoise",function() {
+		jasmine.J.describe("makePerlinNoise()",function() {
+			jasmine.J.it("should make perlin noise data",function() {
+				var data = co.janicek.core.math.PerlinNoise.makePerlinNoise(100,100,1.0,1.0,1.0);
+				jasmine.J.expect(data).not.toBeNull();
+			});
+		});
+	});
+};
+specs.co.janicek.core.math.PerlinNoiseSpec.__name__ = ["specs","co","janicek","core","math","PerlinNoiseSpec"];
+specs.co.janicek.core.math.PerlinNoiseSpec.prototype = {
+	__class__: specs.co.janicek.core.math.PerlinNoiseSpec
+}
+specs.co.janicek.core.math.RandomCoreSpec = $hxClasses["specs.co.janicek.core.math.RandomCoreSpec"] = function() {
+	jasmine.J.describe("RandomCore",function() {
+		jasmine.J.describe("makeRandomSeed()",function() {
+			jasmine.J.it("should make a non deterministic random seed",function() {
+				jasmine.J.expect(co.janicek.core.math.RandomCore.makeRandomSeed()).toBeDefined();
+			});
+		});
+		jasmine.J.describe("nextParkMiller()",function() {
+			jasmine.J.it("should generate a random int using Park Miller algorithm",function() {
+				var seed = 1;
+				var original = seed;
+				seed = seed * 16807.0 % 2147483647.0;
+				jasmine.J.expect(seed).not.toBe(original);
+			});
+			jasmine.J.it("should generate the same Park Miller sequence on every machine",function() {
+				var seed = 1;
+				var length = 1000;
+				var _g = 0;
+				while(_g < length) {
+					var step = _g++;
+					seed = seed * 16807.0 % 2147483647.0;
+				}
+				jasmine.J.expect(seed).toBe(522329230);
+			});
+			jasmine.J.it("should generate a statistically even Park Miller distribution",function() {
+				var seed = 1;
+				var total = 0.0;
+				var length = 1000;
+				var _g = 0;
+				while(_g < length) {
+					var step = _g++;
+					seed = seed * 16807.0 % 2147483647.0;
+					total += seed / 2147483647.0;
+				}
+				jasmine.J.expect(total / length).toBeGreaterThan(0.45);
+				jasmine.J.expect(total / length).toBeLessThan(0.55);
+			});
+		});
+		jasmine.J.describe("nextLCG()",function() {
+			jasmine.J.it("should generate the same LCG sequence",function() {
+				var seed = 1;
+				var length = 1000;
+				var _g = 0;
+				while(_g < length) {
+					var step = _g++;
+					seed = (1103515245.0 * seed + 12345) % 2147483647.0;
+				}
+				jasmine.J.expect(seed).toBe(1157381547);
+			});
+			jasmine.J.it("should generate an even LCG distribution",function() {
+				var seed = 1;
+				var total = 0.0;
+				var length = 1000;
+				var _g = 0;
+				while(_g < length) {
+					var step = _g++;
+					seed = (1103515245.0 * seed + 12345) % 2147483647.0;
+					total += seed / 2147483647.0;
+				}
+				jasmine.J.expect(total / length).toBeGreaterThan(0.45);
+				jasmine.J.expect(total / length).toBeLessThan(0.55);
+			});
+		});
+		jasmine.J.describe("toFloat()",function() {
+			jasmine.J.it("should convert random seed to a Float value between 0.0 and 1.0",function() {
+				jasmine.J.expect(16807.0 % 2147483647.0 / 2147483647.0).toBeDefined();
+			});
+		});
+		jasmine.J.describe("toBool()",function() {
+			jasmine.J.it("should convert random seed to a Bool value (coin flip)",function() {
+				jasmine.J.expect(16807.0 % 2147483647.0 / 2147483647.0 > 0.5).toBeDefined();
+			});
+		});
+		jasmine.J.describe("toIntRange()",function() {
+			jasmine.J.it("should generate an Int in range",function() {
+				var iterations = 100;
+				var seed = 1;
+				var _g = 0;
+				while(_g < iterations) {
+					var step = _g++;
+					seed = seed * 16807.0 % 2147483647.0;
+					jasmine.J.expect(Math.round(-0.4999 + 10.9998 * (seed / 2147483647.0))).toBeGreaterThan(-1);
+					jasmine.J.expect(Math.round(-0.4999 + 10.9998 * (seed / 2147483647.0))).toBeLessThan(11);
+				}
+			});
+		});
+		jasmine.J.describe("toFloatRange()",function() {
+			jasmine.J.it("should generate a Float in range",function() {
+				var iterations = 100;
+				var seed = 1;
+				var _g = 0;
+				while(_g < iterations) {
+					var step = _g++;
+					seed = seed * 16807.0 % 2147483647.0;
+					jasmine.J.expect(seed / 2147483647.0).toBeGreaterThan(-0.1);
+					jasmine.J.expect(seed / 2147483647.0).toBeLessThan(1.1);
+				}
+			});
+		});
+		jasmine.J.describe("stringToSeed()",function() {
+			jasmine.J.it("should convert a string to a seed",function() {
+				jasmine.J.expect(co.janicek.core.math.RandomCore.stringToSeed("random seed")).toBeDefined();
+			});
+		});
+	});
+};
+specs.co.janicek.core.math.RandomCoreSpec.__name__ = ["specs","co","janicek","core","math","RandomCoreSpec"];
+specs.co.janicek.core.math.RandomCoreSpec.prototype = {
+	__class__: specs.co.janicek.core.math.RandomCoreSpec
+}
 js.Boot.__res = {}
 js.Boot.__init();
+{
+	var d = Date;
+	d.now = function() {
+		return new Date();
+	};
+	d.fromTime = function(t) {
+		var d1 = new Date();
+		d1["setTime"](t);
+		return d1;
+	};
+	d.fromString = function(s) {
+		switch(s.length) {
+		case 8:
+			var k = s.split(":");
+			var d1 = new Date();
+			d1["setTime"](0);
+			d1["setUTCHours"](k[0]);
+			d1["setUTCMinutes"](k[1]);
+			d1["setUTCSeconds"](k[2]);
+			return d1;
+		case 10:
+			var k = s.split("-");
+			return new Date(k[0],k[1] - 1,k[2],0,0,0);
+		case 19:
+			var k = s.split(" ");
+			var y = k[0].split("-");
+			var t = k[1].split(":");
+			return new Date(y[0],y[1] - 1,y[2],t[0],t[1],t[2]);
+		default:
+			throw "Invalid date format : " + s;
+		}
+	};
+	d.prototype["toString"] = function() {
+		var date = this;
+		var m = date.getMonth() + 1;
+		var d1 = date.getDate();
+		var h = date.getHours();
+		var mi = date.getMinutes();
+		var s = date.getSeconds();
+		return date.getFullYear() + "-" + (m < 10?"0" + m:"" + m) + "-" + (d1 < 10?"0" + d1:"" + d1) + " " + (h < 10?"0" + h:"" + h) + ":" + (mi < 10?"0" + mi:"" + mi) + ":" + (s < 10?"0" + s:"" + s);
+	};
+	d.prototype.__class__ = $hxClasses["Date"] = d;
+	d.__name__ = ["Date"];
+}
 {
 	Math.__name__ = ["Math"];
 	Math.NaN = Number["NaN"];
@@ -1308,6 +2084,13 @@ js.Boot.__init();
 }
 co.janicek.core.BaseCode64.BASE_64_ENCODINGS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 co.janicek.core.BaseCode64.BASE_64_PADDING = "=";
+co.janicek.core.html.CanvasCore.CANVAS_ELEMENTS_PER_PIXEL = 4;
+co.janicek.core.html.CanvasCore.CANVAS_RED_OFFSET = 0;
+co.janicek.core.html.CanvasCore.CANVAS_GREEN_OFFSET = 1;
+co.janicek.core.html.CanvasCore.CANVAS_BLUE_OFFSET = 2;
+co.janicek.core.html.CanvasCore.CANVAS_ALPHA_OFFSET = 3;
+co.janicek.core.html.ColorCore.MAX_COLOR_COMPONENT = 255;
+co.janicek.core.math.MathCore.INT32_MAX = 2147483647;
 co.janicek.core.math.PerlinNoise.p = [151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,190,6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,88,237,149,56,87,174,20,125,136,171,168,68,175,74,165,71,134,139,48,27,166,77,146,158,231,83,111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244,102,143,54,65,25,63,161,1,216,80,73,209,76,132,187,208,89,18,169,200,196,135,130,116,188,159,86,164,100,109,198,173,186,3,64,52,217,226,250,124,123,5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,189,28,42,223,183,170,213,119,248,152,2,44,154,163,70,221,153,101,155,167,43,172,9,129,22,39,253,19,98,108,110,79,113,224,232,178,185,112,104,218,246,97,228,251,34,242,193,238,210,144,12,191,179,162,241,81,51,145,235,249,14,239,107,49,192,214,31,181,199,106,157,184,84,204,176,115,121,50,45,127,4,150,254,138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180,151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,190,6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,88,237,149,56,87,174,20,125,136,171,168,68,175,74,165,71,134,139,48,27,166,77,146,158,231,83,111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244,102,143,54,65,25,63,161,1,216,80,73,209,76,132,187,208,89,18,169,200,196,135,130,116,188,159,86,164,100,109,198,173,186,3,64,52,217,226,250,124,123,5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,189,28,42,223,183,170,213,119,248,152,2,44,154,163,70,221,153,101,155,167,43,172,9,129,22,39,253,19,98,108,110,79,113,224,232,178,185,112,104,218,246,97,228,251,34,242,193,238,210,144,12,191,179,162,241,81,51,145,235,249,14,239,107,49,192,214,31,181,199,106,157,184,84,204,176,115,121,50,45,127,4,150,254,138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180];
 co.janicek.core.math.RandomCore.MPM = 2147483647.0;
 co.janicek.core.math.RandomCore.MINSTD = 16807.0;
