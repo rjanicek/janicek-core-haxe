@@ -283,7 +283,7 @@ Main.main = function() {
 	new specs.co.janicek.core.Array2dSpec();
 	new specs.co.janicek.core.BaseCode64Spec();
 	new specs.co.janicek.core.html.CanvasCoreSpec();
-	new specs.co.janicek.core.html.ColorCoreSpec();
+	new specs.co.janicek.core.html.HtmlColorCoreSpec();
 	new specs.co.janicek.core.math.HashCoreSpec();
 	new specs.co.janicek.core.math.MathCoreSpec();
 	new specs.co.janicek.core.PathCoreSpec();
@@ -695,11 +695,18 @@ co.janicek.core.html.CanvasCore.addNoiseToCanvas = function(context,randomSeed,n
 	context.putImageData(imageData,0,0);
 }
 co.janicek.core.html.CanvasCore.loadImage = function(url,f) {
-	var image = js.Lib.document.createElement("img");
+	var image = new Image();
 	image.onload = function() {
 		f(image);
 	};
 	image.src = url;
+}
+co.janicek.core.html.CanvasCore.loadFileIntoImage = function(file,img) {
+	var reader = new FileReader();
+	reader.onload = function(event) {
+		img.src = event.target.result;
+	};
+	reader.readAsDataURL(file);
 }
 co.janicek.core.html.CanvasCore.getImageData = function(image) {
 	var canvas = js.Lib.document.createElement("canvas");
@@ -710,10 +717,26 @@ co.janicek.core.html.CanvasCore.getImageData = function(image) {
 	var imageData = ctx.getImageData(0,0,canvas.width,canvas.height);
 	return imageData;
 }
+co.janicek.core.html.CanvasCore.makeImageDataUrlFromImageData = function(imageData) {
+	var canvas = js.Lib.document.createElement("canvas");
+	canvas.width = imageData.width | 0;
+	canvas.height = imageData.height | 0;
+	canvas.getContext("2d").putImageData(imageData,0,0);
+	return canvas.toDataURL();
+}
+co.janicek.core.html.CanvasCore.makeAverageThresholdImageData = function(imageData,threshold,lessthanThresholdColor,greaterthanOrEqualToThresholdColor,alpha) {
+	if(alpha == null) alpha = 1.0;
+	var intAlpha = 255 * alpha | 0;
+	co.janicek.core.html.CanvasCore.renderCanvasPixelArray(imageData,function(index,red,green,blue,alpha1) {
+		var color = co.janicek.core.math.MathCore.averageInt([red,green,blue]) >= threshold?greaterthanOrEqualToThresholdColor:lessthanThresholdColor;
+		return { red : color >> 16 & 255, green : color >> 8 & 255, blue : color & 255, alpha : intAlpha};
+	});
+	return imageData;
+}
 co.janicek.core.html.CanvasCore.makeAverageThresholdBitmap = function(imageData,threshold) {
 	threshold = co.janicek.core.math.MathCore.clampInt(threshold,0,255);
 	return co.janicek.core.html.CanvasCore.makeBitmap(imageData,function(red,green,blue,alpha) {
-		return co.janicek.core.math.MathCore.averageInt([red,green,blue]) > threshold;
+		return co.janicek.core.math.MathCore.averageInt([red,green,blue]) >= threshold;
 	});
 }
 co.janicek.core.html.CanvasCore.makeBitmap = function(imageData,f) {
@@ -734,9 +757,68 @@ co.janicek.core.html.CanvasCore.invertBitmap = function(bitmap) {
 co.janicek.core.html.CanvasCore.prototype = {
 	__class__: co.janicek.core.html.CanvasCore
 }
-co.janicek.core.html.ColorCore = $hxClasses["co.janicek.core.html.ColorCore"] = function() { }
-co.janicek.core.html.ColorCore.__name__ = ["co","janicek","core","html","ColorCore"];
-co.janicek.core.html.ColorCore.interpolateColor = function(color0,color1,f) {
+co.janicek.core.html.HtmlColor = $hxClasses["co.janicek.core.html.HtmlColor"] = { __ename__ : ["co","janicek","core","html","HtmlColor"], __constructs__ : ["Color","Rgb","Rgba","RgbF","RgbaF","Hsl","Hsla"] }
+co.janicek.core.html.HtmlColor.Color = function(color) { var $x = ["Color",0,color]; $x.__enum__ = co.janicek.core.html.HtmlColor; $x.toString = $estr; return $x; }
+co.janicek.core.html.HtmlColor.Rgb = function(r,g,b) { var $x = ["Rgb",1,r,g,b]; $x.__enum__ = co.janicek.core.html.HtmlColor; $x.toString = $estr; return $x; }
+co.janicek.core.html.HtmlColor.Rgba = function(red,green,blue,alpha) { var $x = ["Rgba",2,red,green,blue,alpha]; $x.__enum__ = co.janicek.core.html.HtmlColor; $x.toString = $estr; return $x; }
+co.janicek.core.html.HtmlColor.RgbF = function(red,green,blue) { var $x = ["RgbF",3,red,green,blue]; $x.__enum__ = co.janicek.core.html.HtmlColor; $x.toString = $estr; return $x; }
+co.janicek.core.html.HtmlColor.RgbaF = function(red,green,blue,alpha) { var $x = ["RgbaF",4,red,green,blue,alpha]; $x.__enum__ = co.janicek.core.html.HtmlColor; $x.toString = $estr; return $x; }
+co.janicek.core.html.HtmlColor.Hsl = function(hue,saturation,lightness) { var $x = ["Hsl",5,hue,saturation,lightness]; $x.__enum__ = co.janicek.core.html.HtmlColor; $x.toString = $estr; return $x; }
+co.janicek.core.html.HtmlColor.Hsla = function(hue,saturation,lightness,alpha) { var $x = ["Hsla",6,hue,saturation,lightness,alpha]; $x.__enum__ = co.janicek.core.html.HtmlColor; $x.toString = $estr; return $x; }
+co.janicek.core.html.HtmlColors = $hxClasses["co.janicek.core.html.HtmlColors"] = function() { }
+co.janicek.core.html.HtmlColors.__name__ = ["co","janicek","core","html","HtmlColors"];
+co.janicek.core.html.HtmlColors.toString = function(c) {
+	return (function($this) {
+		var $r;
+		var $e = (c);
+		switch( $e[1] ) {
+		case 0:
+			var c1 = $e[2];
+			$r = co.janicek.core.html.HtmlColorCore.intToHexColor(c1);
+			break;
+		case 1:
+			var b = $e[4], g = $e[3], r = $e[2];
+			$r = co.janicek.core.html.HtmlColorCore.rgb(r,g,b);
+			break;
+		case 2:
+			var a = $e[5], b = $e[4], g = $e[3], r = $e[2];
+			$r = co.janicek.core.html.HtmlColorCore.rgba(r,g,b,a);
+			break;
+		case 3:
+			var b = $e[4], g = $e[3], r = $e[2];
+			$r = co.janicek.core.html.HtmlColorCore.rgbF(r,g,b);
+			break;
+		case 4:
+			var a = $e[5], b = $e[4], g = $e[3], r = $e[2];
+			$r = co.janicek.core.html.HtmlColorCore.rgbaF(r,g,b,a);
+			break;
+		case 5:
+			var l = $e[4], s = $e[3], h = $e[2];
+			$r = co.janicek.core.html.HtmlColorCore.hsl(h,s,l);
+			break;
+		case 6:
+			var a = $e[5], l = $e[4], s = $e[3], h = $e[2];
+			$r = co.janicek.core.html.HtmlColorCore.hsla(h,s,l,a);
+			break;
+		}
+		return $r;
+	}(this));
+}
+co.janicek.core.html.HtmlColors.prototype = {
+	__class__: co.janicek.core.html.HtmlColors
+}
+co.janicek.core.html.HtmlColorCore = $hxClasses["co.janicek.core.html.HtmlColorCore"] = function() { }
+co.janicek.core.html.HtmlColorCore.__name__ = ["co","janicek","core","html","HtmlColorCore"];
+co.janicek.core.html.HtmlColorCore.getRedComponent = function(c) {
+	return c >> 16 & 255;
+}
+co.janicek.core.html.HtmlColorCore.getGreenComponent = function(c) {
+	return c >> 8 & 255;
+}
+co.janicek.core.html.HtmlColorCore.getBlueComponent = function(c) {
+	return c & 255;
+}
+co.janicek.core.html.HtmlColorCore.interpolateColor = function(color0,color1,f) {
 	var r = (1 - f) * (color0 >> 16) + f * (color1 >> 16) | 0;
 	var g = (1 - f) * (color0 >> 8 & 255) + f * (color1 >> 8 & 255) | 0;
 	var b = (1 - f) * (color0 & 255) + f * (color1 & 255) | 0;
@@ -745,22 +827,32 @@ co.janicek.core.html.ColorCore.interpolateColor = function(color0,color1,f) {
 	if(b > 255) b = 255;
 	return r << 16 | g << 8 | b;
 }
-co.janicek.core.html.ColorCore.intToHexColor = function(color) {
-	return "#" + StringTools.hex(color,6);
-}
-co.janicek.core.html.ColorCore.rgba = function(red,green,blue,alpha) {
-	var core = "" + red + "," + green + "," + blue;
-	return alpha == null?"rgb(" + core + ")":"rgba(" + core + "," + alpha + ")";
-}
-co.janicek.core.html.ColorCore.rgbaFraction = function(red,green,blue,alpha) {
-	var core = "" + red * 100 + "%," + green * 100 + "%," + blue * 100 + "%";
-	return alpha == null?"rgb(" + core + ")":"rgba(" + core + "," + alpha + ")";
-}
-co.janicek.core.html.ColorCore.colorFraction = function(fraction) {
+co.janicek.core.html.HtmlColorCore.colorFraction = function(fraction) {
 	return 255 * fraction | 0;
 }
-co.janicek.core.html.ColorCore.prototype = {
-	__class__: co.janicek.core.html.ColorCore
+co.janicek.core.html.HtmlColorCore.intToHexColor = function(color) {
+	return "#" + StringTools.hex(color,6);
+}
+co.janicek.core.html.HtmlColorCore.rgb = function(red,green,blue) {
+	return "rgb(" + red + "," + green + "," + blue + ")";
+}
+co.janicek.core.html.HtmlColorCore.rgba = function(red,green,blue,alpha) {
+	return "rgba(" + red + "," + green + "," + blue + "," + alpha + ")";
+}
+co.janicek.core.html.HtmlColorCore.rgbF = function(red,green,blue) {
+	return "rgb(" + red * 100 + "%," + green * 100 + "%," + blue * 100 + "%)";
+}
+co.janicek.core.html.HtmlColorCore.rgbaF = function(red,green,blue,alpha) {
+	return "rgba(" + red * 100 + "%," + green * 100 + "%," + blue * 100 + "%," + alpha + ")";
+}
+co.janicek.core.html.HtmlColorCore.hsl = function(hue,saturation,lightness) {
+	return "hsl(" + hue + "," + saturation * 100 + "%," + lightness * 100 + "%)";
+}
+co.janicek.core.html.HtmlColorCore.hsla = function(hue,saturation,lightness,alpha) {
+	return "hsla(" + hue + "," + saturation * 100 + "%," + lightness * 100 + "%," + alpha + ")";
+}
+co.janicek.core.html.HtmlColorCore.prototype = {
+	__class__: co.janicek.core.html.HtmlColorCore
 }
 if(!co.janicek.core.math) co.janicek.core.math = {}
 co.janicek.core.math.HashCore = $hxClasses["co.janicek.core.math.HashCore"] = function() { }
@@ -1776,28 +1868,57 @@ specs.co.janicek.core.html.CanvasCoreSpec.__name__ = ["specs","co","janicek","co
 specs.co.janicek.core.html.CanvasCoreSpec.prototype = {
 	__class__: specs.co.janicek.core.html.CanvasCoreSpec
 }
-specs.co.janicek.core.html.ColorCoreSpec = $hxClasses["specs.co.janicek.core.html.ColorCoreSpec"] = function() {
-	jasmine.J.describe("ColorCore",function() {
+specs.co.janicek.core.html.HtmlColorCoreSpec = $hxClasses["specs.co.janicek.core.html.HtmlColorCoreSpec"] = function() {
+	jasmine.J.describe("HtmlColorCore",function() {
+		jasmine.J.describe("getRedComponent()",function() {
+			jasmine.J.it("should get red color coponent",function() {
+				jasmine.J.expect(17).toEqual(17);
+				jasmine.J.expect(17).toEqual(17);
+			});
+		});
+		jasmine.J.describe("getGreenComponent()",function() {
+			jasmine.J.it("should get green color coponent",function() {
+				jasmine.J.expect(34).toEqual(34);
+				jasmine.J.expect(34).toEqual(34);
+			});
+		});
+		jasmine.J.describe("getBlueComponent()",function() {
+			jasmine.J.it("should get blue color coponent",function() {
+				jasmine.J.expect(51).toEqual(51);
+				jasmine.J.expect(51).toEqual(51);
+			});
+		});
+		jasmine.J.describe("hsla()",function() {
+			jasmine.J.it("should make html hsl string",function() {
+				jasmine.J.expect(co.janicek.core.html.HtmlColorCore.hsl(0,0.0,0.0)).toEqual("hsl(0,0%,0%)");
+			});
+			jasmine.J.it("should make html hsla string",function() {
+				jasmine.J.expect(co.janicek.core.html.HtmlColorCore.hsla(0,0.0,0.0,0.5)).toEqual("hsla(0,0%,0%,0.5)");
+			});
+			jasmine.J.it("should make html hsla string for decimal values",function() {
+				jasmine.J.expect(co.janicek.core.html.HtmlColorCore.hsla(0,0.5,1.0,1.0)).toEqual("hsla(0,50%,100%,1)");
+			});
+		});
 		jasmine.J.describe("rgba()",function() {
 			jasmine.J.it("should make html rgb string",function() {
-				jasmine.J.expect(co.janicek.core.html.ColorCore.rgba(0,0,0)).toEqual("rgb(0,0,0)");
+				jasmine.J.expect(co.janicek.core.html.HtmlColorCore.rgb(0,0,0)).toEqual("rgb(0,0,0)");
 			});
 			jasmine.J.it("should make html rgba string",function() {
-				jasmine.J.expect(co.janicek.core.html.ColorCore.rgba(0,0,0,0)).toEqual("rgba(0,0,0,0)");
+				jasmine.J.expect(co.janicek.core.html.HtmlColorCore.rgba(0,0,0,0)).toEqual("rgba(0,0,0,0)");
 			});
 			jasmine.J.it("should make html rgba string for decimal alpha",function() {
-				jasmine.J.expect(co.janicek.core.html.ColorCore.rgba(0,0,0,0.5)).toEqual("rgba(0,0,0,0.5)");
+				jasmine.J.expect(co.janicek.core.html.HtmlColorCore.rgba(0,0,0,0.5)).toEqual("rgba(0,0,0,0.5)");
 			});
 		});
 		jasmine.J.describe("rgbaFraction()",function() {
 			jasmine.J.it("should make html rgb string",function() {
-				jasmine.J.expect(co.janicek.core.html.ColorCore.rgbaFraction(0.0,0.5,1)).toEqual("rgb(0%,50%,100%)");
+				jasmine.J.expect(co.janicek.core.html.HtmlColorCore.rgbF(0.0,0.5,1)).toEqual("rgb(0%,50%,100%)");
 			});
 			jasmine.J.it("should make html rgba string",function() {
-				jasmine.J.expect(co.janicek.core.html.ColorCore.rgbaFraction(0.0,0.5,1.0,0)).toEqual("rgba(0%,50%,100%,0)");
+				jasmine.J.expect(co.janicek.core.html.HtmlColorCore.rgbaF(0.0,0.5,1.0,0)).toEqual("rgba(0%,50%,100%,0)");
 			});
 			jasmine.J.it("should make html rgba string for decimal alpha",function() {
-				jasmine.J.expect(co.janicek.core.html.ColorCore.rgbaFraction(0.0,0.5,1.0,0.5)).toEqual("rgba(0%,50%,100%,0.5)");
+				jasmine.J.expect(co.janicek.core.html.HtmlColorCore.rgbaF(0.0,0.5,1.0,0.5)).toEqual("rgba(0%,50%,100%,0.5)");
 			});
 		});
 		jasmine.J.describe("colorFraction()",function() {
@@ -1809,15 +1930,25 @@ specs.co.janicek.core.html.ColorCoreSpec = $hxClasses["specs.co.janicek.core.htm
 		});
 		jasmine.J.describe("intToHexColor()",function() {
 			jasmine.J.it("should make a HTML hex color codes",function() {
-				jasmine.J.expect(co.janicek.core.html.ColorCore.intToHexColor(0)).toEqual("#000000");
-				jasmine.J.expect(co.janicek.core.html.ColorCore.intToHexColor(16777215)).toEqual("#FFFFFF");
+				jasmine.J.expect(co.janicek.core.html.HtmlColorCore.intToHexColor(0)).toEqual("#000000");
+				jasmine.J.expect(co.janicek.core.html.HtmlColorCore.intToHexColor(16777215)).toEqual("#FFFFFF");
+			});
+		});
+		jasmine.J.describe("HtmlColor",function() {
+			jasmine.J.it("should make a HTML rgba color codes",function() {
+				var c = co.janicek.core.html.HtmlColor.Rgb(0,0,0);
+				jasmine.J.expect(co.janicek.core.html.HtmlColors.toString(c)).toEqual("rgb(0,0,0)");
+				c = co.janicek.core.html.HtmlColor.Rgba(0,0,0,0);
+				jasmine.J.expect(co.janicek.core.html.HtmlColors.toString(c)).toEqual("rgba(0,0,0,0)");
+				c = co.janicek.core.html.HtmlColor.Color(0);
+				jasmine.J.expect(co.janicek.core.html.HtmlColors.toString(c)).toEqual("#000000");
 			});
 		});
 	});
 };
-specs.co.janicek.core.html.ColorCoreSpec.__name__ = ["specs","co","janicek","core","html","ColorCoreSpec"];
-specs.co.janicek.core.html.ColorCoreSpec.prototype = {
-	__class__: specs.co.janicek.core.html.ColorCoreSpec
+specs.co.janicek.core.html.HtmlColorCoreSpec.__name__ = ["specs","co","janicek","core","html","HtmlColorCoreSpec"];
+specs.co.janicek.core.html.HtmlColorCoreSpec.prototype = {
+	__class__: specs.co.janicek.core.html.HtmlColorCoreSpec
 }
 if(!specs.co.janicek.core.math) specs.co.janicek.core.math = {}
 specs.co.janicek.core.math.HashCoreSpec = $hxClasses["specs.co.janicek.core.math.HashCoreSpec"] = function() {
@@ -2089,7 +2220,7 @@ co.janicek.core.html.CanvasCore.CANVAS_RED_OFFSET = 0;
 co.janicek.core.html.CanvasCore.CANVAS_GREEN_OFFSET = 1;
 co.janicek.core.html.CanvasCore.CANVAS_BLUE_OFFSET = 2;
 co.janicek.core.html.CanvasCore.CANVAS_ALPHA_OFFSET = 3;
-co.janicek.core.html.ColorCore.MAX_COLOR_COMPONENT = 255;
+co.janicek.core.html.HtmlColorCore.MAX_COLOR_COMPONENT = 255;
 co.janicek.core.math.MathCore.INT32_MAX = 2147483647;
 co.janicek.core.math.PerlinNoise.p = [151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,190,6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,88,237,149,56,87,174,20,125,136,171,168,68,175,74,165,71,134,139,48,27,166,77,146,158,231,83,111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244,102,143,54,65,25,63,161,1,216,80,73,209,76,132,187,208,89,18,169,200,196,135,130,116,188,159,86,164,100,109,198,173,186,3,64,52,217,226,250,124,123,5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,189,28,42,223,183,170,213,119,248,152,2,44,154,163,70,221,153,101,155,167,43,172,9,129,22,39,253,19,98,108,110,79,113,224,232,178,185,112,104,218,246,97,228,251,34,242,193,238,210,144,12,191,179,162,241,81,51,145,235,249,14,239,107,49,192,214,31,181,199,106,157,184,84,204,176,115,121,50,45,127,4,150,254,138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180,151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,190,6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,88,237,149,56,87,174,20,125,136,171,168,68,175,74,165,71,134,139,48,27,166,77,146,158,231,83,111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244,102,143,54,65,25,63,161,1,216,80,73,209,76,132,187,208,89,18,169,200,196,135,130,116,188,159,86,164,100,109,198,173,186,3,64,52,217,226,250,124,123,5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,189,28,42,223,183,170,213,119,248,152,2,44,154,163,70,221,153,101,155,167,43,172,9,129,22,39,253,19,98,108,110,79,113,224,232,178,185,112,104,218,246,97,228,251,34,242,193,238,210,144,12,191,179,162,241,81,51,145,235,249,14,239,107,49,192,214,31,181,199,106,157,184,84,204,176,115,121,50,45,127,4,150,254,138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180];
 co.janicek.core.math.RandomCore.MPM = 2147483647.0;
