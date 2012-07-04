@@ -279,20 +279,21 @@ var Main = $hxClasses["Main"] = function() { }
 Main.__name__ = ["Main"];
 Main.main = function() {
 	if(!js.Lib.isIE) haxe.Firebug.redirectTraces();
-	haxe.Log.trace("Testing...",{ fileName : "Main.hx", lineNumber : 27, className : "Main", methodName : "main"});
+	haxe.Log.trace("Testing...",{ fileName : "Main.hx", lineNumber : 28, className : "Main", methodName : "main"});
 	new specs.co.janicek.core.Array2dSpec();
 	new specs.co.janicek.core.BaseCode64Spec();
 	new specs.co.janicek.core.html.CanvasCoreSpec();
-	new specs.co.janicek.core.html.HtmlColorCoreSpec();
 	new specs.co.janicek.core.math.HashCoreSpec();
+	new specs.co.janicek.core.html.HtmlColorCoreSpec();
 	new specs.co.janicek.core.math.MathCoreSpec();
+	new specs.co.janicek.core.NullCoreSpec();
 	new specs.co.janicek.core.PathCoreSpec();
 	new specs.co.janicek.core.math.PerlinNoiseSpec();
 	new specs.co.janicek.core.math.RandomCoreSpec();
 	new specs.co.janicek.core.StringCoreSpec();
 	jasmine.Jasmine.getEnv().addReporter(jasmine.Jasmine.newHtmlReporter());
 	jasmine.Jasmine.getEnv().execute();
-	haxe.Log.trace("Done testing.",{ fileName : "Main.hx", lineNumber : 42, className : "Main", methodName : "main"});
+	haxe.Log.trace("Done testing.",{ fileName : "Main.hx", lineNumber : 44, className : "Main", methodName : "main"});
 }
 Main.prototype = {
 	__class__: Main
@@ -463,6 +464,20 @@ co.janicek.core.BaseCode64.base64DecodeString = function(base64) {
 }
 co.janicek.core.BaseCode64.prototype = {
 	__class__: co.janicek.core.BaseCode64
+}
+co.janicek.core.NullCore = $hxClasses["co.janicek.core.NullCore"] = function() { }
+co.janicek.core.NullCore.__name__ = ["co","janicek","core","NullCore"];
+co.janicek.core.NullCore.isNull = function(nullable) {
+	return nullable == null;
+}
+co.janicek.core.NullCore.isNotNull = function(nullable) {
+	return nullable != null;
+}
+co.janicek.core.NullCore.coalesce = function(nullable,defaultValue) {
+	return nullable == null?defaultValue:nullable;
+}
+co.janicek.core.NullCore.prototype = {
+	__class__: co.janicek.core.NullCore
 }
 co.janicek.core.PathCore = $hxClasses["co.janicek.core.PathCore"] = function() { }
 co.janicek.core.PathCore.__name__ = ["co","janicek","core","PathCore"];
@@ -1766,6 +1781,48 @@ specs.co.janicek.core.BaseCode64Spec = $hxClasses["specs.co.janicek.core.BaseCod
 specs.co.janicek.core.BaseCode64Spec.__name__ = ["specs","co","janicek","core","BaseCode64Spec"];
 specs.co.janicek.core.BaseCode64Spec.prototype = {
 	__class__: specs.co.janicek.core.BaseCode64Spec
+}
+specs.co.janicek.core.NullCoreSpec = $hxClasses["specs.co.janicek.core.NullCoreSpec"] = function() {
+	jasmine.J.describe("NullCore",function() {
+		jasmine.J.describe("isNull()",function() {
+			jasmine.J.it("should test nullable type for null",function() {
+				var nullable = null;
+				jasmine.J.expect(nullable == null).toBeTruthy();
+				nullable = true;
+				jasmine.J.expect(nullable == null).toBeFalsy();
+				jasmine.J.expect(false).toBeFalsy();
+				jasmine.J.expect(false).toBeFalsy();
+				jasmine.J.expect(false).toBeFalsy();
+				var object = { };
+				jasmine.J.expect(object == null).toBeFalsy();
+			});
+		});
+		jasmine.J.describe("isNotNull()",function() {
+			jasmine.J.it("should test nullable type for not null",function() {
+				var nullable = null;
+				jasmine.J.expect(nullable != null).toBeFalsy();
+				nullable = true;
+				jasmine.J.expect(nullable != null).toBeTruthy();
+				jasmine.J.expect(true).toBeTruthy();
+				jasmine.J.expect(true).toBeTruthy();
+				jasmine.J.expect(true).toBeTruthy();
+				var object = { };
+				jasmine.J.expect(object != null).toBeTruthy();
+			});
+		});
+		jasmine.J.describe("coalesce()",function() {
+			jasmine.J.it("should coalesce a nullable by returning default value if nullable is null",function() {
+				var nullable = null;
+				jasmine.J.expect(nullable == null?1:nullable).toEqual(1);
+				nullable = 0;
+				jasmine.J.expect(nullable == null?1:nullable).toEqual(0);
+			});
+		});
+	});
+};
+specs.co.janicek.core.NullCoreSpec.__name__ = ["specs","co","janicek","core","NullCoreSpec"];
+specs.co.janicek.core.NullCoreSpec.prototype = {
+	__class__: specs.co.janicek.core.NullCoreSpec
 }
 specs.co.janicek.core.PathCoreSpec = $hxClasses["specs.co.janicek.core.PathCoreSpec"] = function() {
 	jasmine.J.describe("PathCore",function() {
