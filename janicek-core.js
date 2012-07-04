@@ -298,6 +298,83 @@ Main.main = function() {
 Main.prototype = {
 	__class__: Main
 }
+var Reflect = $hxClasses["Reflect"] = function() { }
+Reflect.__name__ = ["Reflect"];
+Reflect.hasField = function(o,field) {
+	return Object.prototype.hasOwnProperty.call(o,field);
+}
+Reflect.field = function(o,field) {
+	var v = null;
+	try {
+		v = o[field];
+	} catch( e ) {
+	}
+	return v;
+}
+Reflect.setField = function(o,field,value) {
+	o[field] = value;
+}
+Reflect.getProperty = function(o,field) {
+	var tmp;
+	return o == null?null:o.__properties__ && (tmp = o.__properties__["get_" + field])?o[tmp]():o[field];
+}
+Reflect.setProperty = function(o,field,value) {
+	var tmp;
+	if(o.__properties__ && (tmp = o.__properties__["set_" + field])) o[tmp](value); else o[field] = value;
+}
+Reflect.callMethod = function(o,func,args) {
+	return func.apply(o,args);
+}
+Reflect.fields = function(o) {
+	var a = [];
+	if(o != null) {
+		var hasOwnProperty = Object.prototype.hasOwnProperty;
+		for( var f in o ) {
+		if(hasOwnProperty.call(o,f)) a.push(f);
+		}
+	}
+	return a;
+}
+Reflect.isFunction = function(f) {
+	return typeof(f) == "function" && f.__name__ == null;
+}
+Reflect.compare = function(a,b) {
+	return a == b?0:a > b?1:-1;
+}
+Reflect.compareMethods = function(f1,f2) {
+	if(f1 == f2) return true;
+	if(!Reflect.isFunction(f1) || !Reflect.isFunction(f2)) return false;
+	return f1.scope == f2.scope && f1.method == f2.method && f1.method != null;
+}
+Reflect.isObject = function(v) {
+	if(v == null) return false;
+	var t = typeof(v);
+	return t == "string" || t == "object" && !v.__enum__ || t == "function" && v.__name__ != null;
+}
+Reflect.deleteField = function(o,f) {
+	if(!Reflect.hasField(o,f)) return false;
+	delete(o[f]);
+	return true;
+}
+Reflect.copy = function(o) {
+	var o2 = { };
+	var _g = 0, _g1 = Reflect.fields(o);
+	while(_g < _g1.length) {
+		var f = _g1[_g];
+		++_g;
+		o2[f] = Reflect.field(o,f);
+	}
+	return o2;
+}
+Reflect.makeVarArgs = function(f) {
+	return function() {
+		var a = Array.prototype.slice.call(arguments);
+		return f(a);
+	};
+}
+Reflect.prototype = {
+	__class__: Reflect
+}
 var Std = $hxClasses["Std"] = function() { }
 Std.__name__ = ["Std"];
 Std["is"] = function(v,t) {
@@ -1796,6 +1873,10 @@ specs.co.janicek.core.NullCoreSpec = $hxClasses["specs.co.janicek.core.NullCoreS
 				var object = { };
 				jasmine.J.expect(object == null).toBeFalsy();
 			});
+			jasmine.J.it("should test reflected nullable type for null",function() {
+				var o = { property : null};
+				jasmine.J.expect(Reflect.field(o,"property") == null).toBeTruthy();
+			});
 		});
 		jasmine.J.describe("isNotNull()",function() {
 			jasmine.J.it("should test nullable type for not null",function() {
@@ -1808,6 +1889,10 @@ specs.co.janicek.core.NullCoreSpec = $hxClasses["specs.co.janicek.core.NullCoreS
 				jasmine.J.expect(true).toBeTruthy();
 				var object = { };
 				jasmine.J.expect(object != null).toBeTruthy();
+			});
+			jasmine.J.it("should test reflected nullable type for not null",function() {
+				var o = { property : null};
+				jasmine.J.expect(Reflect.field(o,"property") != null).toBeFalsy();
 			});
 		});
 		jasmine.J.describe("coalesce()",function() {
