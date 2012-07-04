@@ -3,6 +3,7 @@ package specs.co.janicek.core;
 import jasmine.J;
 
 using co.janicek.core.NullCore;
+using Reflect;
 
 /**
  * NullCore specs.
@@ -26,7 +27,11 @@ class NullCoreSpec {
 					J.expect(1.0.isNull()).toBeFalsy();
 					var object = { };
 					J.expect(object.isNull()).toBeFalsy();
-					
+				});
+				
+				J.it("should test reflected nullable type for null", function() {
+					var o = { property:null };
+					J.expect(o.field("property").isNull()).toBeTruthy();
 				});
 			});
 			
@@ -44,6 +49,11 @@ class NullCoreSpec {
 					J.expect(object.isNotNull()).toBeTruthy();
 					
 				});
+				
+				J.it("should test reflected nullable type for not null", function() {
+					var o = { property:null };
+					J.expect(o.field("property").isNotNull()).toBeFalsy();
+				});				
 			});	
 			
 			J.describe("coalesce()", function () {

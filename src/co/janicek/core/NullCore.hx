@@ -12,14 +12,14 @@ class NullCore {
 	/**
 	 * Tests if nullable type is null.
 	 */
-	public static inline function isNull<T>( nullable : Null<T> ) : Bool {
+	public static inline function isNull( nullable : Null<Dynamic> ) : Bool {
 		return nullable == null;
 	}
 	
 	/**
 	 * Tests if nullable type is not null.
 	 */
-	public static inline function isNotNull<T>( nullable : Null<T> ) : Bool {
+	public static inline function isNotNull( nullable : Null<Dynamic> ) : Bool {
 		return nullable != null;
 	}
 	
