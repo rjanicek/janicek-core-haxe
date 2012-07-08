@@ -28,7 +28,7 @@ class NullCore {
 	 * @return Value of nullable type if it's not null else default value.
 	 */
 	public static inline function coalesce<T>( nullable : Null<T>, defaultValue :  T ) : T {
-		return (nullable.isNull()) ? defaultValue : nullable;
+		return nullable.isNull() ? defaultValue : nullable;
 	}
 	
 }

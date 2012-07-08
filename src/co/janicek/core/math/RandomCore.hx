@@ -2,6 +2,8 @@ package co.janicek.core.math;
 
 import co.janicek.core.math.MathCore;
 
+using Std;
+
 /**
  * Pseudo random number generator (PRNG) using a functional style.
 */
@@ -33,7 +35,7 @@ class RandomCore {
 	 * @return Returns the next pseudo-random int value .
 	 */
 	public static inline function nextParkMiller( seed : Int ) : Int {
-		return cast ((seed * MINSTD) % MPM);
+		return ((seed * MINSTD) % MPM).int();
 	}
 
     /**
@@ -46,7 +48,7 @@ class RandomCore {
     public static inline function nextLCG( seed : Int ) : Int {
         // These constants borrowed from glibc
         // Force float multiplication here to avoid overflow in Flash (and keep parity with JS)
-        return cast ((1103515245.0 * seed + 12345) % MPM);
+        return ((1103515245.0 * seed + 12345) % MPM).int();
     }
 
 	/**
@@ -82,6 +84,6 @@ class RandomCore {
 	 * Lets you use words as seeds.
 	 */
 	public static function stringToSeed( s : String ) : Int {
-        return Std.int(HashCore.djb2(s) % MPM);
+        return (HashCore.djb2(s) % MPM).int();
 	}
 }
