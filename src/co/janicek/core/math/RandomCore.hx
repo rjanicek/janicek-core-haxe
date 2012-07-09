@@ -29,20 +29,37 @@ class RandomCore {
 	
 	/**
 	 * Park-Miller-Carta algorithm.
-	 * @see http://lab.polygonal.de/?p=162
-	 * @see http://code.google.com/p/polygonal/source/browse/trunk/src/lib/de/polygonal/core/math/random/ParkMiller.hx?r=547 
-	 * @see http://en.wikipedia.org/wiki/Lehmer_random_number_generator
-	 * @return Returns the next pseudo-random int value .
+	 * @see <a href="http://lab.polygonal.de/?p=162">http://lab.polygonal.de/?p=162</a>
+	 * @see <a href="http://code.google.com/p/polygonal/source/browse/trunk/src/lib/de/polygonal/core/math/random/ParkMiller.hx?r=547">http://code.google.com/p/polygonal/source/browse/trunk/src/lib/de/polygonal/core/math/random/ParkMiller.hx?r=547</a> 
+	 * @see <a href="http://en.wikipedia.org/wiki/Lehmer_random_number_generator">http://en.wikipedia.org/wiki/Lehmer_random_number_generator</a>
+	 * @return Returns the next pseudo-random int value.
 	 */
 	public static inline function nextParkMiller( seed : Int ) : Int {
 		return ((seed * MINSTD) % MPM).int();
+	}
+	
+	/**
+	 * <p>A Park-Miller-Carta PRNG (pseudo random number generator).</p>
+	 * <p>Integer implementation, using only 32 bit integer maths and no divisions.</p>
+	 * @see <a href="https://github.com/polygonal/core/blob/dev/src/de/polygonal/core/math/random/ParkMiller31.hx">POLYGONAL - A HAXE LIBRARY FOR GAME DEVELOPERS</a>
+	 * @see <a href="http://www.firstpr.com.au/dsp/rand31/rand31-park-miller-carta.cc.txt" target="_blank">http://www.firstpr.com.au/dsp/rand31/rand31-park-miller-carta.cc.txt</a>
+	 * @see <a href="http://en.wikipedia.org/wiki/Park%E2%80%93Miller_random_number_generator" target="_blank">Park-Miller random number generator</a>.
+	 * @see <a href="http://lab.polygonal.de/?p=162" target="_blank">A good Pseudo-Random Number Generator (PRNG)</a>.
+	 */
+	public static function nextParkMiller31( seed : Int ) : Int {
+		var lo:Int = 16807 * (seed & 0xffff);
+		var hi:Int = 16807 * (seed >>> 16);
+		lo += (hi & 0x7fff) << 16;
+		lo += hi >>> 15;
+		if (lo > 0x7fffffff) lo -= 0x7fffffff;
+		return lo;
 	}
 
     /**
 	 * Linear congruential generator using GLIBC constants.
      * 
-	 * @see http://en.wikipedia.org/wiki/Linear_congruential_generator
-	 * @see https://github.com/aduros/flambe/blob/master/src/flambe/util/Random.hx
+	 * @see <a href="http://en.wikipedia.org/wiki/Linear_congruential_generator">http://en.wikipedia.org/wiki/Linear_congruential_generator</a>
+	 * @see <a href="https://github.com/aduros/flambe/blob/master/src/flambe/util/Random.hx">https://github.com/aduros/flambe/blob/master/src/flambe/util/Random.hx</a>
 	 * @return Returns an integer in [0, INT_MAX)
      */
     public static inline function nextLCG( seed : Int ) : Int {
