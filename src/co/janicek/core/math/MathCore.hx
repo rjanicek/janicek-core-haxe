@@ -8,6 +8,20 @@ class MathCore {
 	 * Max value, signed integer.  
 	 */
 	inline public static var  INT32_MAX = 0x7fffffff;
+	
+	/**
+	 * Biggest whole number.
+	 * WARNING: INT53_MAX + 1 === INT53_MAX
+	 * @see <a href="http://en.wikipedia.org/wiki/IEEE_754-1985">http://en.wikipedia.org/wiki/IEEE_754-1985</a>
+	 */
+	inline public static var INT53_MAX = 9007199254740992;
+	
+	/**
+	 * Smallest whole number.
+	 * WARNING: INT53_MIN - 1 === INT53_MIN
+	 * @see <a href="http://en.wikipedia.org/wiki/IEEE_754-1985">http://en.wikipedia.org/wiki/IEEE_754-1985</a>
+	 */
+	inline public static var INT53_MIN = -INT53_MAX;
 
 	public static function isEven( n : Int ) : Bool {
 		return n % 2 == 0;

@@ -22,9 +22,6 @@ import js.Lib;
 class Main {
 	
 	static function main() {
-		if (!Lib.isIE) {
-			Firebug.redirectTraces();
-		}
 		trace(Std.format("Testing..."));
 
 		new Array2dSpec();

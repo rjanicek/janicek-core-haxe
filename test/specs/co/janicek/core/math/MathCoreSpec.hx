@@ -32,6 +32,18 @@ class MathCoreSpec {
 				});
 			});
 			
+			J.describe("INT53_MAX", function() {
+				J.it("should not be able to go higher", function() {
+					J.expect(MathCore.INT53_MAX + 1).toEqual(MathCore.INT53_MAX);
+				});
+			});
+			
+			J.describe("INT53_MIN", function() {
+				J.it("should not be able to go lower", function() {
+					J.expect(MathCore.INT53_MIN - 1).toEqual(MathCore.INT53_MIN);
+				});
+			});
+			
 			J.describe("isEven()", function() {
 				J.it("should test if Int is even", function() {
 					J.expect(1.isEven()).toBeFalsy();
