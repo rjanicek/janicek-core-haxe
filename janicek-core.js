@@ -1,30 +1,88 @@
-var $_, $hxClasses = $hxClasses || {}, $estr = function() { return js.Boot.__string_rec(this,''); }
-function $extend(from, fields) {
-	function inherit() {}; inherit.prototype = from; var proto = new inherit();
-	for (var name in fields) proto[name] = fields[name];
-	return proto;
+var $estr = function() { return js.Boot.__string_rec(this,''); };
+var HxOverrides = function() { }
+HxOverrides.__name__ = true;
+HxOverrides.dateStr = function(date) {
+	var m = date.getMonth() + 1;
+	var d = date.getDate();
+	var h = date.getHours();
+	var mi = date.getMinutes();
+	var s = date.getSeconds();
+	return date.getFullYear() + "-" + (m < 10?"0" + m:"" + m) + "-" + (d < 10?"0" + d:"" + d) + " " + (h < 10?"0" + h:"" + h) + ":" + (mi < 10?"0" + mi:"" + mi) + ":" + (s < 10?"0" + s:"" + s);
 }
-var IntIter = $hxClasses["IntIter"] = function(min,max) {
+HxOverrides.strDate = function(s) {
+	switch(s.length) {
+	case 8:
+		var k = s.split(":");
+		var d = new Date();
+		d.setTime(0);
+		d.setUTCHours(k[0]);
+		d.setUTCMinutes(k[1]);
+		d.setUTCSeconds(k[2]);
+		return d;
+	case 10:
+		var k = s.split("-");
+		return new Date(k[0],k[1] - 1,k[2],0,0,0);
+	case 19:
+		var k = s.split(" ");
+		var y = k[0].split("-");
+		var t = k[1].split(":");
+		return new Date(y[0],y[1] - 1,y[2],t[0],t[1],t[2]);
+	default:
+		throw "Invalid date format : " + s;
+	}
+}
+HxOverrides.cca = function(s,index) {
+	var x = s.charCodeAt(index);
+	if(x != x) return undefined;
+	return x;
+}
+HxOverrides.substr = function(s,pos,len) {
+	if(pos != null && pos != 0 && len != null && len < 0) return "";
+	if(len == null) len = s.length;
+	if(pos < 0) {
+		pos = s.length + pos;
+		if(pos < 0) pos = 0;
+	} else if(len < 0) len = s.length + len - pos;
+	return s.substr(pos,len);
+}
+HxOverrides.remove = function(a,obj) {
+	var i = 0;
+	var l = a.length;
+	while(i < l) {
+		if(a[i] == obj) {
+			a.splice(i,1);
+			return true;
+		}
+		i++;
+	}
+	return false;
+}
+HxOverrides.iter = function(a) {
+	return { cur : 0, arr : a, hasNext : function() {
+		return this.cur < this.arr.length;
+	}, next : function() {
+		return this.arr[this.cur++];
+	}};
+}
+var IntIter = function(min,max) {
 	this.min = min;
 	this.max = max;
 };
-IntIter.__name__ = ["IntIter"];
+IntIter.__name__ = true;
 IntIter.prototype = {
-	min: null
-	,max: null
+	next: function() {
+		return this.min++;
+	}
 	,hasNext: function() {
 		return this.min < this.max;
 	}
-	,next: function() {
-		return this.min++;
-	}
 	,__class__: IntIter
 }
-var Lambda = $hxClasses["Lambda"] = function() { }
-Lambda.__name__ = ["Lambda"];
+var Lambda = function() { }
+Lambda.__name__ = true;
 Lambda.array = function(it) {
 	var a = new Array();
-	var $it0 = it.iterator();
+	var $it0 = $iterator(it)();
 	while( $it0.hasNext() ) {
 		var i = $it0.next();
 		a.push(i);
@@ -33,7 +91,7 @@ Lambda.array = function(it) {
 }
 Lambda.list = function(it) {
 	var l = new List();
-	var $it0 = it.iterator();
+	var $it0 = $iterator(it)();
 	while( $it0.hasNext() ) {
 		var i = $it0.next();
 		l.add(i);
@@ -42,7 +100,7 @@ Lambda.list = function(it) {
 }
 Lambda.map = function(it,f) {
 	var l = new List();
-	var $it0 = it.iterator();
+	var $it0 = $iterator(it)();
 	while( $it0.hasNext() ) {
 		var x = $it0.next();
 		l.add(f(x));
@@ -52,7 +110,7 @@ Lambda.map = function(it,f) {
 Lambda.mapi = function(it,f) {
 	var l = new List();
 	var i = 0;
-	var $it0 = it.iterator();
+	var $it0 = $iterator(it)();
 	while( $it0.hasNext() ) {
 		var x = $it0.next();
 		l.add(f(i++,x));
@@ -61,13 +119,13 @@ Lambda.mapi = function(it,f) {
 }
 Lambda.has = function(it,elt,cmp) {
 	if(cmp == null) {
-		var $it0 = it.iterator();
+		var $it0 = $iterator(it)();
 		while( $it0.hasNext() ) {
 			var x = $it0.next();
 			if(x == elt) return true;
 		}
 	} else {
-		var $it1 = it.iterator();
+		var $it1 = $iterator(it)();
 		while( $it1.hasNext() ) {
 			var x = $it1.next();
 			if(cmp(x,elt)) return true;
@@ -76,7 +134,7 @@ Lambda.has = function(it,elt,cmp) {
 	return false;
 }
 Lambda.exists = function(it,f) {
-	var $it0 = it.iterator();
+	var $it0 = $iterator(it)();
 	while( $it0.hasNext() ) {
 		var x = $it0.next();
 		if(f(x)) return true;
@@ -84,7 +142,7 @@ Lambda.exists = function(it,f) {
 	return false;
 }
 Lambda.foreach = function(it,f) {
-	var $it0 = it.iterator();
+	var $it0 = $iterator(it)();
 	while( $it0.hasNext() ) {
 		var x = $it0.next();
 		if(!f(x)) return false;
@@ -92,7 +150,7 @@ Lambda.foreach = function(it,f) {
 	return true;
 }
 Lambda.iter = function(it,f) {
-	var $it0 = it.iterator();
+	var $it0 = $iterator(it)();
 	while( $it0.hasNext() ) {
 		var x = $it0.next();
 		f(x);
@@ -100,7 +158,7 @@ Lambda.iter = function(it,f) {
 }
 Lambda.filter = function(it,f) {
 	var l = new List();
-	var $it0 = it.iterator();
+	var $it0 = $iterator(it)();
 	while( $it0.hasNext() ) {
 		var x = $it0.next();
 		if(f(x)) l.add(x);
@@ -108,7 +166,7 @@ Lambda.filter = function(it,f) {
 	return l;
 }
 Lambda.fold = function(it,f,first) {
-	var $it0 = it.iterator();
+	var $it0 = $iterator(it)();
 	while( $it0.hasNext() ) {
 		var x = $it0.next();
 		first = f(x,first);
@@ -118,13 +176,13 @@ Lambda.fold = function(it,f,first) {
 Lambda.count = function(it,pred) {
 	var n = 0;
 	if(pred == null) {
-		var $it0 = it.iterator();
+		var $it0 = $iterator(it)();
 		while( $it0.hasNext() ) {
 			var _ = $it0.next();
 			n++;
 		}
 	} else {
-		var $it1 = it.iterator();
+		var $it1 = $iterator(it)();
 		while( $it1.hasNext() ) {
 			var x = $it1.next();
 			if(pred(x)) n++;
@@ -133,11 +191,11 @@ Lambda.count = function(it,pred) {
 	return n;
 }
 Lambda.empty = function(it) {
-	return !it.iterator().hasNext();
+	return !$iterator(it)().hasNext();
 }
 Lambda.indexOf = function(it,v) {
 	var i = 0;
-	var $it0 = it.iterator();
+	var $it0 = $iterator(it)();
 	while( $it0.hasNext() ) {
 		var v2 = $it0.next();
 		if(v == v2) return i;
@@ -147,62 +205,76 @@ Lambda.indexOf = function(it,v) {
 }
 Lambda.concat = function(a,b) {
 	var l = new List();
-	var $it0 = a.iterator();
+	var $it0 = $iterator(a)();
 	while( $it0.hasNext() ) {
 		var x = $it0.next();
 		l.add(x);
 	}
-	var $it1 = b.iterator();
+	var $it1 = $iterator(b)();
 	while( $it1.hasNext() ) {
 		var x = $it1.next();
 		l.add(x);
 	}
 	return l;
 }
-Lambda.prototype = {
-	__class__: Lambda
-}
-var List = $hxClasses["List"] = function() {
+var List = function() {
 	this.length = 0;
 };
-List.__name__ = ["List"];
+List.__name__ = true;
 List.prototype = {
-	h: null
-	,q: null
-	,length: null
-	,add: function(item) {
-		var x = [item];
-		if(this.h == null) this.h = x; else this.q[1] = x;
-		this.q = x;
-		this.length++;
+	map: function(f) {
+		var b = new List();
+		var l = this.h;
+		while(l != null) {
+			var v = l[0];
+			l = l[1];
+			b.add(f(v));
+		}
+		return b;
 	}
-	,push: function(item) {
-		var x = [item,this.h];
-		this.h = x;
-		if(this.q == null) this.q = x;
-		this.length++;
+	,filter: function(f) {
+		var l2 = new List();
+		var l = this.h;
+		while(l != null) {
+			var v = l[0];
+			l = l[1];
+			if(f(v)) l2.add(v);
+		}
+		return l2;
 	}
-	,first: function() {
-		return this.h == null?null:this.h[0];
+	,join: function(sep) {
+		var s = new StringBuf();
+		var first = true;
+		var l = this.h;
+		while(l != null) {
+			if(first) first = false; else s.b += Std.string(sep);
+			s.b += Std.string(l[0]);
+			l = l[1];
+		}
+		return s.b;
 	}
-	,last: function() {
-		return this.q == null?null:this.q[0];
+	,toString: function() {
+		var s = new StringBuf();
+		var first = true;
+		var l = this.h;
+		s.b += Std.string("{");
+		while(l != null) {
+			if(first) first = false; else s.b += Std.string(", ");
+			s.b += Std.string(Std.string(l[0]));
+			l = l[1];
+		}
+		s.b += Std.string("}");
+		return s.b;
 	}
-	,pop: function() {
-		if(this.h == null) return null;
-		var x = this.h[0];
-		this.h = this.h[1];
-		if(this.h == null) this.q = null;
-		this.length--;
-		return x;
-	}
-	,isEmpty: function() {
-		return this.h == null;
-	}
-	,clear: function() {
-		this.h = null;
-		this.q = null;
-		this.length = 0;
+	,iterator: function() {
+		return { h : this.h, hasNext : function() {
+			return this.h != null;
+		}, next : function() {
+			if(this.h == null) return null;
+			var x = this.h[0];
+			this.h = this.h[1];
+			return x;
+		}};
 	}
 	,remove: function(v) {
 		var prev = null;
@@ -219,67 +291,46 @@ List.prototype = {
 		}
 		return false;
 	}
-	,iterator: function() {
-		return { h : this.h, hasNext : function() {
-			return this.h != null;
-		}, next : function() {
-			if(this.h == null) return null;
-			var x = this.h[0];
-			this.h = this.h[1];
-			return x;
-		}};
+	,clear: function() {
+		this.h = null;
+		this.q = null;
+		this.length = 0;
 	}
-	,toString: function() {
-		var s = new StringBuf();
-		var first = true;
-		var l = this.h;
-		s.b[s.b.length] = "{";
-		while(l != null) {
-			if(first) first = false; else s.b[s.b.length] = ", ";
-			s.add(Std.string(l[0]));
-			l = l[1];
-		}
-		s.b[s.b.length] = "}";
-		return s.b.join("");
+	,isEmpty: function() {
+		return this.h == null;
 	}
-	,join: function(sep) {
-		var s = new StringBuf();
-		var first = true;
-		var l = this.h;
-		while(l != null) {
-			if(first) first = false; else s.b[s.b.length] = sep == null?"null":sep;
-			s.add(l[0]);
-			l = l[1];
-		}
-		return s.b.join("");
+	,pop: function() {
+		if(this.h == null) return null;
+		var x = this.h[0];
+		this.h = this.h[1];
+		if(this.h == null) this.q = null;
+		this.length--;
+		return x;
 	}
-	,filter: function(f) {
-		var l2 = new List();
-		var l = this.h;
-		while(l != null) {
-			var v = l[0];
-			l = l[1];
-			if(f(v)) l2.add(v);
-		}
-		return l2;
+	,last: function() {
+		return this.q == null?null:this.q[0];
 	}
-	,map: function(f) {
-		var b = new List();
-		var l = this.h;
-		while(l != null) {
-			var v = l[0];
-			l = l[1];
-			b.add(f(v));
-		}
-		return b;
+	,first: function() {
+		return this.h == null?null:this.h[0];
+	}
+	,push: function(item) {
+		var x = [item,this.h];
+		this.h = x;
+		if(this.q == null) this.q = x;
+		this.length++;
+	}
+	,add: function(item) {
+		var x = [item];
+		if(this.h == null) this.h = x; else this.q[1] = x;
+		this.q = x;
+		this.length++;
 	}
 	,__class__: List
 }
-var Main = $hxClasses["Main"] = function() { }
-Main.__name__ = ["Main"];
+var Main = function() { }
+Main.__name__ = true;
 Main.main = function() {
-	if(!js.Lib.isIE) haxe.Firebug.redirectTraces();
-	haxe.Log.trace("Testing...",{ fileName : "Main.hx", lineNumber : 28, className : "Main", methodName : "main"});
+	haxe.Log.trace("Testing...",{ fileName : "Main.hx", lineNumber : 25, className : "Main", methodName : "main"});
 	new specs.co.janicek.core.Array2dSpec();
 	new specs.co.janicek.core.BaseCode64Spec();
 	new specs.co.janicek.core.html.CanvasCoreSpec();
@@ -293,13 +344,10 @@ Main.main = function() {
 	new specs.co.janicek.core.StringCoreSpec();
 	jasmine.Jasmine.getEnv().addReporter(jasmine.Jasmine.newHtmlReporter());
 	jasmine.Jasmine.getEnv().execute();
-	haxe.Log.trace("Done testing.",{ fileName : "Main.hx", lineNumber : 44, className : "Main", methodName : "main"});
+	haxe.Log.trace("Done testing.",{ fileName : "Main.hx", lineNumber : 41, className : "Main", methodName : "main"});
 }
-Main.prototype = {
-	__class__: Main
-}
-var Reflect = $hxClasses["Reflect"] = function() { }
-Reflect.__name__ = ["Reflect"];
+var Reflect = function() { }
+Reflect.__name__ = true;
 Reflect.hasField = function(o,field) {
 	return Object.prototype.hasOwnProperty.call(o,field);
 }
@@ -336,7 +384,7 @@ Reflect.fields = function(o) {
 	return a;
 }
 Reflect.isFunction = function(f) {
-	return typeof(f) == "function" && f.__name__ == null;
+	return typeof(f) == "function" && !(f.__name__ || f.__ename__);
 }
 Reflect.compare = function(a,b) {
 	return a == b?0:a > b?1:-1;
@@ -349,7 +397,7 @@ Reflect.compareMethods = function(f1,f2) {
 Reflect.isObject = function(v) {
 	if(v == null) return false;
 	var t = typeof(v);
-	return t == "string" || t == "object" && !v.__enum__ || t == "function" && v.__name__ != null;
+	return t == "string" || t == "object" && !v.__enum__ || t == "function" && (v.__name__ || v.__ename__);
 }
 Reflect.deleteField = function(o,f) {
 	if(!Reflect.hasField(o,f)) return false;
@@ -372,11 +420,8 @@ Reflect.makeVarArgs = function(f) {
 		return f(a);
 	};
 }
-Reflect.prototype = {
-	__class__: Reflect
-}
-var Std = $hxClasses["Std"] = function() { }
-Std.__name__ = ["Std"];
+var Std = function() { }
+Std.__name__ = true;
 Std["is"] = function(v,t) {
 	return js.Boot.__instanceof(v,t);
 }
@@ -388,7 +433,7 @@ Std["int"] = function(x) {
 }
 Std.parseInt = function(x) {
 	var v = parseInt(x,10);
-	if(v == 0 && x.charCodeAt(1) == 120) v = parseInt(x);
+	if(v == 0 && (HxOverrides.cca(x,1) == 120 || HxOverrides.cca(x,1) == 88)) v = parseInt(x);
 	if(isNaN(v)) return null;
 	return v;
 }
@@ -398,31 +443,27 @@ Std.parseFloat = function(x) {
 Std.random = function(x) {
 	return Math.floor(Math.random() * x);
 }
-Std.prototype = {
-	__class__: Std
-}
-var StringBuf = $hxClasses["StringBuf"] = function() {
-	this.b = new Array();
+var StringBuf = function() {
+	this.b = "";
 };
-StringBuf.__name__ = ["StringBuf"];
+StringBuf.__name__ = true;
 StringBuf.prototype = {
-	add: function(x) {
-		this.b[this.b.length] = x == null?"null":x;
+	toString: function() {
+		return this.b;
 	}
 	,addSub: function(s,pos,len) {
-		this.b[this.b.length] = s.substr(pos,len);
+		this.b += HxOverrides.substr(s,pos,len);
 	}
 	,addChar: function(c) {
-		this.b[this.b.length] = String.fromCharCode(c);
+		this.b += String.fromCharCode(c);
 	}
-	,toString: function() {
-		return this.b.join("");
+	,add: function(x) {
+		this.b += Std.string(x);
 	}
-	,b: null
 	,__class__: StringBuf
 }
-var StringTools = $hxClasses["StringTools"] = function() { }
-StringTools.__name__ = ["StringTools"];
+var StringTools = function() { }
+StringTools.__name__ = true;
 StringTools.urlEncode = function(s) {
 	return encodeURIComponent(s);
 }
@@ -436,28 +477,28 @@ StringTools.htmlUnescape = function(s) {
 	return s.split("&gt;").join(">").split("&lt;").join("<").split("&amp;").join("&");
 }
 StringTools.startsWith = function(s,start) {
-	return s.length >= start.length && s.substr(0,start.length) == start;
+	return s.length >= start.length && HxOverrides.substr(s,0,start.length) == start;
 }
 StringTools.endsWith = function(s,end) {
 	var elen = end.length;
 	var slen = s.length;
-	return slen >= elen && s.substr(slen - elen,elen) == end;
+	return slen >= elen && HxOverrides.substr(s,slen - elen,elen) == end;
 }
 StringTools.isSpace = function(s,pos) {
-	var c = s.charCodeAt(pos);
+	var c = HxOverrides.cca(s,pos);
 	return c >= 9 && c <= 13 || c == 32;
 }
 StringTools.ltrim = function(s) {
 	var l = s.length;
 	var r = 0;
 	while(r < l && StringTools.isSpace(s,r)) r++;
-	if(r > 0) return s.substr(r,l - r); else return s;
+	if(r > 0) return HxOverrides.substr(s,r,l - r); else return s;
 }
 StringTools.rtrim = function(s) {
 	var l = s.length;
 	var r = 0;
 	while(r < l && StringTools.isSpace(s,l - r - 1)) r++;
-	if(r > 0) return s.substr(0,l - r); else return s;
+	if(r > 0) return HxOverrides.substr(s,0,l - r); else return s;
 }
 StringTools.trim = function(s) {
 	return StringTools.ltrim(StringTools.rtrim(s));
@@ -466,7 +507,7 @@ StringTools.rpad = function(s,c,l) {
 	var sl = s.length;
 	var cl = c.length;
 	while(sl < l) if(l - sl < cl) {
-		s += c.substr(0,l - sl);
+		s += HxOverrides.substr(c,0,l - sl);
 		sl = l;
 	} else {
 		s += c;
@@ -480,7 +521,7 @@ StringTools.lpad = function(s,c,l) {
 	if(sl >= l) return s;
 	var cl = c.length;
 	while(sl < l) if(l - sl < cl) {
-		ns += c.substr(0,l - sl);
+		ns += HxOverrides.substr(c,0,l - sl);
 		sl = l;
 	} else {
 		ns += c;
@@ -502,19 +543,16 @@ StringTools.hex = function(n,digits) {
 	return s;
 }
 StringTools.fastCodeAt = function(s,index) {
-	return s.cca(index);
+	return s.charCodeAt(index);
 }
 StringTools.isEOF = function(c) {
 	return c != c;
 }
-StringTools.prototype = {
-	__class__: StringTools
-}
 var co = co || {}
 if(!co.janicek) co.janicek = {}
 if(!co.janicek.core) co.janicek.core = {}
-co.janicek.core.BaseCode64 = $hxClasses["co.janicek.core.BaseCode64"] = function() { }
-co.janicek.core.BaseCode64.__name__ = ["co","janicek","core","BaseCode64"];
+co.janicek.core.BaseCode64 = function() { }
+co.janicek.core.BaseCode64.__name__ = true;
 co.janicek.core.BaseCode64.base64EncodeBytesData = function(bytesData) {
 	var bytes = haxe.io.Bytes.ofData(bytesData);
 	var encodings = haxe.io.Bytes.ofString("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/");
@@ -527,7 +565,7 @@ co.janicek.core.BaseCode64.base64EncodeBytesData = function(bytesData) {
 co.janicek.core.BaseCode64.base64DecodeBytesData = function(base64) {
 	var paddingSize = -1;
 	if(base64.charAt(base64.length - 2) == "=") paddingSize = 2; else if(base64.charAt(base64.length - 1) == "=") paddingSize = 1;
-	if(paddingSize != -1) base64 = base64.substr(0,base64.length - paddingSize);
+	if(paddingSize != -1) base64 = HxOverrides.substr(base64,0,base64.length - paddingSize);
 	var encodings = haxe.io.Bytes.ofString("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/");
 	var bytes = new haxe.BaseCode(encodings).decodeBytes(haxe.io.Bytes.ofString(base64));
 	return bytes.b;
@@ -539,11 +577,8 @@ co.janicek.core.BaseCode64.base64EncodeString = function(string) {
 co.janicek.core.BaseCode64.base64DecodeString = function(base64) {
 	return haxe.io.Bytes.ofData(co.janicek.core.BaseCode64.base64DecodeBytesData(base64)).toString();
 }
-co.janicek.core.BaseCode64.prototype = {
-	__class__: co.janicek.core.BaseCode64
-}
-co.janicek.core.NullCore = $hxClasses["co.janicek.core.NullCore"] = function() { }
-co.janicek.core.NullCore.__name__ = ["co","janicek","core","NullCore"];
+co.janicek.core.NullCore = function() { }
+co.janicek.core.NullCore.__name__ = true;
 co.janicek.core.NullCore.isNull = function(nullable) {
 	return nullable == null;
 }
@@ -553,14 +588,11 @@ co.janicek.core.NullCore.isNotNull = function(nullable) {
 co.janicek.core.NullCore.coalesce = function(nullable,defaultValue) {
 	return nullable == null?defaultValue:nullable;
 }
-co.janicek.core.NullCore.prototype = {
-	__class__: co.janicek.core.NullCore
-}
-co.janicek.core.PathCore = $hxClasses["co.janicek.core.PathCore"] = function() { }
-co.janicek.core.PathCore.__name__ = ["co","janicek","core","PathCore"];
+co.janicek.core.PathCore = function() { }
+co.janicek.core.PathCore.__name__ = true;
 co.janicek.core.PathCore.getDirectoryName = function(path,pathDelimeter) {
 	if(pathDelimeter == null) pathDelimeter = "/";
-	return path.substr(0,path.lastIndexOf(pathDelimeter));
+	return HxOverrides.substr(path,0,path.lastIndexOf(pathDelimeter));
 }
 co.janicek.core.PathCore.getFileName = function(path,pathDelimeter) {
 	if(pathDelimeter == null) pathDelimeter = "/";
@@ -571,13 +603,10 @@ co.janicek.core.PathCore.removeFileNameExtension = function(path,fileExtensionDe
 	if(fileExtensionDelimeter == null) fileExtensionDelimeter = ".";
 	return path.split(fileExtensionDelimeter)[0];
 }
-co.janicek.core.PathCore.prototype = {
-	__class__: co.janicek.core.PathCore
-}
-co.janicek.core.StringCore = $hxClasses["co.janicek.core.StringCore"] = function() { }
-co.janicek.core.StringCore.__name__ = ["co","janicek","core","StringCore"];
+co.janicek.core.StringCore = function() { }
+co.janicek.core.StringCore.__name__ = true;
 co.janicek.core.StringCore.removeFromEnd = function(string,pattern) {
-	if(StringTools.endsWith(string,pattern)) return string.substr(0,string.lastIndexOf(pattern));
+	if(StringTools.endsWith(string,pattern)) return HxOverrides.substr(string,0,string.lastIndexOf(pattern));
 	return string;
 }
 co.janicek.core.StringCore.contains = function(string,pattern) {
@@ -592,12 +621,9 @@ co.janicek.core.StringCore.isInteger = function(s) {
 	if(co.janicek.core.StringCore.contains(s,".")) return false;
 	return Std.parseInt(s) != null;
 }
-co.janicek.core.StringCore.prototype = {
-	__class__: co.janicek.core.StringCore
-}
 if(!co.janicek.core.array) co.janicek.core.array = {}
-co.janicek.core.array.Array2dCore = $hxClasses["co.janicek.core.array.Array2dCore"] = function() { }
-co.janicek.core.array.Array2dCore.__name__ = ["co","janicek","core","array","Array2dCore"];
+co.janicek.core.array.Array2dCore = function() { }
+co.janicek.core.array.Array2dCore.__name__ = true;
 co.janicek.core.array.Array2dCore.get = function(a,x,y) {
 	if(a[y] == null) return null;
 	return a[y][x];
@@ -668,21 +694,19 @@ co.janicek.core.array.Array2dCore.indexes = function(array) {
 		return new co.janicek.core.array.Array2dIterator(array);
 	}};
 }
-co.janicek.core.array.Array2dCore.prototype = {
-	__class__: co.janicek.core.array.Array2dCore
-}
-co.janicek.core.array.Array2dIterator = $hxClasses["co.janicek.core.array.Array2dIterator"] = function(a) {
+co.janicek.core.array.Array2dIterator = function(a) {
 	this.a = a;
 	this.y = 0;
 	this.x = 0;
 	this.nextValue = null;
 };
-co.janicek.core.array.Array2dIterator.__name__ = ["co","janicek","core","array","Array2dIterator"];
+co.janicek.core.array.Array2dIterator.__name__ = true;
 co.janicek.core.array.Array2dIterator.prototype = {
-	a: null
-	,nextValue: null
-	,y: null
-	,x: null
+	next: function() {
+		var n = this.nextValue;
+		this.nextValue = null;
+		return n;
+	}
 	,hasNext: function() {
 		if(this.nextValue != null) return true;
 		while(this.y < this.a.length) {
@@ -699,23 +723,20 @@ co.janicek.core.array.Array2dIterator.prototype = {
 		}
 		return false;
 	}
-	,next: function() {
+	,__class__: co.janicek.core.array.Array2dIterator
+}
+co.janicek.core.array.Array2dValueIterator = function(a) {
+	this.yIterator = HxOverrides.iter(a);
+	this.xIterator = null;
+	this.nextValue = null;
+};
+co.janicek.core.array.Array2dValueIterator.__name__ = true;
+co.janicek.core.array.Array2dValueIterator.prototype = {
+	next: function() {
 		var n = this.nextValue;
 		this.nextValue = null;
 		return n;
 	}
-	,__class__: co.janicek.core.array.Array2dIterator
-}
-co.janicek.core.array.Array2dValueIterator = $hxClasses["co.janicek.core.array.Array2dValueIterator"] = function(a) {
-	this.yIterator = a.iterator();
-	this.xIterator = null;
-	this.nextValue = null;
-};
-co.janicek.core.array.Array2dValueIterator.__name__ = ["co","janicek","core","array","Array2dValueIterator"];
-co.janicek.core.array.Array2dValueIterator.prototype = {
-	yIterator: null
-	,xIterator: null
-	,nextValue: null
 	,hasNext: function() {
 		if(this.nextValue != null) return true;
 		if(this.xIterator != null) while(this.xIterator.hasNext()) {
@@ -725,22 +746,17 @@ co.janicek.core.array.Array2dValueIterator.prototype = {
 		while(this.yIterator.hasNext()) {
 			var z = this.yIterator.next();
 			if(z != null) {
-				this.xIterator = z.iterator();
+				this.xIterator = HxOverrides.iter(z);
 				return this.hasNext();
 			}
 		}
 		return false;
 	}
-	,next: function() {
-		var n = this.nextValue;
-		this.nextValue = null;
-		return n;
-	}
 	,__class__: co.janicek.core.array.Array2dValueIterator
 }
 if(!co.janicek.core.html) co.janicek.core.html = {}
-co.janicek.core.html.CanvasCore = $hxClasses["co.janicek.core.html.CanvasCore"] = function() { }
-co.janicek.core.html.CanvasCore.__name__ = ["co","janicek","core","html","CanvasCore"];
+co.janicek.core.html.CanvasCore = function() { }
+co.janicek.core.html.CanvasCore.__name__ = true;
 co.janicek.core.html.CanvasCore.renderCanvasPixelArray = function(imageData,f) {
 	var pixels = imageData.data;
 	var index;
@@ -766,12 +782,12 @@ co.janicek.core.html.CanvasCore.addNoise = function(pixelData,randomSeed,noiseLe
 	noiseLevel = co.janicek.core.math.MathCore.clampInt(noiseLevel,1,255);
 	var delta;
 	co.janicek.core.html.CanvasCore.renderCanvasPixelArray(pixelData,function(index,red,green,blue,alpha) {
-		delta = co.janicek.core.math.RandomCore.toIntRange(randomSeed = randomSeed * 16807.0 % 2147483647.0,-noiseLevel,noiseLevel);
+		delta = co.janicek.core.math.RandomCore.toIntRange(randomSeed = randomSeed * 16807.0 % 2147483647.0 | 0,-noiseLevel,noiseLevel);
 		var newColors = { red : null, green : null, blue : null, alpha : null};
 		if(changeRed) newColors.red = red + delta;
-		if(changeGreen) newColors.green = green + (grayScale?delta:co.janicek.core.math.RandomCore.toIntRange(randomSeed = randomSeed * 16807.0 % 2147483647.0,-noiseLevel,noiseLevel));
-		if(changeBlue) newColors.blue = blue + (grayScale?delta:co.janicek.core.math.RandomCore.toIntRange(randomSeed = randomSeed * 16807.0 % 2147483647.0,-noiseLevel,noiseLevel));
-		if(changeAlpha) newColors.alpha = alpha + co.janicek.core.math.RandomCore.toIntRange(randomSeed = randomSeed * 16807.0 % 2147483647.0,-noiseLevel,noiseLevel);
+		if(changeGreen) newColors.green = green + (grayScale?delta:co.janicek.core.math.RandomCore.toIntRange(randomSeed = randomSeed * 16807.0 % 2147483647.0 | 0,-noiseLevel,noiseLevel));
+		if(changeBlue) newColors.blue = blue + (grayScale?delta:co.janicek.core.math.RandomCore.toIntRange(randomSeed = randomSeed * 16807.0 % 2147483647.0 | 0,-noiseLevel,noiseLevel));
+		if(changeAlpha) newColors.alpha = alpha + co.janicek.core.math.RandomCore.toIntRange(randomSeed = randomSeed * 16807.0 % 2147483647.0 | 0,-noiseLevel,noiseLevel);
 		return newColors;
 	});
 	return pixelData;
@@ -846,10 +862,7 @@ co.janicek.core.html.CanvasCore.invertBitmap = function(bitmap) {
 	});
 	return bitmap;
 }
-co.janicek.core.html.CanvasCore.prototype = {
-	__class__: co.janicek.core.html.CanvasCore
-}
-co.janicek.core.html.HtmlColor = $hxClasses["co.janicek.core.html.HtmlColor"] = { __ename__ : ["co","janicek","core","html","HtmlColor"], __constructs__ : ["Color","Rgb","Rgba","RgbF","RgbaF","Hsl","Hsla"] }
+co.janicek.core.html.HtmlColor = { __ename__ : true, __constructs__ : ["Color","Rgb","Rgba","RgbF","RgbaF","Hsl","Hsla"] }
 co.janicek.core.html.HtmlColor.Color = function(color) { var $x = ["Color",0,color]; $x.__enum__ = co.janicek.core.html.HtmlColor; $x.toString = $estr; return $x; }
 co.janicek.core.html.HtmlColor.Rgb = function(r,g,b) { var $x = ["Rgb",1,r,g,b]; $x.__enum__ = co.janicek.core.html.HtmlColor; $x.toString = $estr; return $x; }
 co.janicek.core.html.HtmlColor.Rgba = function(red,green,blue,alpha) { var $x = ["Rgba",2,red,green,blue,alpha]; $x.__enum__ = co.janicek.core.html.HtmlColor; $x.toString = $estr; return $x; }
@@ -857,8 +870,8 @@ co.janicek.core.html.HtmlColor.RgbF = function(red,green,blue) { var $x = ["RgbF
 co.janicek.core.html.HtmlColor.RgbaF = function(red,green,blue,alpha) { var $x = ["RgbaF",4,red,green,blue,alpha]; $x.__enum__ = co.janicek.core.html.HtmlColor; $x.toString = $estr; return $x; }
 co.janicek.core.html.HtmlColor.Hsl = function(hue,saturation,lightness) { var $x = ["Hsl",5,hue,saturation,lightness]; $x.__enum__ = co.janicek.core.html.HtmlColor; $x.toString = $estr; return $x; }
 co.janicek.core.html.HtmlColor.Hsla = function(hue,saturation,lightness,alpha) { var $x = ["Hsla",6,hue,saturation,lightness,alpha]; $x.__enum__ = co.janicek.core.html.HtmlColor; $x.toString = $estr; return $x; }
-co.janicek.core.html.HtmlColors = $hxClasses["co.janicek.core.html.HtmlColors"] = function() { }
-co.janicek.core.html.HtmlColors.__name__ = ["co","janicek","core","html","HtmlColors"];
+co.janicek.core.html.HtmlColors = function() { }
+co.janicek.core.html.HtmlColors.__name__ = true;
 co.janicek.core.html.HtmlColors.toString = function(c) {
 	return (function($this) {
 		var $r;
@@ -896,11 +909,8 @@ co.janicek.core.html.HtmlColors.toString = function(c) {
 		return $r;
 	}(this));
 }
-co.janicek.core.html.HtmlColors.prototype = {
-	__class__: co.janicek.core.html.HtmlColors
-}
-co.janicek.core.html.HtmlColorCore = $hxClasses["co.janicek.core.html.HtmlColorCore"] = function() { }
-co.janicek.core.html.HtmlColorCore.__name__ = ["co","janicek","core","html","HtmlColorCore"];
+co.janicek.core.html.HtmlColorCore = function() { }
+co.janicek.core.html.HtmlColorCore.__name__ = true;
 co.janicek.core.html.HtmlColorCore.getRedComponent = function(c) {
 	return c >> 16 & 255;
 }
@@ -943,18 +953,15 @@ co.janicek.core.html.HtmlColorCore.hsl = function(hue,saturation,lightness) {
 co.janicek.core.html.HtmlColorCore.hsla = function(hue,saturation,lightness,alpha) {
 	return "hsla(" + hue + "," + saturation * 100 + "%," + lightness * 100 + "%," + alpha + ")";
 }
-co.janicek.core.html.HtmlColorCore.prototype = {
-	__class__: co.janicek.core.html.HtmlColorCore
-}
 if(!co.janicek.core.math) co.janicek.core.math = {}
-co.janicek.core.math.HashCore = $hxClasses["co.janicek.core.math.HashCore"] = function() { }
-co.janicek.core.math.HashCore.__name__ = ["co","janicek","core","math","HashCore"];
+co.janicek.core.math.HashCore = function() { }
+co.janicek.core.math.HashCore.__name__ = true;
 co.janicek.core.math.HashCore.djb2 = function(s) {
 	var hash = 5381;
 	var _g1 = 0, _g = s.length;
 	while(_g1 < _g) {
 		var i = _g1++;
-		hash = (hash << 5) + hash + s.charCodeAt(i);
+		hash = (hash << 5) + hash + HxOverrides.cca(s,i);
 	}
 	return hash;
 }
@@ -963,7 +970,7 @@ co.janicek.core.math.HashCore.sdbm = function(s) {
 	var _g1 = 0, _g = s.length;
 	while(_g1 < _g) {
 		var i = _g1++;
-		hash = s.charCodeAt(i) + (hash << 6) + (hash << 16) - hash;
+		hash = HxOverrides.cca(s,i) + (hash << 6) + (hash << 16) - hash;
 	}
 	return hash;
 }
@@ -973,16 +980,13 @@ co.janicek.core.math.HashCore.javaHashCode = function(s) {
 	var _g1 = 0, _g = s.length;
 	while(_g1 < _g) {
 		var i = _g1++;
-		hash = (hash << 5) - hash + s.charCodeAt(i);
+		hash = (hash << 5) - hash + HxOverrides.cca(s,i);
 		hash = hash & hash;
 	}
 	return hash;
 }
-co.janicek.core.math.HashCore.prototype = {
-	__class__: co.janicek.core.math.HashCore
-}
-co.janicek.core.math.MathCore = $hxClasses["co.janicek.core.math.MathCore"] = function() { }
-co.janicek.core.math.MathCore.__name__ = ["co","janicek","core","math","MathCore"];
+co.janicek.core.math.MathCore = function() { }
+co.janicek.core.math.MathCore.__name__ = true;
 co.janicek.core.math.MathCore.isEven = function(n) {
 	return n % 2 == 0;
 }
@@ -1011,11 +1015,8 @@ co.janicek.core.math.MathCore.averageInt = function(numbers) {
 		return total + number;
 	},0) / numbers.length;
 }
-co.janicek.core.math.MathCore.prototype = {
-	__class__: co.janicek.core.math.MathCore
-}
-co.janicek.core.math.PerlinNoise = $hxClasses["co.janicek.core.math.PerlinNoise"] = function() { }
-co.janicek.core.math.PerlinNoise.__name__ = ["co","janicek","core","math","PerlinNoise"];
+co.janicek.core.math.PerlinNoise = function() { }
+co.janicek.core.math.PerlinNoise.__name__ = true;
 co.janicek.core.math.PerlinNoise.makePerlinNoise = function(width,height,_x,_y,_z,seed,octaves,falloff,_) {
 	if(falloff == null) falloff = 0.5;
 	if(octaves == null) octaves = 4;
@@ -1111,19 +1112,24 @@ co.janicek.core.math.PerlinNoise.makePerlinNoise = function(width,height,_x,_y,_
 	}
 	return bitmap;
 }
-co.janicek.core.math.PerlinNoise.prototype = {
-	__class__: co.janicek.core.math.PerlinNoise
-}
-co.janicek.core.math.RandomCore = $hxClasses["co.janicek.core.math.RandomCore"] = function() { }
-co.janicek.core.math.RandomCore.__name__ = ["co","janicek","core","math","RandomCore"];
+co.janicek.core.math.RandomCore = function() { }
+co.janicek.core.math.RandomCore.__name__ = true;
 co.janicek.core.math.RandomCore.makeRandomSeed = function() {
 	return Math.floor(Math.random() * 2147483647.0);
 }
 co.janicek.core.math.RandomCore.nextParkMiller = function(seed) {
-	return seed * 16807.0 % 2147483647.0;
+	return seed * 16807.0 % 2147483647.0 | 0;
+}
+co.janicek.core.math.RandomCore.nextParkMiller31 = function(seed) {
+	var lo = 16807 * (seed & 65535);
+	var hi = 16807 * (seed >>> 16);
+	lo += (hi & 32767) << 16;
+	lo += hi >>> 15;
+	if(lo > 2147483647) lo -= 2147483647;
+	return lo;
 }
 co.janicek.core.math.RandomCore.nextLCG = function(seed) {
-	return (1103515245.0 * seed + 12345) % 2147483647.0;
+	return (1103515245.0 * seed + 12345) % 2147483647.0 | 0;
 }
 co.janicek.core.math.RandomCore.toFloat = function(seed) {
 	return seed / 2147483647.0;
@@ -1140,11 +1146,8 @@ co.janicek.core.math.RandomCore.toIntRange = function(seed,min,max) {
 co.janicek.core.math.RandomCore.stringToSeed = function(s) {
 	return co.janicek.core.math.HashCore.djb2(s) % 2147483647.0 | 0;
 }
-co.janicek.core.math.RandomCore.prototype = {
-	__class__: co.janicek.core.math.RandomCore
-}
 var haxe = haxe || {}
-haxe.BaseCode = $hxClasses["haxe.BaseCode"] = function(base) {
+haxe.BaseCode = function(base) {
 	var len = base.length;
 	var nbits = 1;
 	while(len > 1 << nbits) nbits++;
@@ -1152,7 +1155,7 @@ haxe.BaseCode = $hxClasses["haxe.BaseCode"] = function(base) {
 	this.base = base;
 	this.nbits = nbits;
 };
-haxe.BaseCode.__name__ = ["haxe","BaseCode"];
+haxe.BaseCode.__name__ = true;
 haxe.BaseCode.encode = function(s,base) {
 	var b = new haxe.BaseCode(haxe.io.Bytes.ofString(base));
 	return b.encodeString(s);
@@ -1162,44 +1165,11 @@ haxe.BaseCode.decode = function(s,base) {
 	return b.decodeString(s);
 }
 haxe.BaseCode.prototype = {
-	base: null
-	,nbits: null
-	,tbl: null
-	,encodeBytes: function(b) {
-		var nbits = this.nbits;
-		var base = this.base;
-		var size = b.length * 8 / nbits | 0;
-		var out = haxe.io.Bytes.alloc(size + (b.length * 8 % nbits == 0?0:1));
-		var buf = 0;
-		var curbits = 0;
-		var mask = (1 << nbits) - 1;
-		var pin = 0;
-		var pout = 0;
-		while(pout < size) {
-			while(curbits < nbits) {
-				curbits += 8;
-				buf <<= 8;
-				buf |= b.b[pin++];
-			}
-			curbits -= nbits;
-			out.b[pout++] = base.b[buf >> curbits & mask] & 255;
-		}
-		if(curbits > 0) out.b[pout++] = base.b[buf << nbits - curbits & mask] & 255;
-		return out;
+	decodeString: function(s) {
+		return this.decodeBytes(haxe.io.Bytes.ofString(s)).toString();
 	}
-	,initTable: function() {
-		var tbl = new Array();
-		var _g = 0;
-		while(_g < 256) {
-			var i = _g++;
-			tbl[i] = -1;
-		}
-		var _g1 = 0, _g = this.base.length;
-		while(_g1 < _g) {
-			var i = _g1++;
-			tbl[this.base.b[i]] = i;
-		}
-		this.tbl = tbl;
+	,encodeString: function(s) {
+		return this.encodeBytes(haxe.io.Bytes.ofString(s)).toString();
 	}
 	,decodeBytes: function(b) {
 		var nbits = this.nbits;
@@ -1225,16 +1195,46 @@ haxe.BaseCode.prototype = {
 		}
 		return out;
 	}
-	,encodeString: function(s) {
-		return this.encodeBytes(haxe.io.Bytes.ofString(s)).toString();
+	,initTable: function() {
+		var tbl = new Array();
+		var _g = 0;
+		while(_g < 256) {
+			var i = _g++;
+			tbl[i] = -1;
+		}
+		var _g1 = 0, _g = this.base.length;
+		while(_g1 < _g) {
+			var i = _g1++;
+			tbl[this.base.b[i]] = i;
+		}
+		this.tbl = tbl;
 	}
-	,decodeString: function(s) {
-		return this.decodeBytes(haxe.io.Bytes.ofString(s)).toString();
+	,encodeBytes: function(b) {
+		var nbits = this.nbits;
+		var base = this.base;
+		var size = b.length * 8 / nbits | 0;
+		var out = haxe.io.Bytes.alloc(size + (b.length * 8 % nbits == 0?0:1));
+		var buf = 0;
+		var curbits = 0;
+		var mask = (1 << nbits) - 1;
+		var pin = 0;
+		var pout = 0;
+		while(pout < size) {
+			while(curbits < nbits) {
+				curbits += 8;
+				buf <<= 8;
+				buf |= b.b[pin++];
+			}
+			curbits -= nbits;
+			out.b[pout++] = base.b[buf >> curbits & mask] & 255;
+		}
+		if(curbits > 0) out.b[pout++] = base.b[buf << nbits - curbits & mask] & 255;
+		return out;
 	}
 	,__class__: haxe.BaseCode
 }
-haxe.Firebug = $hxClasses["haxe.Firebug"] = function() { }
-haxe.Firebug.__name__ = ["haxe","Firebug"];
+haxe.Firebug = function() { }
+haxe.Firebug.__name__ = true;
 haxe.Firebug.detect = function() {
 	try {
 		return console != null && console.error != null;
@@ -1262,27 +1262,21 @@ haxe.Firebug.trace = function(v,inf) {
 	if(type != "warn" && type != "info" && type != "debug" && type != "error") type = inf == null?"error":"log";
 	console[type]((inf == null?"":inf.fileName + ":" + inf.lineNumber + " : ") + Std.string(v));
 }
-haxe.Firebug.prototype = {
-	__class__: haxe.Firebug
-}
-haxe.Log = $hxClasses["haxe.Log"] = function() { }
-haxe.Log.__name__ = ["haxe","Log"];
+haxe.Log = function() { }
+haxe.Log.__name__ = true;
 haxe.Log.trace = function(v,infos) {
 	js.Boot.__trace(v,infos);
 }
 haxe.Log.clear = function() {
 	js.Boot.__clear_trace();
 }
-haxe.Log.prototype = {
-	__class__: haxe.Log
-}
-haxe.Timer = $hxClasses["haxe.Timer"] = function(time_ms) {
+haxe.Timer = function(time_ms) {
 	var me = this;
 	this.id = window.setInterval(function() {
 		me.run();
 	},time_ms);
 };
-haxe.Timer.__name__ = ["haxe","Timer"];
+haxe.Timer.__name__ = true;
 haxe.Timer.delay = function(f,time_ms) {
 	var t = new haxe.Timer(time_ms);
 	t.run = function() {
@@ -1298,25 +1292,24 @@ haxe.Timer.measure = function(f,pos) {
 	return r;
 }
 haxe.Timer.stamp = function() {
-	return Date.now().getTime() / 1000;
+	return new Date().getTime() / 1000;
 }
 haxe.Timer.prototype = {
-	id: null
+	run: function() {
+	}
 	,stop: function() {
 		if(this.id == null) return;
 		window.clearInterval(this.id);
 		this.id = null;
 	}
-	,run: function() {
-	}
 	,__class__: haxe.Timer
 }
 if(!haxe.io) haxe.io = {}
-haxe.io.Bytes = $hxClasses["haxe.io.Bytes"] = function(length,b) {
+haxe.io.Bytes = function(length,b) {
 	this.length = length;
 	this.b = b;
 };
-haxe.io.Bytes.__name__ = ["haxe","io","Bytes"];
+haxe.io.Bytes.__name__ = true;
 haxe.io.Bytes.alloc = function(length) {
 	var a = new Array();
 	var _g = 0;
@@ -1331,7 +1324,7 @@ haxe.io.Bytes.ofString = function(s) {
 	var _g1 = 0, _g = s.length;
 	while(_g1 < _g) {
 		var i = _g1++;
-		var c = s.cca(i);
+		var c = s.charCodeAt(i);
 		if(c <= 127) a.push(c); else if(c <= 2047) {
 			a.push(192 | c >> 6);
 			a.push(128 | c & 63);
@@ -1352,46 +1345,29 @@ haxe.io.Bytes.ofData = function(b) {
 	return new haxe.io.Bytes(b.length,b);
 }
 haxe.io.Bytes.prototype = {
-	length: null
-	,b: null
-	,get: function(pos) {
-		return this.b[pos];
+	getData: function() {
+		return this.b;
 	}
-	,set: function(pos,v) {
-		this.b[pos] = v & 255;
-	}
-	,blit: function(pos,src,srcpos,len) {
-		if(pos < 0 || srcpos < 0 || len < 0 || pos + len > this.length || srcpos + len > src.length) throw haxe.io.Error.OutsideBounds;
-		var b1 = this.b;
-		var b2 = src.b;
-		if(b1 == b2 && pos > srcpos) {
-			var i = len;
-			while(i > 0) {
-				i--;
-				b1[i + pos] = b2[i + srcpos];
-			}
-			return;
+	,toHex: function() {
+		var s = new StringBuf();
+		var chars = [];
+		var str = "0123456789abcdef";
+		var _g1 = 0, _g = str.length;
+		while(_g1 < _g) {
+			var i = _g1++;
+			chars.push(HxOverrides.cca(str,i));
 		}
-		var _g = 0;
-		while(_g < len) {
-			var i = _g++;
-			b1[i + pos] = b2[i + srcpos];
+		var _g1 = 0, _g = this.length;
+		while(_g1 < _g) {
+			var i = _g1++;
+			var c = this.b[i];
+			s.b += String.fromCharCode(chars[c >> 4]);
+			s.b += String.fromCharCode(chars[c & 15]);
 		}
+		return s.b;
 	}
-	,sub: function(pos,len) {
-		if(pos < 0 || len < 0 || pos + len > this.length) throw haxe.io.Error.OutsideBounds;
-		return new haxe.io.Bytes(len,this.b.slice(pos,pos + len));
-	}
-	,compare: function(other) {
-		var b1 = this.b;
-		var b2 = other.b;
-		var len = this.length < other.length?this.length:other.length;
-		var _g = 0;
-		while(_g < len) {
-			var i = _g++;
-			if(b1[i] != b2[i]) return b1[i] - b2[i];
-		}
-		return this.length - other.length;
+	,toString: function() {
+		return this.readString(0,this.length);
 	}
 	,readString: function(pos,len) {
 		if(pos < 0 || len < 0 || pos + len > this.length) throw haxe.io.Error.OutsideBounds;
@@ -1416,33 +1392,48 @@ haxe.io.Bytes.prototype = {
 		}
 		return s;
 	}
-	,toString: function() {
-		return this.readString(0,this.length);
-	}
-	,toHex: function() {
-		var s = new StringBuf();
-		var chars = [];
-		var str = "0123456789abcdef";
-		var _g1 = 0, _g = str.length;
-		while(_g1 < _g) {
-			var i = _g1++;
-			chars.push(str.charCodeAt(i));
+	,compare: function(other) {
+		var b1 = this.b;
+		var b2 = other.b;
+		var len = this.length < other.length?this.length:other.length;
+		var _g = 0;
+		while(_g < len) {
+			var i = _g++;
+			if(b1[i] != b2[i]) return b1[i] - b2[i];
 		}
-		var _g1 = 0, _g = this.length;
-		while(_g1 < _g) {
-			var i = _g1++;
-			var c = this.b[i];
-			s.b[s.b.length] = String.fromCharCode(chars[c >> 4]);
-			s.b[s.b.length] = String.fromCharCode(chars[c & 15]);
-		}
-		return s.b.join("");
+		return this.length - other.length;
 	}
-	,getData: function() {
-		return this.b;
+	,sub: function(pos,len) {
+		if(pos < 0 || len < 0 || pos + len > this.length) throw haxe.io.Error.OutsideBounds;
+		return new haxe.io.Bytes(len,this.b.slice(pos,pos + len));
+	}
+	,blit: function(pos,src,srcpos,len) {
+		if(pos < 0 || srcpos < 0 || len < 0 || pos + len > this.length || srcpos + len > src.length) throw haxe.io.Error.OutsideBounds;
+		var b1 = this.b;
+		var b2 = src.b;
+		if(b1 == b2 && pos > srcpos) {
+			var i = len;
+			while(i > 0) {
+				i--;
+				b1[i + pos] = b2[i + srcpos];
+			}
+			return;
+		}
+		var _g = 0;
+		while(_g < len) {
+			var i = _g++;
+			b1[i + pos] = b2[i + srcpos];
+		}
+	}
+	,set: function(pos,v) {
+		this.b[pos] = v & 255;
+	}
+	,get: function(pos) {
+		return this.b[pos];
 	}
 	,__class__: haxe.io.Bytes
 }
-haxe.io.Error = $hxClasses["haxe.io.Error"] = { __ename__ : ["haxe","io","Error"], __constructs__ : ["Blocked","Overflow","OutsideBounds","Custom"] }
+haxe.io.Error = { __ename__ : true, __constructs__ : ["Blocked","Overflow","OutsideBounds","Custom"] }
 haxe.io.Error.Blocked = ["Blocked",0];
 haxe.io.Error.Blocked.toString = $estr;
 haxe.io.Error.Blocked.__enum__ = haxe.io.Error;
@@ -1454,8 +1445,8 @@ haxe.io.Error.OutsideBounds.toString = $estr;
 haxe.io.Error.OutsideBounds.__enum__ = haxe.io.Error;
 haxe.io.Error.Custom = function(e) { var $x = ["Custom",3,e]; $x.__enum__ = haxe.io.Error; $x.toString = $estr; return $x; }
 var jasmine = jasmine || {}
-jasmine.J = $hxClasses["jasmine.J"] = function() { }
-jasmine.J.__name__ = ["jasmine","J"];
+jasmine.J = function() { }
+jasmine.J.__name__ = true;
 jasmine.J.beforeEach = function(beforeEachFunction) {
 	beforeEach(beforeEachFunction);
 }
@@ -1489,11 +1480,8 @@ jasmine.J.waitsFor = function(func,message,timeoutMilliseconds) {
 jasmine.J.spyOn = function(x,method) {
 	return spyOn(x, method);
 }
-jasmine.J.prototype = {
-	__class__: jasmine.J
-}
-jasmine.Jasmine = $hxClasses["jasmine.Jasmine"] = function() { }
-jasmine.Jasmine.__name__ = ["jasmine","Jasmine"];
+jasmine.Jasmine = function() { }
+jasmine.Jasmine.__name__ = true;
 jasmine.Jasmine.getEnv = function() {
 	return jasmine.getEnv();
 }
@@ -1506,34 +1494,40 @@ jasmine.Jasmine.newHtmlReporter = function() {
 jasmine.Jasmine.createSpy = function(name) {
 	return jasmine.createSpy(name);
 }
-jasmine.Jasmine.prototype = {
-	__class__: jasmine.Jasmine
-}
 var js = js || {}
-js.Boot = $hxClasses["js.Boot"] = function() { }
-js.Boot.__name__ = ["js","Boot"];
+js.Boot = function() { }
+js.Boot.__name__ = true;
 js.Boot.__unhtml = function(s) {
 	return s.split("&").join("&amp;").split("<").join("&lt;").split(">").join("&gt;");
 }
 js.Boot.__trace = function(v,i) {
 	var msg = i != null?i.fileName + ":" + i.lineNumber + ": ":"";
 	msg += js.Boot.__string_rec(v,"");
-	var d = document.getElementById("haxe:trace");
-	if(d != null) d.innerHTML += js.Boot.__unhtml(msg) + "<br/>"; else if(typeof(console) != "undefined" && console.log != null) console.log(msg);
+	var d;
+	if(typeof(document) != "undefined" && (d = document.getElementById("haxe:trace")) != null) d.innerHTML += js.Boot.__unhtml(msg) + "<br/>"; else if(typeof(console) != "undefined" && console.log != null) console.log(msg);
 }
 js.Boot.__clear_trace = function() {
 	var d = document.getElementById("haxe:trace");
 	if(d != null) d.innerHTML = "";
 }
+js.Boot.isClass = function(o) {
+	return o.__name__;
+}
+js.Boot.isEnum = function(e) {
+	return e.__ename__;
+}
+js.Boot.getClass = function(o) {
+	return o.__class__;
+}
 js.Boot.__string_rec = function(o,s) {
 	if(o == null) return "null";
 	if(s.length >= 5) return "<...>";
 	var t = typeof(o);
-	if(t == "function" && (o.__name__ != null || o.__ename__ != null)) t = "object";
+	if(t == "function" && (o.__name__ || o.__ename__)) t = "object";
 	switch(t) {
 	case "object":
 		if(o instanceof Array) {
-			if(o.__enum__ != null) {
+			if(o.__enum__) {
 				if(o.length == 2) return o[0];
 				var str = o[0] + "(";
 				s += "\t";
@@ -1628,74 +1622,19 @@ js.Boot.__instanceof = function(o,cl) {
 		return true;
 	default:
 		if(o == null) return false;
-		return o.__enum__ == cl || cl == Class && o.__name__ != null || cl == Enum && o.__ename__ != null;
+		if(cl == Class && o.__name__ != null) return true; else null;
+		if(cl == Enum && o.__ename__ != null) return true; else null;
+		return o.__enum__ == cl;
 	}
 }
-js.Boot.__init = function() {
-	js.Lib.isIE = typeof document!='undefined' && document.all != null && typeof window!='undefined' && window.opera == null;
-	js.Lib.isOpera = typeof window!='undefined' && window.opera != null;
-	Array.prototype.copy = Array.prototype.slice;
-	Array.prototype.insert = function(i,x) {
-		this.splice(i,0,x);
-	};
-	Array.prototype.remove = Array.prototype.indexOf?function(obj) {
-		var idx = this.indexOf(obj);
-		if(idx == -1) return false;
-		this.splice(idx,1);
-		return true;
-	}:function(obj) {
-		var i = 0;
-		var l = this.length;
-		while(i < l) {
-			if(this[i] == obj) {
-				this.splice(i,1);
-				return true;
-			}
-			i++;
-		}
-		return false;
-	};
-	Array.prototype.iterator = function() {
-		return { cur : 0, arr : this, hasNext : function() {
-			return this.cur < this.arr.length;
-		}, next : function() {
-			return this.arr[this.cur++];
-		}};
-	};
-	if(String.prototype.cca == null) String.prototype.cca = String.prototype.charCodeAt;
-	String.prototype.charCodeAt = function(i) {
-		var x = this.cca(i);
-		if(x != x) return undefined;
-		return x;
-	};
-	var oldsub = String.prototype.substr;
-	String.prototype.substr = function(pos,len) {
-		if(pos != null && pos != 0 && len != null && len < 0) return "";
-		if(len == null) len = this.length;
-		if(pos < 0) {
-			pos = this.length + pos;
-			if(pos < 0) pos = 0;
-		} else if(len < 0) len = this.length + len - pos;
-		return oldsub.apply(this,[pos,len]);
-	};
-	Function.prototype["$bind"] = function(o) {
-		var f = function() {
-			return f.method.apply(f.scope,arguments);
-		};
-		f.scope = o;
-		f.method = this;
-		return f;
-	};
+js.Boot.__cast = function(o,t) {
+	if(js.Boot.__instanceof(o,t)) return o; else throw "Cannot cast " + Std.string(o) + " to " + Std.string(t);
 }
-js.Boot.prototype = {
-	__class__: js.Boot
+js.Lib = function() { }
+js.Lib.__name__ = true;
+js.Lib.debug = function() {
+	debugger;
 }
-js.Lib = $hxClasses["js.Lib"] = function() { }
-js.Lib.__name__ = ["js","Lib"];
-js.Lib.isIE = null;
-js.Lib.isOpera = null;
-js.Lib.document = null;
-js.Lib.window = null;
 js.Lib.alert = function(v) {
 	alert(js.Boot.__string_rec(v,""));
 }
@@ -1705,14 +1644,11 @@ js.Lib.eval = function(code) {
 js.Lib.setErrorHandler = function(f) {
 	js.Lib.onerror = f;
 }
-js.Lib.prototype = {
-	__class__: js.Lib
-}
 var specs = specs || {}
 if(!specs.co) specs.co = {}
 if(!specs.co.janicek) specs.co.janicek = {}
 if(!specs.co.janicek.core) specs.co.janicek.core = {}
-specs.co.janicek.core.Array2dSpec = $hxClasses["specs.co.janicek.core.Array2dSpec"] = function() {
+specs.co.janicek.core.Array2dSpec = function() {
 	jasmine.J.describe("Array2DCore",function() {
 		jasmine.J.describe("get()",function() {
 			jasmine.J.it("should get value at index",function() {
@@ -1810,11 +1746,11 @@ specs.co.janicek.core.Array2dSpec = $hxClasses["specs.co.janicek.core.Array2dSpe
 		});
 	});
 };
-specs.co.janicek.core.Array2dSpec.__name__ = ["specs","co","janicek","core","Array2dSpec"];
+specs.co.janicek.core.Array2dSpec.__name__ = true;
 specs.co.janicek.core.Array2dSpec.prototype = {
 	__class__: specs.co.janicek.core.Array2dSpec
 }
-specs.co.janicek.core.BaseCode64Spec = $hxClasses["specs.co.janicek.core.BaseCode64Spec"] = function() {
+specs.co.janicek.core.BaseCode64Spec = function() {
 	jasmine.J.describe("BaseCode64",function() {
 		jasmine.J.it("should encode and decode every byte value",function() {
 			var byteValueStart = 0;
@@ -1855,11 +1791,11 @@ specs.co.janicek.core.BaseCode64Spec = $hxClasses["specs.co.janicek.core.BaseCod
 		});
 	});
 };
-specs.co.janicek.core.BaseCode64Spec.__name__ = ["specs","co","janicek","core","BaseCode64Spec"];
+specs.co.janicek.core.BaseCode64Spec.__name__ = true;
 specs.co.janicek.core.BaseCode64Spec.prototype = {
 	__class__: specs.co.janicek.core.BaseCode64Spec
 }
-specs.co.janicek.core.NullCoreSpec = $hxClasses["specs.co.janicek.core.NullCoreSpec"] = function() {
+specs.co.janicek.core.NullCoreSpec = function() {
 	jasmine.J.describe("NullCore",function() {
 		jasmine.J.describe("isNull()",function() {
 			jasmine.J.it("should test nullable type for null",function() {
@@ -1905,11 +1841,11 @@ specs.co.janicek.core.NullCoreSpec = $hxClasses["specs.co.janicek.core.NullCoreS
 		});
 	});
 };
-specs.co.janicek.core.NullCoreSpec.__name__ = ["specs","co","janicek","core","NullCoreSpec"];
+specs.co.janicek.core.NullCoreSpec.__name__ = true;
 specs.co.janicek.core.NullCoreSpec.prototype = {
 	__class__: specs.co.janicek.core.NullCoreSpec
 }
-specs.co.janicek.core.PathCoreSpec = $hxClasses["specs.co.janicek.core.PathCoreSpec"] = function() {
+specs.co.janicek.core.PathCoreSpec = function() {
 	jasmine.J.describe("PathCore",function() {
 		jasmine.J.describe("getDirectoryName()",function() {
 			jasmine.J.it("should get directory name from path that includes filename",function() {
@@ -1934,11 +1870,11 @@ specs.co.janicek.core.PathCoreSpec = $hxClasses["specs.co.janicek.core.PathCoreS
 		});
 	});
 };
-specs.co.janicek.core.PathCoreSpec.__name__ = ["specs","co","janicek","core","PathCoreSpec"];
+specs.co.janicek.core.PathCoreSpec.__name__ = true;
 specs.co.janicek.core.PathCoreSpec.prototype = {
 	__class__: specs.co.janicek.core.PathCoreSpec
 }
-specs.co.janicek.core.StringCoreSpec = $hxClasses["specs.co.janicek.core.StringCoreSpec"] = function() {
+specs.co.janicek.core.StringCoreSpec = function() {
 	jasmine.J.describe("StringCore",function() {
 		jasmine.J.describe("removeFromEnd()",function() {
 			jasmine.J.it("should remove one string from the end of another string",function() {
@@ -1966,12 +1902,12 @@ specs.co.janicek.core.StringCoreSpec = $hxClasses["specs.co.janicek.core.StringC
 		});
 	});
 };
-specs.co.janicek.core.StringCoreSpec.__name__ = ["specs","co","janicek","core","StringCoreSpec"];
+specs.co.janicek.core.StringCoreSpec.__name__ = true;
 specs.co.janicek.core.StringCoreSpec.prototype = {
 	__class__: specs.co.janicek.core.StringCoreSpec
 }
 if(!specs.co.janicek.core.html) specs.co.janicek.core.html = {}
-specs.co.janicek.core.html.CanvasCoreSpec = $hxClasses["specs.co.janicek.core.html.CanvasCoreSpec"] = function() {
+specs.co.janicek.core.html.CanvasCoreSpec = function() {
 	jasmine.J.describe("CanvasCore",function() {
 		jasmine.J.describe("loadImage()",function() {
 			jasmine.J.it("should load an image from a URL",function() {
@@ -2006,11 +1942,11 @@ specs.co.janicek.core.html.CanvasCoreSpec = $hxClasses["specs.co.janicek.core.ht
 		});
 	});
 };
-specs.co.janicek.core.html.CanvasCoreSpec.__name__ = ["specs","co","janicek","core","html","CanvasCoreSpec"];
+specs.co.janicek.core.html.CanvasCoreSpec.__name__ = true;
 specs.co.janicek.core.html.CanvasCoreSpec.prototype = {
 	__class__: specs.co.janicek.core.html.CanvasCoreSpec
 }
-specs.co.janicek.core.html.HtmlColorCoreSpec = $hxClasses["specs.co.janicek.core.html.HtmlColorCoreSpec"] = function() {
+specs.co.janicek.core.html.HtmlColorCoreSpec = function() {
 	jasmine.J.describe("HtmlColorCore",function() {
 		jasmine.J.describe("getRedComponent()",function() {
 			jasmine.J.it("should get red color coponent",function() {
@@ -2088,12 +2024,12 @@ specs.co.janicek.core.html.HtmlColorCoreSpec = $hxClasses["specs.co.janicek.core
 		});
 	});
 };
-specs.co.janicek.core.html.HtmlColorCoreSpec.__name__ = ["specs","co","janicek","core","html","HtmlColorCoreSpec"];
+specs.co.janicek.core.html.HtmlColorCoreSpec.__name__ = true;
 specs.co.janicek.core.html.HtmlColorCoreSpec.prototype = {
 	__class__: specs.co.janicek.core.html.HtmlColorCoreSpec
 }
 if(!specs.co.janicek.core.math) specs.co.janicek.core.math = {}
-specs.co.janicek.core.math.HashCoreSpec = $hxClasses["specs.co.janicek.core.math.HashCoreSpec"] = function() {
+specs.co.janicek.core.math.HashCoreSpec = function() {
 	jasmine.J.describe("HashCore",function() {
 		jasmine.J.describe("djb2()",function() {
 			jasmine.J.it("should make djb2 hash",function() {
@@ -2102,11 +2038,11 @@ specs.co.janicek.core.math.HashCoreSpec = $hxClasses["specs.co.janicek.core.math
 		});
 	});
 };
-specs.co.janicek.core.math.HashCoreSpec.__name__ = ["specs","co","janicek","core","math","HashCoreSpec"];
+specs.co.janicek.core.math.HashCoreSpec.__name__ = true;
 specs.co.janicek.core.math.HashCoreSpec.prototype = {
 	__class__: specs.co.janicek.core.math.HashCoreSpec
 }
-specs.co.janicek.core.math.MathCoreSpec = $hxClasses["specs.co.janicek.core.math.MathCoreSpec"] = function() {
+specs.co.janicek.core.math.MathCoreSpec = function() {
 	jasmine.J.describe("MathCore",function() {
 		jasmine.J.describe("average()",function() {
 			jasmine.J.it("should calculate average from array of Floats",function() {
@@ -2121,6 +2057,16 @@ specs.co.janicek.core.math.MathCoreSpec = $hxClasses["specs.co.janicek.core.math
 		jasmine.J.describe("degreesToRadians()",function() {
 			jasmine.J.it("should convert degrees to radians",function() {
 				jasmine.J.expect(co.janicek.core.math.MathCore.degreesToRadians(180)).toBe(3.141592653589793);
+			});
+		});
+		jasmine.J.describe("INT53_MAX",function() {
+			jasmine.J.it("should not be able to go higher",function() {
+				jasmine.J.expect(9007199254740992 + 1).toEqual(9007199254740992);
+			});
+		});
+		jasmine.J.describe("INT53_MIN",function() {
+			jasmine.J.it("should not be able to go lower",function() {
+				jasmine.J.expect(-9007199254740992 - 1).toEqual(-9007199254740992);
 			});
 		});
 		jasmine.J.describe("isEven()",function() {
@@ -2142,11 +2088,11 @@ specs.co.janicek.core.math.MathCoreSpec = $hxClasses["specs.co.janicek.core.math
 		});
 	});
 };
-specs.co.janicek.core.math.MathCoreSpec.__name__ = ["specs","co","janicek","core","math","MathCoreSpec"];
+specs.co.janicek.core.math.MathCoreSpec.__name__ = true;
 specs.co.janicek.core.math.MathCoreSpec.prototype = {
 	__class__: specs.co.janicek.core.math.MathCoreSpec
 }
-specs.co.janicek.core.math.PerlinNoiseSpec = $hxClasses["specs.co.janicek.core.math.PerlinNoiseSpec"] = function() {
+specs.co.janicek.core.math.PerlinNoiseSpec = function() {
 	jasmine.J.describe("PerlinNoise",function() {
 		jasmine.J.describe("makePerlinNoise()",function() {
 			jasmine.J.it("should make perlin noise data",function() {
@@ -2156,11 +2102,11 @@ specs.co.janicek.core.math.PerlinNoiseSpec = $hxClasses["specs.co.janicek.core.m
 		});
 	});
 };
-specs.co.janicek.core.math.PerlinNoiseSpec.__name__ = ["specs","co","janicek","core","math","PerlinNoiseSpec"];
+specs.co.janicek.core.math.PerlinNoiseSpec.__name__ = true;
 specs.co.janicek.core.math.PerlinNoiseSpec.prototype = {
 	__class__: specs.co.janicek.core.math.PerlinNoiseSpec
 }
-specs.co.janicek.core.math.RandomCoreSpec = $hxClasses["specs.co.janicek.core.math.RandomCoreSpec"] = function() {
+specs.co.janicek.core.math.RandomCoreSpec = function() {
 	jasmine.J.describe("RandomCore",function() {
 		jasmine.J.describe("makeRandomSeed()",function() {
 			jasmine.J.it("should make a non deterministic random seed",function() {
@@ -2171,7 +2117,7 @@ specs.co.janicek.core.math.RandomCoreSpec = $hxClasses["specs.co.janicek.core.ma
 			jasmine.J.it("should generate a random int using Park Miller algorithm",function() {
 				var seed = 1;
 				var original = seed;
-				seed = seed * 16807.0 % 2147483647.0;
+				seed = seed * 16807.0 % 2147483647.0 | 0;
 				jasmine.J.expect(seed).not.toBe(original);
 			});
 			jasmine.J.it("should generate the same Park Miller sequence on every machine",function() {
@@ -2180,7 +2126,7 @@ specs.co.janicek.core.math.RandomCoreSpec = $hxClasses["specs.co.janicek.core.ma
 				var _g = 0;
 				while(_g < length) {
 					var step = _g++;
-					seed = seed * 16807.0 % 2147483647.0;
+					seed = seed * 16807.0 % 2147483647.0 | 0;
 				}
 				jasmine.J.expect(seed).toBe(522329230);
 			});
@@ -2191,7 +2137,7 @@ specs.co.janicek.core.math.RandomCoreSpec = $hxClasses["specs.co.janicek.core.ma
 				var _g = 0;
 				while(_g < length) {
 					var step = _g++;
-					seed = seed * 16807.0 % 2147483647.0;
+					seed = seed * 16807.0 % 2147483647.0 | 0;
 					total += seed / 2147483647.0;
 				}
 				jasmine.J.expect(total / length).toBeGreaterThan(0.45);
@@ -2205,7 +2151,7 @@ specs.co.janicek.core.math.RandomCoreSpec = $hxClasses["specs.co.janicek.core.ma
 				var _g = 0;
 				while(_g < length) {
 					var step = _g++;
-					seed = (1103515245.0 * seed + 12345) % 2147483647.0;
+					seed = (1103515245.0 * seed + 12345) % 2147483647.0 | 0;
 				}
 				jasmine.J.expect(seed).toBe(1157381547);
 			});
@@ -2216,7 +2162,7 @@ specs.co.janicek.core.math.RandomCoreSpec = $hxClasses["specs.co.janicek.core.ma
 				var _g = 0;
 				while(_g < length) {
 					var step = _g++;
-					seed = (1103515245.0 * seed + 12345) % 2147483647.0;
+					seed = (1103515245.0 * seed + 12345) % 2147483647.0 | 0;
 					total += seed / 2147483647.0;
 				}
 				jasmine.J.expect(total / length).toBeGreaterThan(0.45);
@@ -2225,12 +2171,12 @@ specs.co.janicek.core.math.RandomCoreSpec = $hxClasses["specs.co.janicek.core.ma
 		});
 		jasmine.J.describe("toFloat()",function() {
 			jasmine.J.it("should convert random seed to a Float value between 0.0 and 1.0",function() {
-				jasmine.J.expect(16807.0 % 2147483647.0 / 2147483647.0).toBeDefined();
+				jasmine.J.expect((16807.0 % 2147483647.0 | 0) / 2147483647.0).toBeDefined();
 			});
 		});
 		jasmine.J.describe("toBool()",function() {
 			jasmine.J.it("should convert random seed to a Bool value (coin flip)",function() {
-				jasmine.J.expect(16807.0 % 2147483647.0 / 2147483647.0 > 0.5).toBeDefined();
+				jasmine.J.expect((16807.0 % 2147483647.0 | 0) / 2147483647.0 > 0.5).toBeDefined();
 			});
 		});
 		jasmine.J.describe("toIntRange()",function() {
@@ -2240,7 +2186,7 @@ specs.co.janicek.core.math.RandomCoreSpec = $hxClasses["specs.co.janicek.core.ma
 				var _g = 0;
 				while(_g < iterations) {
 					var step = _g++;
-					seed = seed * 16807.0 % 2147483647.0;
+					seed = seed * 16807.0 % 2147483647.0 | 0;
 					jasmine.J.expect(Math.round(-0.4999 + 10.9998 * (seed / 2147483647.0))).toBeGreaterThan(-1);
 					jasmine.J.expect(Math.round(-0.4999 + 10.9998 * (seed / 2147483647.0))).toBeLessThan(11);
 				}
@@ -2253,7 +2199,7 @@ specs.co.janicek.core.math.RandomCoreSpec = $hxClasses["specs.co.janicek.core.ma
 				var _g = 0;
 				while(_g < iterations) {
 					var step = _g++;
-					seed = seed * 16807.0 % 2147483647.0;
+					seed = seed * 16807.0 % 2147483647.0 | 0;
 					jasmine.J.expect(seed / 2147483647.0).toBeGreaterThan(-0.1);
 					jasmine.J.expect(seed / 2147483647.0).toBeLessThan(1.1);
 				}
@@ -2266,94 +2212,52 @@ specs.co.janicek.core.math.RandomCoreSpec = $hxClasses["specs.co.janicek.core.ma
 		});
 	});
 };
-specs.co.janicek.core.math.RandomCoreSpec.__name__ = ["specs","co","janicek","core","math","RandomCoreSpec"];
+specs.co.janicek.core.math.RandomCoreSpec.__name__ = true;
 specs.co.janicek.core.math.RandomCoreSpec.prototype = {
 	__class__: specs.co.janicek.core.math.RandomCoreSpec
 }
-js.Boot.__res = {}
-js.Boot.__init();
-{
-	var d = Date;
-	d.now = function() {
-		return new Date();
+function $iterator(o) { if( o instanceof Array ) return function() { return HxOverrides.iter(o); }; return typeof(o.iterator) == 'function' ? $bind(o,o.iterator) : o.iterator; };
+var $_;
+function $bind(o,m) { var f = function(){ return f.method.apply(f.scope, arguments); }; f.scope = o; f.method = m; return f; };
+if(Array.prototype.indexOf) HxOverrides.remove = function(a,o) {
+	var i = a.indexOf(o);
+	if(i == -1) return false;
+	a.splice(i,1);
+	return true;
+}; else null;
+Math.__name__ = ["Math"];
+Math.NaN = Number.NaN;
+Math.NEGATIVE_INFINITY = Number.NEGATIVE_INFINITY;
+Math.POSITIVE_INFINITY = Number.POSITIVE_INFINITY;
+Math.isFinite = function(i) {
+	return isFinite(i);
+};
+Math.isNaN = function(i) {
+	return isNaN(i);
+};
+String.prototype.__class__ = String;
+String.__name__ = true;
+Array.prototype.__class__ = Array;
+Array.__name__ = true;
+Date.prototype.__class__ = Date;
+Date.__name__ = ["Date"];
+var Int = { __name__ : ["Int"]};
+var Dynamic = { __name__ : ["Dynamic"]};
+var Float = Number;
+Float.__name__ = ["Float"];
+var Bool = Boolean;
+Bool.__ename__ = ["Bool"];
+var Class = { __name__ : ["Class"]};
+var Enum = { };
+var Void = { __ename__ : ["Void"]};
+if(typeof document != "undefined") js.Lib.document = document;
+if(typeof window != "undefined") {
+	js.Lib.window = window;
+	js.Lib.window.onerror = function(msg,url,line) {
+		var f = js.Lib.onerror;
+		if(f == null) return false;
+		return f(msg,[url + ":" + line]);
 	};
-	d.fromTime = function(t) {
-		var d1 = new Date();
-		d1["setTime"](t);
-		return d1;
-	};
-	d.fromString = function(s) {
-		switch(s.length) {
-		case 8:
-			var k = s.split(":");
-			var d1 = new Date();
-			d1["setTime"](0);
-			d1["setUTCHours"](k[0]);
-			d1["setUTCMinutes"](k[1]);
-			d1["setUTCSeconds"](k[2]);
-			return d1;
-		case 10:
-			var k = s.split("-");
-			return new Date(k[0],k[1] - 1,k[2],0,0,0);
-		case 19:
-			var k = s.split(" ");
-			var y = k[0].split("-");
-			var t = k[1].split(":");
-			return new Date(y[0],y[1] - 1,y[2],t[0],t[1],t[2]);
-		default:
-			throw "Invalid date format : " + s;
-		}
-	};
-	d.prototype["toString"] = function() {
-		var date = this;
-		var m = date.getMonth() + 1;
-		var d1 = date.getDate();
-		var h = date.getHours();
-		var mi = date.getMinutes();
-		var s = date.getSeconds();
-		return date.getFullYear() + "-" + (m < 10?"0" + m:"" + m) + "-" + (d1 < 10?"0" + d1:"" + d1) + " " + (h < 10?"0" + h:"" + h) + ":" + (mi < 10?"0" + mi:"" + mi) + ":" + (s < 10?"0" + s:"" + s);
-	};
-	d.prototype.__class__ = $hxClasses["Date"] = d;
-	d.__name__ = ["Date"];
-}
-{
-	Math.__name__ = ["Math"];
-	Math.NaN = Number["NaN"];
-	Math.NEGATIVE_INFINITY = Number["NEGATIVE_INFINITY"];
-	Math.POSITIVE_INFINITY = Number["POSITIVE_INFINITY"];
-	$hxClasses["Math"] = Math;
-	Math.isFinite = function(i) {
-		return isFinite(i);
-	};
-	Math.isNaN = function(i) {
-		return isNaN(i);
-	};
-}
-{
-	String.prototype.__class__ = $hxClasses["String"] = String;
-	String.__name__ = ["String"];
-	Array.prototype.__class__ = $hxClasses["Array"] = Array;
-	Array.__name__ = ["Array"];
-	var Int = $hxClasses["Int"] = { __name__ : ["Int"]};
-	var Dynamic = $hxClasses["Dynamic"] = { __name__ : ["Dynamic"]};
-	var Float = $hxClasses["Float"] = Number;
-	Float.__name__ = ["Float"];
-	var Bool = $hxClasses["Bool"] = Boolean;
-	Bool.__ename__ = ["Bool"];
-	var Class = $hxClasses["Class"] = { __name__ : ["Class"]};
-	var Enum = { };
-	var Void = $hxClasses["Void"] = { __ename__ : ["Void"]};
-}
-{
-	if(typeof document != "undefined") js.Lib.document = document;
-	if(typeof window != "undefined") {
-		js.Lib.window = window;
-		js.Lib.window.onerror = function(msg,url,line) {
-			var f = js.Lib.onerror;
-			if(f == null) return false;
-			return f(msg,[url + ":" + line]);
-		};
-	}
 }
 co.janicek.core.BaseCode64.BASE_64_ENCODINGS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 co.janicek.core.BaseCode64.BASE_64_PADDING = "=";
@@ -2364,9 +2268,11 @@ co.janicek.core.html.CanvasCore.CANVAS_BLUE_OFFSET = 2;
 co.janicek.core.html.CanvasCore.CANVAS_ALPHA_OFFSET = 3;
 co.janicek.core.html.HtmlColorCore.MAX_COLOR_COMPONENT = 255;
 co.janicek.core.math.MathCore.INT32_MAX = 2147483647;
+co.janicek.core.math.MathCore.INT53_MAX = 9007199254740992;
+co.janicek.core.math.MathCore.INT53_MIN = -9007199254740992;
 co.janicek.core.math.PerlinNoise.p = [151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,190,6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,88,237,149,56,87,174,20,125,136,171,168,68,175,74,165,71,134,139,48,27,166,77,146,158,231,83,111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244,102,143,54,65,25,63,161,1,216,80,73,209,76,132,187,208,89,18,169,200,196,135,130,116,188,159,86,164,100,109,198,173,186,3,64,52,217,226,250,124,123,5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,189,28,42,223,183,170,213,119,248,152,2,44,154,163,70,221,153,101,155,167,43,172,9,129,22,39,253,19,98,108,110,79,113,224,232,178,185,112,104,218,246,97,228,251,34,242,193,238,210,144,12,191,179,162,241,81,51,145,235,249,14,239,107,49,192,214,31,181,199,106,157,184,84,204,176,115,121,50,45,127,4,150,254,138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180,151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,190,6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,88,237,149,56,87,174,20,125,136,171,168,68,175,74,165,71,134,139,48,27,166,77,146,158,231,83,111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244,102,143,54,65,25,63,161,1,216,80,73,209,76,132,187,208,89,18,169,200,196,135,130,116,188,159,86,164,100,109,198,173,186,3,64,52,217,226,250,124,123,5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,189,28,42,223,183,170,213,119,248,152,2,44,154,163,70,221,153,101,155,167,43,172,9,129,22,39,253,19,98,108,110,79,113,224,232,178,185,112,104,218,246,97,228,251,34,242,193,238,210,144,12,191,179,162,241,81,51,145,235,249,14,239,107,49,192,214,31,181,199,106,157,184,84,204,176,115,121,50,45,127,4,150,254,138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180];
 co.janicek.core.math.RandomCore.MPM = 2147483647.0;
 co.janicek.core.math.RandomCore.MINSTD = 16807.0;
-js.Lib.onerror = null;
-Main.main()
+Main.main();
+
 //@ sourceMappingURL=janicek-core.js.map
