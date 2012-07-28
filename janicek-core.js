@@ -1214,7 +1214,7 @@ co.janicek.core.math.UUID.uuid = function(length,radix,seed) {
 	}
 	return uuid.join("");
 }
-co.janicek.core.math.UUID.uuidRfc4122 = function(seed) {
+co.janicek.core.math.UUID.uuidRfc4122V4 = function(seed) {
 	if(seed == null) seed = co.janicek.core.math.RandomCore.makeRandomSeed();
 	var chars = co.janicek.core.math.UUID.CHARS, uuid = [], i;
 	var r;
@@ -2339,17 +2339,23 @@ specs.co.janicek.core.math.UUIDSpec = function() {
 				jasmine.J.expect(co.janicek.core.math.UUID.uuid(1).length).toEqual(1);
 				jasmine.J.expect(co.janicek.core.math.UUID.uuid(10).length).toEqual(10);
 			});
-		});
-		jasmine.J.describe("uuid()",function() {
 			jasmine.J.it("should make a uuid of specific radix",function() {
 				var uuid = co.janicek.core.math.UUID.uuid(10,2);
 				jasmine.J.expect(uuid.length).toEqual(10);
 				jasmine.J.expect(StringTools.replace(StringTools.replace(uuid,"0",""),"1","").length).toEqual(0);
 			});
 		});
-		jasmine.J.describe("uuidRfc4122()",function() {
+		jasmine.J.describe("uuidRfc4122V4()",function() {
+			var uuid;
 			jasmine.J.it("should make a uuid",function() {
-				jasmine.J.expect(co.janicek.core.math.UUID.uuidRfc4122()).toBeDefined();
+				uuid = co.janicek.core.math.UUID.uuidRfc4122V4();
+				jasmine.J.expect(uuid).toBeDefined();
+			});
+			jasmine.J.it("should be 36 characters long",function() {
+				jasmine.J.expect(uuid.length).toEqual(36);
+			});
+			jasmine.J.it("should have 5 parts seperated by hyphens",function() {
+				jasmine.J.expect(uuid.split("-").length).toEqual(5);
 			});
 		});
 		jasmine.J.describe("uuidFast()",function() {
