@@ -1,6 +1,8 @@
 package co.janicek.core.math;
 
 using Lambda;
+using Std;
+using co.janicek.core.math.MathCore;
 
 class MathCore {
 
@@ -31,12 +33,30 @@ class MathCore {
 		return !isEven(n);
 	}
 	
-	public static function clampInt( value : Int, min : Int, max : Int ) : Int {
-		return value < min ? 0 : value > max ? max : value;
+	/**
+	 * clamp an Integer to an interval
+	 * interval endpoints are compared to get min and max, so it doesn't matter what order they are passed in
+	 * @param	value value to clamp
+	 * @param	minOrMax1 interval endpoint
+	 * @param	minOrMax2 interval endpoint
+	 * @return 	clamped value to given interval
+	 */
+	public static function clampInt( value : Int, minOrMax1 : Int, minOrMax2 : Int ) : Int {
+		return value.clamp(minOrMax1, minOrMax2).int();
 	}
 	
-	public static function clamp( value : Float, min : Float, max : Float ) : Float {
-		return value < min ? 0 : value > max ? max : value;
+	/**
+	 * clamp a Float to an interval
+	 * interval endpoints are compared to get min and max, so it doesn't matter what order they are passed in
+	 * @param	value value to clamp
+	 * @param	minOrMax1 interval endpoint
+	 * @param	minOrMax2 interval endpoint
+	 * @return 	clamped value to given interval
+	 */
+	public static function clamp( value : Float, minOrMax1 : Float, minOrMax2 : Float ) : Float {
+		var min = Math.min(minOrMax1, minOrMax2);
+		var max = Math.max(minOrMax1, minOrMax2);
+		return value < min ? min : value > max ? max : value;
 	}
 	
 	public static function degreesToRadians( degrees : Float ) : Float {

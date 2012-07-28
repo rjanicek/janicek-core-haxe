@@ -26,6 +26,17 @@ class MathCoreSpec {
 				});
 			});
 			
+			J.describe("clamp()", function() {
+				J.it("should clamp a Float to an interval", function() {
+					J.expect(1.0.clamp(1.0, 1.0)).toEqual(1.0);
+					J.expect(1.0.clamp(1.0, 2.0)).toEqual(1.0);
+					J.expect(1.0.clamp(0.0, 1.0)).toEqual(1.0);
+					J.expect(1.0.clamp(0.0, 2.0)).toEqual(1.0);
+					J.expect(1.0.clamp(2.0, 2.0)).toEqual(2.0);
+					J.expect(1.0.clamp(2.0, 1.0)).toEqual(1.0);
+				});
+			});
+			
 			J.describe("degreesToRadians()", function() {
 				J.it("should convert degrees to radians", function() {
 					J.expect(180.degreesToRadians()).toBe(3.141592653589793);

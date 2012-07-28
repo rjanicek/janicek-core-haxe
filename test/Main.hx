@@ -3,6 +3,7 @@ import specs.co.janicek.core.BaseCode64Spec;
 import specs.co.janicek.core.html.CanvasCoreSpec;
 import specs.co.janicek.core.math.HashCoreSpec;
 import specs.co.janicek.core.math.MathCoreSpec;
+import specs.co.janicek.core.math.UUIDSpec;
 import specs.co.janicek.core.NullCoreSpec;
 import specs.co.janicek.core.PathCoreSpec;
 import specs.co.janicek.core.math.PerlinNoiseSpec;
@@ -35,6 +36,7 @@ class Main {
 		new PerlinNoiseSpec();
 		new RandomCoreSpec();
 		new StringCoreSpec();
+		new UUIDSpec();
 
 		Jasmine.getEnv().addReporter(Jasmine.newHtmlReporter());
 		Jasmine.getEnv().execute();
