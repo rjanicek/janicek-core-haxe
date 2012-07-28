@@ -32,7 +32,7 @@ class StringCoreSpec {
 			});
 			
 			J.describe("isInteger()", function () {
-				J.it("should return true is string is an Integer", function() {
+				J.it("should return true if string is an Integer", function() {
 					J.expect("0".isInteger()).toBeTruthy();
 					J.expect("1".isInteger()).toBeTruthy();
 					J.expect("-1".isInteger()).toBeTruthy();

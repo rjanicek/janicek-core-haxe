@@ -1,6 +1,7 @@
 package co.janicek.core;
 
 using co.janicek.core.NullCore;
+using co.janicek.core.LambdaCore;
 
 /**
  * Functions for nulls.
@@ -27,8 +28,16 @@ class NullCore {
 	 * Coalesce a nullable type using a default value.
 	 * @return Value of nullable type if it's not null else default value.
 	 */
-	public static inline function coalesce<T>( nullable : Null<T>, defaultValue :  T ) : T {
+	public static inline function coalesce<T>( nullable : Null<T>, defaultValue :  Null<T> ) : Null<T> {
 		return nullable.isNull() ? defaultValue : nullable;
+	}
+	
+	/**
+	 * Coalesce a list of nullable type.
+	 * @return Value of first non null in list else null.
+	 */
+	public static function coalesceIter<T>( nullables : Iterable<Null<T>> ) : Null<T> {
+		return nullables.first(function(n) { return n.isNotNull(); } );
 	}
 	
 }

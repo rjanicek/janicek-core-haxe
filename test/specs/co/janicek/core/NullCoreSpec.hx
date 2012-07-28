@@ -65,6 +65,18 @@ class NullCoreSpec {
 				});
 			});
 			
+			J.describe("coalesceIter()", function () {
+				J.it("should return null for empty iterable", function() {
+					J.expect([].coalesceIter()).toEqual(null);
+				});
+				J.it("should return null if no value in iterable", function() {
+					J.expect([null].coalesceIter()).toEqual(null);
+				});
+				J.it("should return first non null value in iterable", function() {
+					J.expect([null, 1].coalesceIter()).toEqual(1);
+				});
+			});
+			
 		});
 
 	}

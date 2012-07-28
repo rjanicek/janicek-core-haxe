@@ -1,2 +1,2 @@
-cd doc\chxdoc_1_1_2
+cd doc\chxdoc_1_1_4
 chxdoc --template=../monaco --title=co.janicek.core --subtitle=https://github.com/rjanicek/janicek-core-haxe --tmpDir=../bin -o ../../bin/api --developer=true ../bin/janicek-core.xml --ignoreRoot=true --includeOnly=co.janicek.*

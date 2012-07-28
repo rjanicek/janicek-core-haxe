@@ -1,6 +1,7 @@
 import specs.co.janicek.core.Array2dSpec;
 import specs.co.janicek.core.BaseCode64Spec;
 import specs.co.janicek.core.html.CanvasCoreSpec;
+import specs.co.janicek.core.HttpCookieCoreSpec;
 import specs.co.janicek.core.math.HashCoreSpec;
 import specs.co.janicek.core.math.MathCoreSpec;
 import specs.co.janicek.core.math.UUIDSpec;
@@ -30,6 +31,7 @@ class Main {
 		new CanvasCoreSpec();
 		new HashCoreSpec();
 		new HtmlColorCoreSpec();
+		new HttpCookieCoreSpec();
 		new MathCoreSpec();
 		new NullCoreSpec();
 		new PathCoreSpec();
