@@ -1,4 +1,56 @@
 var $estr = function() { return js.Boot.__string_rec(this,''); };
+var EReg = function(r,opt) {
+	opt = opt.split("u").join("");
+	this.r = new RegExp(r,opt);
+};
+EReg.__name__ = true;
+EReg.prototype = {
+	customReplace: function(s,f) {
+		var buf = new StringBuf();
+		while(true) {
+			if(!this.match(s)) break;
+			buf.b += Std.string(this.matchedLeft());
+			buf.b += Std.string(f(this));
+			s = this.matchedRight();
+		}
+		buf.b += Std.string(s);
+		return buf.b;
+	}
+	,replace: function(s,by) {
+		return s.replace(this.r,by);
+	}
+	,split: function(s) {
+		var d = "#__delim__#";
+		return s.replace(this.r,d).split(d);
+	}
+	,matchedPos: function() {
+		if(this.r.m == null) throw "No string matched";
+		return { pos : this.r.m.index, len : this.r.m[0].length};
+	}
+	,matchedRight: function() {
+		if(this.r.m == null) throw "No string matched";
+		var sz = this.r.m.index + this.r.m[0].length;
+		return this.r.s.substr(sz,this.r.s.length - sz);
+	}
+	,matchedLeft: function() {
+		if(this.r.m == null) throw "No string matched";
+		return this.r.s.substr(0,this.r.m.index);
+	}
+	,matched: function(n) {
+		return this.r.m != null && n >= 0 && n < this.r.m.length?this.r.m[n]:(function($this) {
+			var $r;
+			throw "EReg::matched";
+			return $r;
+		}(this));
+	}
+	,match: function(s) {
+		if(this.r.global) this.r.lastIndex = 0;
+		this.r.m = this.r.exec(s);
+		this.r.s = s;
+		return this.r.m != null;
+	}
+	,__class__: EReg
+}
 var HxOverrides = function() { }
 HxOverrides.__name__ = true;
 HxOverrides.dateStr = function(date) {
@@ -330,7 +382,7 @@ List.prototype = {
 var Main = function() { }
 Main.__name__ = true;
 Main.main = function() {
-	haxe.Log.trace("Testing...",{ fileName : "Main.hx", lineNumber : 25, className : "Main", methodName : "main"});
+	haxe.Log.trace("Testing...",{ fileName : "Main.hx", lineNumber : 26, className : "Main", methodName : "main"});
 	new specs.co.janicek.core.Array2dSpec();
 	new specs.co.janicek.core.BaseCode64Spec();
 	new specs.co.janicek.core.html.CanvasCoreSpec();
@@ -342,9 +394,10 @@ Main.main = function() {
 	new specs.co.janicek.core.math.PerlinNoiseSpec();
 	new specs.co.janicek.core.math.RandomCoreSpec();
 	new specs.co.janicek.core.StringCoreSpec();
+	new specs.co.janicek.core.math.UUIDSpec();
 	jasmine.Jasmine.getEnv().addReporter(jasmine.Jasmine.newHtmlReporter());
 	jasmine.Jasmine.getEnv().execute();
-	haxe.Log.trace("Done testing.",{ fileName : "Main.hx", lineNumber : 41, className : "Main", methodName : "main"});
+	haxe.Log.trace("Done testing.",{ fileName : "Main.hx", lineNumber : 43, className : "Main", methodName : "main"});
 }
 var Reflect = function() { }
 Reflect.__name__ = true;
@@ -993,11 +1046,13 @@ co.janicek.core.math.MathCore.isEven = function(n) {
 co.janicek.core.math.MathCore.isOdd = function(n) {
 	return !co.janicek.core.math.MathCore.isEven(n);
 }
-co.janicek.core.math.MathCore.clampInt = function(value,min,max) {
-	return value < min?0:value > max?max:value;
+co.janicek.core.math.MathCore.clampInt = function(value,minOrMax1,minOrMax2) {
+	return co.janicek.core.math.MathCore.clamp(value,minOrMax1,minOrMax2) | 0;
 }
-co.janicek.core.math.MathCore.clamp = function(value,min,max) {
-	return value < min?0:value > max?max:value;
+co.janicek.core.math.MathCore.clamp = function(value,minOrMax1,minOrMax2) {
+	var min = Math.min(minOrMax1,minOrMax2);
+	var max = Math.max(minOrMax1,minOrMax2);
+	return value < min?min:value > max?max:value;
 }
 co.janicek.core.math.MathCore.degreesToRadians = function(degrees) {
 	return degrees * Math.PI / 180;
@@ -1145,6 +1200,57 @@ co.janicek.core.math.RandomCore.toIntRange = function(seed,min,max) {
 }
 co.janicek.core.math.RandomCore.stringToSeed = function(s) {
 	return co.janicek.core.math.HashCore.djb2(s) % 2147483647.0 | 0;
+}
+co.janicek.core.math.UUID = function() { }
+co.janicek.core.math.UUID.__name__ = true;
+co.janicek.core.math.UUID.uuid = function(length,radix,seed) {
+	if(seed == null) seed = co.janicek.core.math.RandomCore.makeRandomSeed();
+	var chars = co.janicek.core.math.UUID.CHARS, uuid = [], i;
+	radix = co.janicek.core.math.MathCore.clampInt(radix == null?chars.length:radix,2,chars.length);
+	var _g = 0;
+	while(_g < length) {
+		var i1 = _g++;
+		uuid[i1] = chars[0 | ((seed = seed * 16807.0 % 2147483647.0 | 0) / 2147483647.0 * radix | 0)];
+	}
+	return uuid.join("");
+}
+co.janicek.core.math.UUID.uuidRfc4122 = function(seed) {
+	if(seed == null) seed = co.janicek.core.math.RandomCore.makeRandomSeed();
+	var chars = co.janicek.core.math.UUID.CHARS, uuid = [], i;
+	var r;
+	uuid[8] = uuid[13] = uuid[18] = uuid[23] = "-";
+	uuid[14] = "4";
+	var _g = 0;
+	while(_g < 36) {
+		var i1 = _g++;
+		if(uuid[i1] == null) {
+			r = 0 | ((seed = seed * 16807.0 % 2147483647.0 | 0) / 2147483647.0 * 16 | 0);
+			uuid[i1] = chars[i1 == 19?r & 3 | 8:r];
+		}
+	}
+	return uuid.join("");
+}
+co.janicek.core.math.UUID.uuidFast = function(seed) {
+	if(seed == null) seed = co.janicek.core.math.RandomCore.makeRandomSeed();
+	var chars = co.janicek.core.math.UUID.CHARS, uuid = new Array(), rnd = 0, r;
+	var _g = 0;
+	while(_g < 36) {
+		var i = _g++;
+		if(i == 8 || i == 13 || i == 18 || i == 23) uuid[i] = "-"; else if(i == 14) uuid[i] = "4"; else {
+			if(rnd <= 2) rnd = 33554432 + ((seed = seed * 16807.0 % 2147483647.0 | 0) / 2147483647.0 * 16777216 | 0) | 0;
+			r = rnd & 15;
+			rnd = rnd >> 4;
+			uuid[i] = chars[i == 19?r & 3 | 8:r];
+		}
+	}
+	return uuid.join("");
+}
+co.janicek.core.math.UUID.uuidCompact = function(seed) {
+	if(seed == null) seed = co.janicek.core.math.RandomCore.makeRandomSeed();
+	return new EReg("[xy]","g").customReplace("xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx",function(c) {
+		var r = (seed = seed * 16807.0 % 2147483647.0 | 0) / 2147483647.0 * 16 | 0 | 0, v = c.matched(0) == "x"?r:r & 3 | 8;
+		return StringTools.hex(v);
+	});
 }
 var haxe = haxe || {}
 haxe.BaseCode = function(base) {
@@ -2054,6 +2160,16 @@ specs.co.janicek.core.math.MathCoreSpec = function() {
 				jasmine.J.expect(co.janicek.core.math.MathCore.averageInt([1,2,3])).toEqual(2);
 			});
 		});
+		jasmine.J.describe("clamp()",function() {
+			jasmine.J.it("should clamp a Float to an interval",function() {
+				jasmine.J.expect(co.janicek.core.math.MathCore.clamp(1.0,1.0,1.0)).toEqual(1.0);
+				jasmine.J.expect(co.janicek.core.math.MathCore.clamp(1.0,1.0,2.0)).toEqual(1.0);
+				jasmine.J.expect(co.janicek.core.math.MathCore.clamp(1.0,0.0,1.0)).toEqual(1.0);
+				jasmine.J.expect(co.janicek.core.math.MathCore.clamp(1.0,0.0,2.0)).toEqual(1.0);
+				jasmine.J.expect(co.janicek.core.math.MathCore.clamp(1.0,2.0,2.0)).toEqual(2.0);
+				jasmine.J.expect(co.janicek.core.math.MathCore.clamp(1.0,2.0,1.0)).toEqual(1.0);
+			});
+		});
 		jasmine.J.describe("degreesToRadians()",function() {
 			jasmine.J.it("should convert degrees to radians",function() {
 				jasmine.J.expect(co.janicek.core.math.MathCore.degreesToRadians(180)).toBe(3.141592653589793);
@@ -2216,6 +2332,42 @@ specs.co.janicek.core.math.RandomCoreSpec.__name__ = true;
 specs.co.janicek.core.math.RandomCoreSpec.prototype = {
 	__class__: specs.co.janicek.core.math.RandomCoreSpec
 }
+specs.co.janicek.core.math.UUIDSpec = function() {
+	jasmine.J.describe("UUID",function() {
+		jasmine.J.describe("uuid()",function() {
+			jasmine.J.it("should make a uuid of specific length",function() {
+				jasmine.J.expect(co.janicek.core.math.UUID.uuid(1).length).toEqual(1);
+				jasmine.J.expect(co.janicek.core.math.UUID.uuid(10).length).toEqual(10);
+			});
+		});
+		jasmine.J.describe("uuid()",function() {
+			jasmine.J.it("should make a uuid of specific radix",function() {
+				var uuid = co.janicek.core.math.UUID.uuid(10,2);
+				jasmine.J.expect(uuid.length).toEqual(10);
+				jasmine.J.expect(StringTools.replace(StringTools.replace(uuid,"0",""),"1","").length).toEqual(0);
+			});
+		});
+		jasmine.J.describe("uuidRfc4122()",function() {
+			jasmine.J.it("should make a uuid",function() {
+				jasmine.J.expect(co.janicek.core.math.UUID.uuidRfc4122()).toBeDefined();
+			});
+		});
+		jasmine.J.describe("uuidFast()",function() {
+			jasmine.J.it("should make a uuid",function() {
+				jasmine.J.expect(co.janicek.core.math.UUID.uuidFast()).toBeDefined();
+			});
+		});
+		jasmine.J.describe("uuidCompact()",function() {
+			jasmine.J.it("should make a uuid",function() {
+				jasmine.J.expect(co.janicek.core.math.UUID.uuidCompact()).toBeDefined();
+			});
+		});
+	});
+};
+specs.co.janicek.core.math.UUIDSpec.__name__ = true;
+specs.co.janicek.core.math.UUIDSpec.prototype = {
+	__class__: specs.co.janicek.core.math.UUIDSpec
+}
 function $iterator(o) { if( o instanceof Array ) return function() { return HxOverrides.iter(o); }; return typeof(o.iterator) == 'function' ? $bind(o,o.iterator) : o.iterator; };
 var $_;
 function $bind(o,m) { var f = function(){ return f.method.apply(f.scope, arguments); }; f.scope = o; f.method = m; return f; };
@@ -2273,6 +2425,7 @@ co.janicek.core.math.MathCore.INT53_MIN = -9007199254740992;
 co.janicek.core.math.PerlinNoise.p = [151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,190,6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,88,237,149,56,87,174,20,125,136,171,168,68,175,74,165,71,134,139,48,27,166,77,146,158,231,83,111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244,102,143,54,65,25,63,161,1,216,80,73,209,76,132,187,208,89,18,169,200,196,135,130,116,188,159,86,164,100,109,198,173,186,3,64,52,217,226,250,124,123,5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,189,28,42,223,183,170,213,119,248,152,2,44,154,163,70,221,153,101,155,167,43,172,9,129,22,39,253,19,98,108,110,79,113,224,232,178,185,112,104,218,246,97,228,251,34,242,193,238,210,144,12,191,179,162,241,81,51,145,235,249,14,239,107,49,192,214,31,181,199,106,157,184,84,204,176,115,121,50,45,127,4,150,254,138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180,151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,190,6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,88,237,149,56,87,174,20,125,136,171,168,68,175,74,165,71,134,139,48,27,166,77,146,158,231,83,111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244,102,143,54,65,25,63,161,1,216,80,73,209,76,132,187,208,89,18,169,200,196,135,130,116,188,159,86,164,100,109,198,173,186,3,64,52,217,226,250,124,123,5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,189,28,42,223,183,170,213,119,248,152,2,44,154,163,70,221,153,101,155,167,43,172,9,129,22,39,253,19,98,108,110,79,113,224,232,178,185,112,104,218,246,97,228,251,34,242,193,238,210,144,12,191,179,162,241,81,51,145,235,249,14,239,107,49,192,214,31,181,199,106,157,184,84,204,176,115,121,50,45,127,4,150,254,138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180];
 co.janicek.core.math.RandomCore.MPM = 2147483647.0;
 co.janicek.core.math.RandomCore.MINSTD = 16807.0;
+co.janicek.core.math.UUID.CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".split("");
 Main.main();
 
 //@ sourceMappingURL=janicek-core.js.map
