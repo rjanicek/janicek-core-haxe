@@ -51,6 +51,57 @@ EReg.prototype = {
 	}
 	,__class__: EReg
 }
+var Hash = function() {
+	this.h = { };
+};
+Hash.__name__ = true;
+Hash.prototype = {
+	toString: function() {
+		var s = new StringBuf();
+		s.b += Std.string("{");
+		var it = this.keys();
+		while( it.hasNext() ) {
+			var i = it.next();
+			s.b += Std.string(i);
+			s.b += Std.string(" => ");
+			s.b += Std.string(Std.string(this.get(i)));
+			if(it.hasNext()) s.b += Std.string(", ");
+		}
+		s.b += Std.string("}");
+		return s.b;
+	}
+	,iterator: function() {
+		return { ref : this.h, it : this.keys(), hasNext : function() {
+			return this.it.hasNext();
+		}, next : function() {
+			var i = this.it.next();
+			return this.ref["$" + i];
+		}};
+	}
+	,keys: function() {
+		var a = [];
+		for( var key in this.h ) {
+		if(this.h.hasOwnProperty(key)) a.push(key.substr(1));
+		}
+		return HxOverrides.iter(a);
+	}
+	,remove: function(key) {
+		key = "$" + key;
+		if(!this.h.hasOwnProperty(key)) return false;
+		delete(this.h[key]);
+		return true;
+	}
+	,exists: function(key) {
+		return this.h.hasOwnProperty("$" + key);
+	}
+	,get: function(key) {
+		return this.h["$" + key];
+	}
+	,set: function(key,value) {
+		this.h["$" + key] = value;
+	}
+	,__class__: Hash
+}
 var HxOverrides = function() { }
 HxOverrides.__name__ = true;
 HxOverrides.dateStr = function(date) {
@@ -382,12 +433,13 @@ List.prototype = {
 var Main = function() { }
 Main.__name__ = true;
 Main.main = function() {
-	haxe.Log.trace("Testing...",{ fileName : "Main.hx", lineNumber : 26, className : "Main", methodName : "main"});
+	haxe.Log.trace("Testing...",{ fileName : "Main.hx", lineNumber : 27, className : "Main", methodName : "main"});
 	new specs.co.janicek.core.Array2dSpec();
 	new specs.co.janicek.core.BaseCode64Spec();
 	new specs.co.janicek.core.html.CanvasCoreSpec();
 	new specs.co.janicek.core.math.HashCoreSpec();
 	new specs.co.janicek.core.html.HtmlColorCoreSpec();
+	new specs.co.janicek.core.HttpCookieCoreSpec();
 	new specs.co.janicek.core.math.MathCoreSpec();
 	new specs.co.janicek.core.NullCoreSpec();
 	new specs.co.janicek.core.PathCoreSpec();
@@ -397,7 +449,7 @@ Main.main = function() {
 	new specs.co.janicek.core.math.UUIDSpec();
 	jasmine.Jasmine.getEnv().addReporter(jasmine.Jasmine.newHtmlReporter());
 	jasmine.Jasmine.getEnv().execute();
-	haxe.Log.trace("Done testing.",{ fileName : "Main.hx", lineNumber : 43, className : "Main", methodName : "main"});
+	haxe.Log.trace("Done testing.",{ fileName : "Main.hx", lineNumber : 45, className : "Main", methodName : "main"});
 }
 var Reflect = function() { }
 Reflect.__name__ = true;
@@ -630,6 +682,26 @@ co.janicek.core.BaseCode64.base64EncodeString = function(string) {
 co.janicek.core.BaseCode64.base64DecodeString = function(base64) {
 	return haxe.io.Bytes.ofData(co.janicek.core.BaseCode64.base64DecodeBytesData(base64)).toString();
 }
+co.janicek.core.HttpCookieCore = function() { }
+co.janicek.core.HttpCookieCore.__name__ = true;
+co.janicek.core.HttpCookieCore.parseCookies = function(rawCookies) {
+	var structuredCookies = new Hash();
+	Lambda.iter(rawCookies.split("; "),function(rawCookie) {
+		var cookie = rawCookie.split("=");
+		if(cookie.length == 2) structuredCookies.set(cookie[0],cookie[1]);
+	});
+	return structuredCookies;
+}
+co.janicek.core.LambdaCore = function() { }
+co.janicek.core.LambdaCore.__name__ = true;
+co.janicek.core.LambdaCore.first = function(it,f) {
+	var $it0 = $iterator(it)();
+	while( $it0.hasNext() ) {
+		var x = $it0.next();
+		if(f(x)) return x;
+	}
+	return null;
+}
 co.janicek.core.NullCore = function() { }
 co.janicek.core.NullCore.__name__ = true;
 co.janicek.core.NullCore.isNull = function(nullable) {
@@ -640,6 +712,11 @@ co.janicek.core.NullCore.isNotNull = function(nullable) {
 }
 co.janicek.core.NullCore.coalesce = function(nullable,defaultValue) {
 	return nullable == null?defaultValue:nullable;
+}
+co.janicek.core.NullCore.coalesceIter = function(nullables) {
+	return co.janicek.core.LambdaCore.first(nullables,function(n) {
+		return n != null;
+	});
 }
 co.janicek.core.PathCore = function() { }
 co.janicek.core.PathCore.__name__ = true;
@@ -1901,6 +1978,29 @@ specs.co.janicek.core.BaseCode64Spec.__name__ = true;
 specs.co.janicek.core.BaseCode64Spec.prototype = {
 	__class__: specs.co.janicek.core.BaseCode64Spec
 }
+specs.co.janicek.core.HttpCookieCoreSpec = function() {
+	jasmine.J.describe("HttpCookieCore",function() {
+		jasmine.J.describe("parseCookies()",function() {
+			jasmine.J.it("should return empty hashtable from empty cookies",function() {
+				var cookies = co.janicek.core.HttpCookieCore.parseCookies("");
+				jasmine.J.expect(Lambda.count(cookies)).toEqual(0);
+			});
+			jasmine.J.it("should parse one cookie",function() {
+				var cookies = co.janicek.core.HttpCookieCore.parseCookies("cookie=monster");
+				jasmine.J.expect(cookies.get("cookie")).toEqual("monster");
+			});
+			jasmine.J.it("should parse multiple cookies",function() {
+				var cookies = co.janicek.core.HttpCookieCore.parseCookies("cookie=monster; singularity=near");
+				jasmine.J.expect(cookies.get("cookie")).toEqual("monster");
+				jasmine.J.expect(cookies.get("singularity")).toEqual("near");
+			});
+		});
+	});
+};
+specs.co.janicek.core.HttpCookieCoreSpec.__name__ = true;
+specs.co.janicek.core.HttpCookieCoreSpec.prototype = {
+	__class__: specs.co.janicek.core.HttpCookieCoreSpec
+}
 specs.co.janicek.core.NullCoreSpec = function() {
 	jasmine.J.describe("NullCore",function() {
 		jasmine.J.describe("isNull()",function() {
@@ -1943,6 +2043,17 @@ specs.co.janicek.core.NullCoreSpec = function() {
 				jasmine.J.expect(nullable == null?1:nullable).toEqual(1);
 				nullable = 0;
 				jasmine.J.expect(nullable == null?1:nullable).toEqual(0);
+			});
+		});
+		jasmine.J.describe("coalesceIter()",function() {
+			jasmine.J.it("should return null for empty iterable",function() {
+				jasmine.J.expect(co.janicek.core.NullCore.coalesceIter([])).toEqual(null);
+			});
+			jasmine.J.it("should return null if no value in iterable",function() {
+				jasmine.J.expect(co.janicek.core.NullCore.coalesceIter([null])).toEqual(null);
+			});
+			jasmine.J.it("should return first non null value in iterable",function() {
+				jasmine.J.expect(co.janicek.core.NullCore.coalesceIter([null,1])).toEqual(1);
 			});
 		});
 	});
@@ -1995,7 +2106,7 @@ specs.co.janicek.core.StringCoreSpec = function() {
 			});
 		});
 		jasmine.J.describe("isInteger()",function() {
-			jasmine.J.it("should return true is string is an Integer",function() {
+			jasmine.J.it("should return true if string is an Integer",function() {
 				jasmine.J.expect(co.janicek.core.StringCore.isInteger("0")).toBeTruthy();
 				jasmine.J.expect(co.janicek.core.StringCore.isInteger("1")).toBeTruthy();
 				jasmine.J.expect(co.janicek.core.StringCore.isInteger("-1")).toBeTruthy();
@@ -2419,6 +2530,8 @@ if(typeof window != "undefined") {
 }
 co.janicek.core.BaseCode64.BASE_64_ENCODINGS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 co.janicek.core.BaseCode64.BASE_64_PADDING = "=";
+co.janicek.core.HttpCookieCore.COOKIE_PAIR_DELIMETER = "; ";
+co.janicek.core.HttpCookieCore.COOKIE_DELIMETER = "=";
 co.janicek.core.html.CanvasCore.CANVAS_ELEMENTS_PER_PIXEL = 4;
 co.janicek.core.html.CanvasCore.CANVAS_RED_OFFSET = 0;
 co.janicek.core.html.CanvasCore.CANVAS_GREEN_OFFSET = 1;
