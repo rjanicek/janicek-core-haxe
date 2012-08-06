@@ -1,5 +1,6 @@
 package co.janicek.core;
 
+using co.janicek.core.NullCore;
 using co.janicek.core.StringCore;
 
 class StringCore {
@@ -33,15 +34,7 @@ class StringCore {
 	 * @return True if string is null or empty.
 	 */
 	public static function isNullOrEmpty( string : Null<String> ) : Bool {
-		if (string == null) {
-			return true;
-		}
-		
-		if (string.length == 0) {
-			return true;
-		}
-		
-		return false;
+		return (string.isNull() || string.length == 0);
 	}
 	
 	/**

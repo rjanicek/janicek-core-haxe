@@ -1,7 +1,9 @@
 import specs.co.janicek.core.Array2dSpec;
 import specs.co.janicek.core.BaseCode64Spec;
 import specs.co.janicek.core.html.CanvasCoreSpec;
-import specs.co.janicek.core.HttpCookieCoreSpec;
+import specs.co.janicek.core.http.HttpCookieCoreSpec;
+import specs.co.janicek.core.ParseCoreSpec;
+import specs.co.janicek.core.http.UrlCoreSpec;
 import specs.co.janicek.core.math.HashCoreSpec;
 import specs.co.janicek.core.math.MathCoreSpec;
 import specs.co.janicek.core.math.UUIDSpec;
@@ -34,10 +36,12 @@ class Main {
 		new HttpCookieCoreSpec();
 		new MathCoreSpec();
 		new NullCoreSpec();
+		new ParseCoreSpec();
 		new PathCoreSpec();
 		new PerlinNoiseSpec();
 		new RandomCoreSpec();
 		new StringCoreSpec();
+		new UrlCoreSpec();
 		new UUIDSpec();
 
 		Jasmine.getEnv().addReporter(Jasmine.newHtmlReporter());

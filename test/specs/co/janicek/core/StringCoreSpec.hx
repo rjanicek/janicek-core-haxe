@@ -1,5 +1,6 @@
 package specs.co.janicek.core;
 
+import co.janicek.core.Constants;
 import co.janicek.core.math.MathCore;
 import co.janicek.core.StringCore;
 import jasmine.J;
@@ -25,8 +26,8 @@ class StringCoreSpec {
 			
 			J.describe("isNullOrEmpty()", function () {
 				J.it("should check if string is null or empty", function() {
-					J.expect(StringCore.isNullOrEmpty("")).toBeTruthy();
 					J.expect(StringCore.isNullOrEmpty(null)).toBeTruthy();
+					J.expect(StringCore.isNullOrEmpty("")).toBeTruthy();
 					J.expect(StringCore.isNullOrEmpty("not null or empty")).toBeFalsy();
 				});
 			});

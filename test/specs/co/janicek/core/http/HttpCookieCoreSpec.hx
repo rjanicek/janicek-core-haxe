@@ -1,6 +1,6 @@
-package specs.co.janicek.core;
+package specs.co.janicek.core.http;
 
-import co.janicek.core.HttpCookieCore;
+import co.janicek.core.http.HttpCookieCore;
 import jasmine.J;
 
 using Lambda;

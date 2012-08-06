@@ -17,7 +17,7 @@ Tested with Haxe 2.10 on JavaScript.
 
 See [spec classes](https://github.com/rjanicek/janicek-core-haxe/tree/master/test/specs/co/janicek/core) for examples of how to use the libraries.
 
-Make sure to run ``git submodule update --init`` to clone the external libraries.
+Make sure to run ``git submodule update --init`` to clone dependencies.
 
 API -> http://rjanicek.github.com/janicek-core-haxe/api
 

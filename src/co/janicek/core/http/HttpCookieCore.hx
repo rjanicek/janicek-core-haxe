@@ -1,6 +1,6 @@
-package co.janicek.core;
+package co.janicek.core.http;
 
-using Lambda;
+using co.janicek.core.ParseCore;
 using Reflect;
 
 /**
@@ -19,14 +19,7 @@ class HttpCookieCore {
 	 * @return	Hash table of cookies.
 	 */
 	public static function parseCookies( rawCookies : String ) : Hash<String> {
-		var structuredCookies = new Hash<String>();
-		rawCookies.split(COOKIE_PAIR_DELIMETER).iter(function(rawCookie) {
-			var cookie = rawCookie.split(COOKIE_DELIMETER);
-			if (cookie.length == 2) {
-				structuredCookies.set(cookie[0], cookie[1]);
-			}
-		});
-		return structuredCookies;
+		return rawCookies.parseHashTable(COOKIE_DELIMETER, COOKIE_PAIR_DELIMETER);
 	}
 	
 }
