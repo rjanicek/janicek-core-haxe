@@ -433,23 +433,25 @@ List.prototype = {
 var Main = function() { }
 Main.__name__ = true;
 Main.main = function() {
-	haxe.Log.trace("Testing...",{ fileName : "Main.hx", lineNumber : 27, className : "Main", methodName : "main"});
+	haxe.Log.trace("Testing...",{ fileName : "Main.hx", lineNumber : 29, className : "Main", methodName : "main"});
 	new specs.co.janicek.core.Array2dSpec();
 	new specs.co.janicek.core.BaseCode64Spec();
 	new specs.co.janicek.core.html.CanvasCoreSpec();
 	new specs.co.janicek.core.math.HashCoreSpec();
 	new specs.co.janicek.core.html.HtmlColorCoreSpec();
-	new specs.co.janicek.core.HttpCookieCoreSpec();
+	new specs.co.janicek.core.http.HttpCookieCoreSpec();
 	new specs.co.janicek.core.math.MathCoreSpec();
 	new specs.co.janicek.core.NullCoreSpec();
+	new specs.co.janicek.core.ParseCoreSpec();
 	new specs.co.janicek.core.PathCoreSpec();
 	new specs.co.janicek.core.math.PerlinNoiseSpec();
 	new specs.co.janicek.core.math.RandomCoreSpec();
 	new specs.co.janicek.core.StringCoreSpec();
+	new specs.co.janicek.core.http.UrlCoreSpec();
 	new specs.co.janicek.core.math.UUIDSpec();
 	jasmine.Jasmine.getEnv().addReporter(jasmine.Jasmine.newHtmlReporter());
 	jasmine.Jasmine.getEnv().execute();
-	haxe.Log.trace("Done testing.",{ fileName : "Main.hx", lineNumber : 45, className : "Main", methodName : "main"});
+	haxe.Log.trace("Done testing.",{ fileName : "Main.hx", lineNumber : 49, className : "Main", methodName : "main"});
 }
 var Reflect = function() { }
 Reflect.__name__ = true;
@@ -682,16 +684,8 @@ co.janicek.core.BaseCode64.base64EncodeString = function(string) {
 co.janicek.core.BaseCode64.base64DecodeString = function(base64) {
 	return haxe.io.Bytes.ofData(co.janicek.core.BaseCode64.base64DecodeBytesData(base64)).toString();
 }
-co.janicek.core.HttpCookieCore = function() { }
-co.janicek.core.HttpCookieCore.__name__ = true;
-co.janicek.core.HttpCookieCore.parseCookies = function(rawCookies) {
-	var structuredCookies = new Hash();
-	Lambda.iter(rawCookies.split("; "),function(rawCookie) {
-		var cookie = rawCookie.split("=");
-		if(cookie.length == 2) structuredCookies.set(cookie[0],cookie[1]);
-	});
-	return structuredCookies;
-}
+co.janicek.core.Constants = function() { }
+co.janicek.core.Constants.__name__ = true;
 co.janicek.core.LambdaCore = function() { }
 co.janicek.core.LambdaCore.__name__ = true;
 co.janicek.core.LambdaCore.first = function(it,f) {
@@ -718,6 +712,24 @@ co.janicek.core.NullCore.coalesceIter = function(nullables) {
 		return n != null;
 	});
 }
+co.janicek.core.ParseCore = function() { }
+co.janicek.core.ParseCore.__name__ = true;
+co.janicek.core.ParseCore.parseHashTable = function(rawHashTable,keyValueDelimeter,rowDelimeter) {
+	if(rowDelimeter == null) rowDelimeter = "";
+	var hashTable = new Hash();
+	var parseItem = function(rawKeyValuePair) {
+		if(!co.janicek.core.StringCore.isNullOrEmpty(rawKeyValuePair)) {
+			if(co.janicek.core.StringCore.contains(rawKeyValuePair,keyValueDelimeter)) {
+				var item = rawKeyValuePair.split(keyValueDelimeter);
+				if(item.length == 2) hashTable.set(item[0],item[1]);
+			} else hashTable.set(rawKeyValuePair,"");
+		}
+	};
+	if(!co.janicek.core.StringCore.isNullOrEmpty(rowDelimeter)) Lambda.iter(rawHashTable.split(rowDelimeter),function(rawItem) {
+		parseItem(rawItem);
+	}); else parseItem(rawHashTable);
+	return hashTable;
+}
 co.janicek.core.PathCore = function() { }
 co.janicek.core.PathCore.__name__ = true;
 co.janicek.core.PathCore.getDirectoryName = function(path,pathDelimeter) {
@@ -743,9 +755,7 @@ co.janicek.core.StringCore.contains = function(string,pattern) {
 	return string.indexOf(pattern) != -1;
 }
 co.janicek.core.StringCore.isNullOrEmpty = function(string) {
-	if(string == null) return true;
-	if(string.length == 0) return true;
-	return false;
+	return string == null || string.length == 0;
 }
 co.janicek.core.StringCore.isInteger = function(s) {
 	if(co.janicek.core.StringCore.contains(s,".")) return false;
@@ -1082,6 +1092,35 @@ co.janicek.core.html.HtmlColorCore.hsl = function(hue,saturation,lightness) {
 }
 co.janicek.core.html.HtmlColorCore.hsla = function(hue,saturation,lightness,alpha) {
 	return "hsla(" + hue + "," + saturation * 100 + "%," + lightness * 100 + "%," + alpha + ")";
+}
+if(!co.janicek.core.http) co.janicek.core.http = {}
+co.janicek.core.http.HttpCookieCore = function() { }
+co.janicek.core.http.HttpCookieCore.__name__ = true;
+co.janicek.core.http.HttpCookieCore.parseCookies = function(rawCookies) {
+	return co.janicek.core.ParseCore.parseHashTable(rawCookies,"=","; ");
+}
+co.janicek.core.http.UrlCore = function() { }
+co.janicek.core.http.UrlCore.__name__ = true;
+co.janicek.core.http.UrlCore.makeEmptyUrl = function() {
+	return { source : "", protocol : "", authority : "", userInfo : "", user : "", password : "", host : "", port : "", relative : "", path : "", directory : "", file : "", query : "", fragment : ""};
+}
+co.janicek.core.http.UrlCore.parseUrl = function(url) {
+	var urlParts = co.janicek.core.http.UrlCore.makeEmptyUrl();
+	var r = new EReg("^(?:(?![^:@]+:[^:@/]*@)([^:/?#.]+):)?(?://)?((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:/?#]*)(?::(\\d*))?)(((/(?:[^?#](?![^?#/]*\\.[^?#/.]+(?:[?#]|$)))*/?)?([^?#/]*))(?:\\?([^#]*))?(?:#(.*))?)","");
+	r.match(url);
+	var i = 0;
+	var _g = 0, _g1 = Reflect.fields(urlParts);
+	while(_g < _g1.length) {
+		var field = _g1[_g];
+		++_g;
+		var part = co.janicek.core.NullCore.coalesce(r.matched(i),"");
+		urlParts[field] = part;
+		i++;
+	}
+	return urlParts;
+}
+co.janicek.core.http.UrlCore.parseUrlQuery = function(query) {
+	return co.janicek.core.ParseCore.parseHashTable(query,"=","&");
 }
 if(!co.janicek.core.math) co.janicek.core.math = {}
 co.janicek.core.math.HashCore = function() { }
@@ -1821,7 +1860,7 @@ js.Lib.debug = function() {
 js.Lib.alert = function(v) {
 	alert(js.Boot.__string_rec(v,""));
 }
-js.Lib.eval = function(code) {
+js.Lib["eval"] = function(code) {
 	return eval(code);
 }
 js.Lib.setErrorHandler = function(f) {
@@ -1978,29 +2017,6 @@ specs.co.janicek.core.BaseCode64Spec.__name__ = true;
 specs.co.janicek.core.BaseCode64Spec.prototype = {
 	__class__: specs.co.janicek.core.BaseCode64Spec
 }
-specs.co.janicek.core.HttpCookieCoreSpec = function() {
-	jasmine.J.describe("HttpCookieCore",function() {
-		jasmine.J.describe("parseCookies()",function() {
-			jasmine.J.it("should return empty hashtable from empty cookies",function() {
-				var cookies = co.janicek.core.HttpCookieCore.parseCookies("");
-				jasmine.J.expect(Lambda.count(cookies)).toEqual(0);
-			});
-			jasmine.J.it("should parse one cookie",function() {
-				var cookies = co.janicek.core.HttpCookieCore.parseCookies("cookie=monster");
-				jasmine.J.expect(cookies.get("cookie")).toEqual("monster");
-			});
-			jasmine.J.it("should parse multiple cookies",function() {
-				var cookies = co.janicek.core.HttpCookieCore.parseCookies("cookie=monster; singularity=near");
-				jasmine.J.expect(cookies.get("cookie")).toEqual("monster");
-				jasmine.J.expect(cookies.get("singularity")).toEqual("near");
-			});
-		});
-	});
-};
-specs.co.janicek.core.HttpCookieCoreSpec.__name__ = true;
-specs.co.janicek.core.HttpCookieCoreSpec.prototype = {
-	__class__: specs.co.janicek.core.HttpCookieCoreSpec
-}
 specs.co.janicek.core.NullCoreSpec = function() {
 	jasmine.J.describe("NullCore",function() {
 		jasmine.J.describe("isNull()",function() {
@@ -2062,6 +2078,39 @@ specs.co.janicek.core.NullCoreSpec.__name__ = true;
 specs.co.janicek.core.NullCoreSpec.prototype = {
 	__class__: specs.co.janicek.core.NullCoreSpec
 }
+specs.co.janicek.core.ParseCoreSpec = function() {
+	jasmine.J.describe("ParseCore",function() {
+		jasmine.J.describe("parseHashTable()",function() {
+			jasmine.J.it("should return empty hashtable from empty string",function() {
+				var ht = co.janicek.core.ParseCore.parseHashTable("","");
+				jasmine.J.expect(Lambda.count(ht)).toEqual(0);
+			});
+			jasmine.J.it("should parse one key / value pair",function() {
+				var ht = co.janicek.core.ParseCore.parseHashTable("key=value","=");
+				jasmine.J.expect(ht.get("key")).toEqual("value");
+			});
+			jasmine.J.it("should parse multiple key / value pairs",function() {
+				var ht = co.janicek.core.ParseCore.parseHashTable("key1=value1,key2=value2","=",",");
+				jasmine.J.expect(ht.get("key1")).toEqual("value1");
+				jasmine.J.expect(ht.get("key2")).toEqual("value2");
+			});
+			jasmine.J.it("should parse keys without values as empty",function() {
+				var ht = co.janicek.core.ParseCore.parseHashTable("key","=");
+				jasmine.J.expect(Lambda.count(ht)).toEqual(1);
+				jasmine.J.expect(ht.exists("key")).toBeTruthy();
+				jasmine.J.expect(ht.get("key")).toEqual("");
+				ht = co.janicek.core.ParseCore.parseHashTable("key&key2","=","&");
+				jasmine.J.expect(Lambda.count(ht)).toEqual(2);
+				jasmine.J.expect(ht.get("key")).toEqual("");
+				jasmine.J.expect(ht.get("key2")).toEqual("");
+			});
+		});
+	});
+};
+specs.co.janicek.core.ParseCoreSpec.__name__ = true;
+specs.co.janicek.core.ParseCoreSpec.prototype = {
+	__class__: specs.co.janicek.core.ParseCoreSpec
+}
 specs.co.janicek.core.PathCoreSpec = function() {
 	jasmine.J.describe("PathCore",function() {
 		jasmine.J.describe("getDirectoryName()",function() {
@@ -2100,8 +2149,8 @@ specs.co.janicek.core.StringCoreSpec = function() {
 		});
 		jasmine.J.describe("isNullOrEmpty()",function() {
 			jasmine.J.it("should check if string is null or empty",function() {
-				jasmine.J.expect(co.janicek.core.StringCore.isNullOrEmpty("")).toBeTruthy();
 				jasmine.J.expect(co.janicek.core.StringCore.isNullOrEmpty(null)).toBeTruthy();
+				jasmine.J.expect(co.janicek.core.StringCore.isNullOrEmpty("")).toBeTruthy();
 				jasmine.J.expect(co.janicek.core.StringCore.isNullOrEmpty("not null or empty")).toBeFalsy();
 			});
 		});
@@ -2244,6 +2293,60 @@ specs.co.janicek.core.html.HtmlColorCoreSpec = function() {
 specs.co.janicek.core.html.HtmlColorCoreSpec.__name__ = true;
 specs.co.janicek.core.html.HtmlColorCoreSpec.prototype = {
 	__class__: specs.co.janicek.core.html.HtmlColorCoreSpec
+}
+if(!specs.co.janicek.core.http) specs.co.janicek.core.http = {}
+specs.co.janicek.core.http.HttpCookieCoreSpec = function() {
+	jasmine.J.describe("HttpCookieCore",function() {
+		jasmine.J.describe("parseCookies()",function() {
+			jasmine.J.it("should return empty hashtable from empty cookies",function() {
+				var cookies = co.janicek.core.http.HttpCookieCore.parseCookies("");
+				jasmine.J.expect(Lambda.count(cookies)).toEqual(0);
+			});
+			jasmine.J.it("should parse one cookie",function() {
+				var cookies = co.janicek.core.http.HttpCookieCore.parseCookies("cookie=monster");
+				jasmine.J.expect(cookies.get("cookie")).toEqual("monster");
+			});
+			jasmine.J.it("should parse multiple cookies",function() {
+				var cookies = co.janicek.core.http.HttpCookieCore.parseCookies("cookie=monster; singularity=near");
+				jasmine.J.expect(cookies.get("cookie")).toEqual("monster");
+				jasmine.J.expect(cookies.get("singularity")).toEqual("near");
+			});
+		});
+	});
+};
+specs.co.janicek.core.http.HttpCookieCoreSpec.__name__ = true;
+specs.co.janicek.core.http.HttpCookieCoreSpec.prototype = {
+	__class__: specs.co.janicek.core.http.HttpCookieCoreSpec
+}
+specs.co.janicek.core.http.UrlCoreSpec = function() {
+	jasmine.J.describe("UrlCore",function() {
+		jasmine.J.describe("parseUrl()",function() {
+			jasmine.J.it("should parse every part of a URL",function() {
+				var url = co.janicek.core.http.UrlCore.parseUrl("http://username:password@janicek.co:666/over/there/index.html?parameter=value&parameter2=value2#fragment");
+				jasmine.J.expect(url.protocol).toEqual("http");
+				jasmine.J.expect(url.user).toEqual("username");
+				jasmine.J.expect(url.password).toEqual("password");
+				jasmine.J.expect(url.host).toEqual("janicek.co");
+				jasmine.J.expect(url.port).toEqual("666");
+				jasmine.J.expect(url.directory).toEqual("/over/there/");
+				jasmine.J.expect(url.file).toEqual("index.html");
+				jasmine.J.expect(url.query).toEqual("parameter=value&parameter2=value2");
+				jasmine.J.expect(url.fragment).toEqual("fragment");
+			});
+		});
+		jasmine.J.describe("parseUrlQuery()",function() {
+			jasmine.J.it("should return hashtable from url query",function() {
+				var query = co.janicek.core.http.UrlCore.parseUrlQuery("key=value&key2=value2");
+				jasmine.J.expect(Lambda.count(query)).toEqual(2);
+				jasmine.J.expect(query.get("key")).toEqual("value");
+				jasmine.J.expect(query.get("key2")).toEqual("value2");
+			});
+		});
+	});
+};
+specs.co.janicek.core.http.UrlCoreSpec.__name__ = true;
+specs.co.janicek.core.http.UrlCoreSpec.prototype = {
+	__class__: specs.co.janicek.core.http.UrlCoreSpec
 }
 if(!specs.co.janicek.core.math) specs.co.janicek.core.math = {}
 specs.co.janicek.core.math.HashCoreSpec = function() {
@@ -2530,14 +2633,21 @@ if(typeof window != "undefined") {
 }
 co.janicek.core.BaseCode64.BASE_64_ENCODINGS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 co.janicek.core.BaseCode64.BASE_64_PADDING = "=";
-co.janicek.core.HttpCookieCore.COOKIE_PAIR_DELIMETER = "; ";
-co.janicek.core.HttpCookieCore.COOKIE_DELIMETER = "=";
+co.janicek.core.Constants.SECONDS_PER_MINUTE = 60;
+co.janicek.core.Constants.SECONDS_PER_HOUR = 3600;
+co.janicek.core.Constants.SECONDS_PER_DAY = 86400;
+co.janicek.core.Constants.MINUTES_PER_HOUR = 60;
+co.janicek.core.Constants.HOURS_PER_DAY = 24;
 co.janicek.core.html.CanvasCore.CANVAS_ELEMENTS_PER_PIXEL = 4;
 co.janicek.core.html.CanvasCore.CANVAS_RED_OFFSET = 0;
 co.janicek.core.html.CanvasCore.CANVAS_GREEN_OFFSET = 1;
 co.janicek.core.html.CanvasCore.CANVAS_BLUE_OFFSET = 2;
 co.janicek.core.html.CanvasCore.CANVAS_ALPHA_OFFSET = 3;
 co.janicek.core.html.HtmlColorCore.MAX_COLOR_COMPONENT = 255;
+co.janicek.core.http.HttpCookieCore.COOKIE_PAIR_DELIMETER = "; ";
+co.janicek.core.http.HttpCookieCore.COOKIE_DELIMETER = "=";
+co.janicek.core.http.UrlCore.QUERY_KEY_VALUE_DELIMETER = "=";
+co.janicek.core.http.UrlCore.QUERY_KEY_VALUE_PAIR_DELIMETER = "&";
 co.janicek.core.math.MathCore.INT32_MAX = 2147483647;
 co.janicek.core.math.MathCore.INT53_MAX = 9007199254740992;
 co.janicek.core.math.MathCore.INT53_MIN = -9007199254740992;
