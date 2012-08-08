@@ -438,11 +438,11 @@ Main.main = function() {
 	new specs.co.janicek.core.BaseCode64Spec();
 	new specs.co.janicek.core.html.CanvasCoreSpec();
 	new specs.co.janicek.core.math.HashCoreSpec();
+	new specs.co.janicek.core.HashTableCoreSpec();
 	new specs.co.janicek.core.html.HtmlColorCoreSpec();
 	new specs.co.janicek.core.http.HttpCookieCoreSpec();
 	new specs.co.janicek.core.math.MathCoreSpec();
 	new specs.co.janicek.core.NullCoreSpec();
-	new specs.co.janicek.core.ParseCoreSpec();
 	new specs.co.janicek.core.PathCoreSpec();
 	new specs.co.janicek.core.math.PerlinNoiseSpec();
 	new specs.co.janicek.core.math.RandomCoreSpec();
@@ -686,6 +686,33 @@ co.janicek.core.BaseCode64.base64DecodeString = function(base64) {
 }
 co.janicek.core.Constants = function() { }
 co.janicek.core.Constants.__name__ = true;
+co.janicek.core.HashTableCore = function() { }
+co.janicek.core.HashTableCore.__name__ = true;
+co.janicek.core.HashTableCore.parseHashTable = function(rawHashTable,keyValueDelimeter,pairDelimeter) {
+	if(pairDelimeter == null) pairDelimeter = "&";
+	if(keyValueDelimeter == null) keyValueDelimeter = "=";
+	var hashTable = new Hash();
+	var parseItem = function(rawKeyValuePair) {
+		if(!(rawKeyValuePair == null || rawKeyValuePair.length == 0)) {
+			if(co.janicek.core.StringCore.contains(rawKeyValuePair,keyValueDelimeter)) {
+				var item = rawKeyValuePair.split(keyValueDelimeter);
+				if(item.length == 2) hashTable.set(item[0],item[1]);
+			} else hashTable.set(rawKeyValuePair,"");
+		}
+	};
+	if(!(pairDelimeter == null || pairDelimeter.length == 0)) Lambda.iter(rawHashTable.split(pairDelimeter),function(rawItem) {
+		parseItem(rawItem);
+	}); else parseItem(rawHashTable);
+	return hashTable;
+}
+co.janicek.core.HashTableCore.stringifyHashTable = function(ht,keyValueDelimeter,pairDelimeter) {
+	if(pairDelimeter == null) pairDelimeter = "&";
+	if(keyValueDelimeter == null) keyValueDelimeter = "=";
+	return Lambda.fold({ iterator : $bind(ht,ht.keys)},function(key,buf) {
+		var value = ht.get(key);
+		return (buf.length == 0?"":buf + pairDelimeter) + key + (value == null || value.length == 0?"":keyValueDelimeter + value);
+	},"");
+}
 co.janicek.core.LambdaCore = function() { }
 co.janicek.core.LambdaCore.__name__ = true;
 co.janicek.core.LambdaCore.first = function(it,f) {
@@ -712,24 +739,6 @@ co.janicek.core.NullCore.coalesceIter = function(nullables) {
 		return n != null;
 	});
 }
-co.janicek.core.ParseCore = function() { }
-co.janicek.core.ParseCore.__name__ = true;
-co.janicek.core.ParseCore.parseHashTable = function(rawHashTable,keyValueDelimeter,rowDelimeter) {
-	if(rowDelimeter == null) rowDelimeter = "";
-	var hashTable = new Hash();
-	var parseItem = function(rawKeyValuePair) {
-		if(!co.janicek.core.StringCore.isNullOrEmpty(rawKeyValuePair)) {
-			if(co.janicek.core.StringCore.contains(rawKeyValuePair,keyValueDelimeter)) {
-				var item = rawKeyValuePair.split(keyValueDelimeter);
-				if(item.length == 2) hashTable.set(item[0],item[1]);
-			} else hashTable.set(rawKeyValuePair,"");
-		}
-	};
-	if(!co.janicek.core.StringCore.isNullOrEmpty(rowDelimeter)) Lambda.iter(rawHashTable.split(rowDelimeter),function(rawItem) {
-		parseItem(rawItem);
-	}); else parseItem(rawHashTable);
-	return hashTable;
-}
 co.janicek.core.PathCore = function() { }
 co.janicek.core.PathCore.__name__ = true;
 co.janicek.core.PathCore.getDirectoryName = function(path,pathDelimeter) {
@@ -753,6 +762,9 @@ co.janicek.core.StringCore.removeFromEnd = function(string,pattern) {
 }
 co.janicek.core.StringCore.contains = function(string,pattern) {
 	return string.indexOf(pattern) != -1;
+}
+co.janicek.core.StringCore.isEmpty = function(string) {
+	return string.length == 0;
 }
 co.janicek.core.StringCore.isNullOrEmpty = function(string) {
 	return string == null || string.length == 0;
@@ -1097,7 +1109,7 @@ if(!co.janicek.core.http) co.janicek.core.http = {}
 co.janicek.core.http.HttpCookieCore = function() { }
 co.janicek.core.http.HttpCookieCore.__name__ = true;
 co.janicek.core.http.HttpCookieCore.parseCookies = function(rawCookies) {
-	return co.janicek.core.ParseCore.parseHashTable(rawCookies,"=","; ");
+	return co.janicek.core.HashTableCore.parseHashTable(rawCookies,"=","; ");
 }
 co.janicek.core.http.UrlCore = function() { }
 co.janicek.core.http.UrlCore.__name__ = true;
@@ -1120,7 +1132,7 @@ co.janicek.core.http.UrlCore.parseUrl = function(url) {
 	return urlParts;
 }
 co.janicek.core.http.UrlCore.parseUrlQuery = function(query) {
-	return co.janicek.core.ParseCore.parseHashTable(query,"=","&");
+	return co.janicek.core.HashTableCore.parseHashTable(query,"=","&");
 }
 if(!co.janicek.core.math) co.janicek.core.math = {}
 co.janicek.core.math.HashCore = function() { }
@@ -1860,7 +1872,7 @@ js.Lib.debug = function() {
 js.Lib.alert = function(v) {
 	alert(js.Boot.__string_rec(v,""));
 }
-js.Lib["eval"] = function(code) {
+js.Lib.eval = function(code) {
 	return eval(code);
 }
 js.Lib.setErrorHandler = function(f) {
@@ -2017,6 +2029,63 @@ specs.co.janicek.core.BaseCode64Spec.__name__ = true;
 specs.co.janicek.core.BaseCode64Spec.prototype = {
 	__class__: specs.co.janicek.core.BaseCode64Spec
 }
+specs.co.janicek.core.HashTableCoreSpec = function() {
+	jasmine.J.describe("HashTableCore",function() {
+		jasmine.J.describe("parseHashTable()",function() {
+			jasmine.J.it("should return empty hashtable from empty string",function() {
+				var ht = co.janicek.core.HashTableCore.parseHashTable("");
+				jasmine.J.expect(Lambda.count(ht)).toEqual(0);
+			});
+			jasmine.J.it("should parse one key / value pair",function() {
+				var ht = co.janicek.core.HashTableCore.parseHashTable("key=value");
+				jasmine.J.expect(ht.get("key")).toEqual("value");
+			});
+			jasmine.J.it("should parse multiple key / value pairs",function() {
+				var ht = co.janicek.core.HashTableCore.parseHashTable("key1=value1&key2=value2");
+				jasmine.J.expect(ht.get("key1")).toEqual("value1");
+				jasmine.J.expect(ht.get("key2")).toEqual("value2");
+			});
+			jasmine.J.it("should parse keys without values as empty",function() {
+				var ht = co.janicek.core.HashTableCore.parseHashTable("key");
+				jasmine.J.expect(Lambda.count(ht)).toEqual(1);
+				jasmine.J.expect(ht.exists("key")).toBeTruthy();
+				jasmine.J.expect(ht.get("key")).toEqual("");
+				ht = co.janicek.core.HashTableCore.parseHashTable("key&key2");
+				jasmine.J.expect(Lambda.count(ht)).toEqual(2);
+				jasmine.J.expect(ht.get("key")).toEqual("");
+				jasmine.J.expect(ht.get("key2")).toEqual("");
+			});
+		});
+		jasmine.J.describe("stringifyHashTable()",function() {
+			jasmine.J.it("should return empty string from empty hash table",function() {
+				var ht = new Hash();
+				jasmine.J.expect(co.janicek.core.HashTableCore.stringifyHashTable(ht)).toEqual("");
+			});
+			jasmine.J.it("should return a key / value pair string",function() {
+				var ht = new Hash();
+				ht.set("key","value");
+				jasmine.J.expect(co.janicek.core.HashTableCore.stringifyHashTable(ht)).toEqual("key=value");
+			});
+			jasmine.J.it("should return multiple key / value pairs string",function() {
+				var ht = new Hash();
+				ht.set("key","value");
+				ht.set("key2","value2");
+				jasmine.J.expect(co.janicek.core.HashTableCore.stringifyHashTable(ht)).toEqual("key=value&key2=value2");
+			});
+			jasmine.J.it("should return key with empty value without key value delimeter",function() {
+				var ht = new Hash();
+				ht.set("key","");
+				jasmine.J.expect(co.janicek.core.HashTableCore.stringifyHashTable(ht)).toEqual("key");
+				ht.set("key2","");
+				jasmine.J.expect(co.janicek.core.HashTableCore.stringifyHashTable(ht)).toEqual("key&key2");
+			});
+		});
+	});
+};
+specs.co.janicek.core.HashTableCoreSpec.__name__ = true;
+specs.co.janicek.core.HashTableCoreSpec.prototype = {
+	__class__: specs.co.janicek.core.HashTableCoreSpec
+}
 specs.co.janicek.core.NullCoreSpec = function() {
 	jasmine.J.describe("NullCore",function() {
 		jasmine.J.describe("isNull()",function() {
@@ -2078,39 +2147,6 @@ specs.co.janicek.core.NullCoreSpec.__name__ = true;
 specs.co.janicek.core.NullCoreSpec.prototype = {
 	__class__: specs.co.janicek.core.NullCoreSpec
 }
-specs.co.janicek.core.ParseCoreSpec = function() {
-	jasmine.J.describe("ParseCore",function() {
-		jasmine.J.describe("parseHashTable()",function() {
-			jasmine.J.it("should return empty hashtable from empty string",function() {
-				var ht = co.janicek.core.ParseCore.parseHashTable("","");
-				jasmine.J.expect(Lambda.count(ht)).toEqual(0);
-			});
-			jasmine.J.it("should parse one key / value pair",function() {
-				var ht = co.janicek.core.ParseCore.parseHashTable("key=value","=");
-				jasmine.J.expect(ht.get("key")).toEqual("value");
-			});
-			jasmine.J.it("should parse multiple key / value pairs",function() {
-				var ht = co.janicek.core.ParseCore.parseHashTable("key1=value1,key2=value2","=",",");
-				jasmine.J.expect(ht.get("key1")).toEqual("value1");
-				jasmine.J.expect(ht.get("key2")).toEqual("value2");
-			});
-			jasmine.J.it("should parse keys without values as empty",function() {
-				var ht = co.janicek.core.ParseCore.parseHashTable("key","=");
-				jasmine.J.expect(Lambda.count(ht)).toEqual(1);
-				jasmine.J.expect(ht.exists("key")).toBeTruthy();
-				jasmine.J.expect(ht.get("key")).toEqual("");
-				ht = co.janicek.core.ParseCore.parseHashTable("key&key2","=","&");
-				jasmine.J.expect(Lambda.count(ht)).toEqual(2);
-				jasmine.J.expect(ht.get("key")).toEqual("");
-				jasmine.J.expect(ht.get("key2")).toEqual("");
-			});
-		});
-	});
-};
-specs.co.janicek.core.ParseCoreSpec.__name__ = true;
-specs.co.janicek.core.ParseCoreSpec.prototype = {
-	__class__: specs.co.janicek.core.ParseCoreSpec
-}
 specs.co.janicek.core.PathCoreSpec = function() {
 	jasmine.J.describe("PathCore",function() {
 		jasmine.J.describe("getDirectoryName()",function() {
@@ -2149,9 +2185,9 @@ specs.co.janicek.core.StringCoreSpec = function() {
 		});
 		jasmine.J.describe("isNullOrEmpty()",function() {
 			jasmine.J.it("should check if string is null or empty",function() {
-				jasmine.J.expect(co.janicek.core.StringCore.isNullOrEmpty(null)).toBeTruthy();
-				jasmine.J.expect(co.janicek.core.StringCore.isNullOrEmpty("")).toBeTruthy();
-				jasmine.J.expect(co.janicek.core.StringCore.isNullOrEmpty("not null or empty")).toBeFalsy();
+				jasmine.J.expect(true).toBeTruthy();
+				jasmine.J.expect("".length == 0).toBeTruthy();
+				jasmine.J.expect("not null or empty".length == 0).toBeFalsy();
 			});
 		});
 		jasmine.J.describe("isInteger()",function() {
@@ -2638,6 +2674,8 @@ co.janicek.core.Constants.SECONDS_PER_HOUR = 3600;
 co.janicek.core.Constants.SECONDS_PER_DAY = 86400;
 co.janicek.core.Constants.MINUTES_PER_HOUR = 60;
 co.janicek.core.Constants.HOURS_PER_DAY = 24;
+co.janicek.core.HashTableCore.DEFAULT_KEY_VALUE_DELIMETER = "=";
+co.janicek.core.HashTableCore.DEFAULT_KEY_VALUE_PAIR_DELIMETER = "&";
 co.janicek.core.html.CanvasCore.CANVAS_ELEMENTS_PER_PIXEL = 4;
 co.janicek.core.html.CanvasCore.CANVAS_RED_OFFSET = 0;
 co.janicek.core.html.CanvasCore.CANVAS_GREEN_OFFSET = 1;
