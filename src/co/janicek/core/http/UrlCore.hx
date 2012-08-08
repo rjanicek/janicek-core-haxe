@@ -1,7 +1,7 @@
 package co.janicek.core.http;
 
 using co.janicek.core.NullCore;
-using co.janicek.core.ParseCore;
+using co.janicek.core.HashTableCore;
 using Reflect;
 
 /**

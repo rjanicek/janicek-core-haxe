@@ -30,11 +30,19 @@ class StringCore {
 	}
 
 	/**
+	 * Test if sting is empty.
+	 * @return True if string is empty.
+	 */
+	public static inline function isEmpty( string : String ) : Bool {
+		return string.length == 0;
+	}
+	
+	/**
 	 * Test if sting is null or empty.
 	 * @return True if string is null or empty.
 	 */
-	public static function isNullOrEmpty( string : Null<String> ) : Bool {
-		return (string.isNull() || string.length == 0);
+	public static inline function isNullOrEmpty( string : Null<String> ) : Bool {
+		return (string.isNull() || string.isEmpty());
 	}
 	
 	/**
