@@ -1,6 +1,3 @@
-package co.janicek.core.math;
-using co.janicek.core.array.Array2dCore;
-
 /**
 Title:      	Perlin noise
 Version:    	1.3
@@ -12,6 +9,8 @@ AS3 optimizations by Mario Klingemann http://www.quasimondo.com
 Haxe port and optimization by Nicolas Cannasse http://haxe.org
 Cross-platform and simplified by Richard Janicek http://janicek.co
 */
+package co.janicek.core.math;
+using co.janicek.core.array.Array2dCore;
 
 class PerlinNoise {
 

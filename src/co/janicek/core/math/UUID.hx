@@ -1,12 +1,3 @@
-package co.janicek.core.math;
-
-using co.janicek.core.math.RandomCore;
-using co.janicek.core.NullCore;
-using co.janicek.core.math.MathCore;
-using Std;
-using EReg;
-using StringTools;
-
 /*!
 Math.uuid.js (v1.4)
 http://www.broofa.com
@@ -16,6 +7,14 @@ Copyright (c) 2010 Robert Kieffer
 Haxe conversion by Richard Janicek
 Dual licensed under the MIT and GPL licenses.
 */
+package co.janicek.core.math;
+
+using co.janicek.core.math.RandomCore;
+using co.janicek.core.NullCore;
+using co.janicek.core.math.MathCore;
+using Std;
+using EReg;
+using StringTools;
 
 /**
  * Random universally unique identifier (UUID) generators.
