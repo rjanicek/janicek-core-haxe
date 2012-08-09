@@ -3,11 +3,11 @@
 <head>
 	::raw build.comment::
 	<title>::name:: (::config.title::)</title>
-	<meta name="date" content="::meta.date::" />
-	::foreach kw meta.keywords::
+	<meta name="date" content="::webmeta.date::" />
+	::foreach kw webmeta.keywords::
 	<meta name="keywords" content="::kw::" />
 	::end::
-	<link rel="stylesheet" type="text/css" href="::meta.stylesheet::" />
+	<link rel="stylesheet" type="text/css" href="::webmeta.stylesheet::" />
 
 <script type="text/javascript">
 function windowTitle()
@@ -20,7 +20,6 @@ function windowTitle()
 <noscript></noscript>
 </head>
 <body onload="windowTitle();">
-	::use 'header.mtt'::::end::
 	<div id="enum-frame" class="type-frame">
 	<!-- ======== START OF class DATA ======== -->
 	<h1 class="enum">::nameDots::::raw params::</h1>

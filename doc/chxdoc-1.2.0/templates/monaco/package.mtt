@@ -3,11 +3,11 @@
 	<head>
 		::raw build.comment::
 		<title>Package ::name:: Type List</title>
-		<meta name="date" content="::meta.date::" />
-		::foreach kw meta.keywords::
+		<meta name="date" content="::webmeta.date::" />
+		::foreach kw webmeta.keywords::
 		<meta name="keywords" content="::kw::" />
 		::end::
-		<link rel="stylesheet" type="text/css" href="::meta.stylesheet::" />
+		<link rel="stylesheet" type="text/css" href="::webmeta.stylesheet::" />
 	</head>
 	<body>
 		<div id="types-frame" class="onepackage">
@@ -17,12 +17,6 @@
 ::else::
  ::set packageName=full::
 ::end::
-			<div id="packages-header">
-				<ul>
-					<li class="overview"><a href="::rootRelative::../uml/::packageName::.html" title="::full::" target="classFrame">Class Diagram</a></li>
-				</ul>
-			</div>
-
 			<ul class="packages">
 ::foreach i types::
 				<li class="::i.type::"><a href="::rootRelative::../types/::i.subdir::::i.name::::config.htmlFileExtension::" title="::i.name::" target="classFrame">::i.name::</a></li>

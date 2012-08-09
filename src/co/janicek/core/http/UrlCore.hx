@@ -1,7 +1,8 @@
 /**
- * Janicek Core Haxe
+ * janicek-core-haxe
+ * ------------------
  * My personal collection of Haxe core libraries.
- * Copyright (c) 2012 Richard Janicek <r@janicek.co>
+ * Copyright (c) 2012 Richard Janicek, http://www.janicek.co
  * 
  * The MIT License (MIT) http://www.opensource.org/licenses/mit-license.php
  * 

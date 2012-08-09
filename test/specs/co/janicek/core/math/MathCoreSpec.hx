@@ -1,7 +1,8 @@
 /**
- * Janicek Core Haxe
+ * janicek-core-haxe
+ * ------------------
  * My personal collection of Haxe core libraries.
- * Copyright (c) 2012 Richard Janicek <r@janicek.co>
+ * Copyright (c) 2012 Richard Janicek, http://www.janicek.co
  * 
  * The MIT License (MIT) http://www.opensource.org/licenses/mit-license.php
  * 
@@ -71,13 +72,13 @@ class MathCoreSpec {
 			
 			J.describe("INT53_MAX", function() {
 				J.it("should not be able to go higher", function() {
-					J.expect(MathCore.INT53_MAX + 1).toEqual(MathCore.INT53_MAX);
+					J.expect(MathCore.WHOLE_NUMBER_MAX + 1).toEqual(MathCore.WHOLE_NUMBER_MAX);
 				});
 			});
 			
 			J.describe("INT53_MIN", function() {
 				J.it("should not be able to go lower", function() {
-					J.expect(MathCore.INT53_MIN - 1).toEqual(MathCore.INT53_MIN);
+					J.expect(MathCore.WHOLE_NUMBER_MIN - 1).toEqual(MathCore.WHOLE_NUMBER_MIN);
 				});
 			});
 			

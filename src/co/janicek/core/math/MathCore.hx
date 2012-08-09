@@ -1,7 +1,8 @@
 /**
- * Janicek Core Haxe
+ * janicek-core-haxe
+ * ------------------
  * My personal collection of Haxe core libraries.
- * Copyright (c) 2012 Richard Janicek <r@janicek.co>
+ * Copyright (c) 2012 Richard Janicek, http://www.janicek.co
  * 
  * The MIT License (MIT) http://www.opensource.org/licenses/mit-license.php
  * 
@@ -39,17 +40,19 @@ class MathCore {
 	
 	/**
 	 * Biggest whole number.
-	 * WARNING: INT53_MAX + 1 === INT53_MAX
+	 * WARNING: WHOLE_NUMBER_MAX + 1 === WHOLE_NUMBER_MAX
+	 * WARNING: bit operations don't work on numbers > INT32_MAX
 	 * @see <a href="http://en.wikipedia.org/wiki/IEEE_754-1985">http://en.wikipedia.org/wiki/IEEE_754-1985</a>
 	 */
-	inline public static var INT53_MAX = 9007199254740992;
+	inline public static var WHOLE_NUMBER_MAX = 9007199254740992;
 	
 	/**
 	 * Smallest whole number.
-	 * WARNING: INT53_MIN - 1 === INT53_MIN
+	 * WARNING: WHOLE_NUMBER_MIN - 1 === WHOLE_NUMBER_MIN
+	 * WARNING: bit operations don't work on numbers < -INT32_MAX
 	 * @see <a href="http://en.wikipedia.org/wiki/IEEE_754-1985">http://en.wikipedia.org/wiki/IEEE_754-1985</a>
 	 */
-	inline public static var INT53_MIN = -INT53_MAX;
+	inline public static var WHOLE_NUMBER_MIN = -WHOLE_NUMBER_MAX;
 
 	public static function isEven( n : Int ) : Bool {
 		return n % 2 == 0;

@@ -2,7 +2,7 @@
 <html>
 	<head>
 		<title>Web Config</title>
-		<link rel="stylesheet" type="text/css" href="::meta.stylesheet::" />
+		<link rel="stylesheet" type="text/css" href="::webmeta.stylesheet::" />
 	</head>
 	<body>
 		<h1>Config settings</h1>
