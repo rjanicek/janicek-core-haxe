@@ -1,0 +1,8 @@
+-cp src
+-cp test/src
+-cp ../../mocha.js-haxe/mocha.js-haxe/src
+-js test/node/janicek-core-test-node.js
+-main MainNode
+--js-modern
+--dead-code-elimination
+-debug

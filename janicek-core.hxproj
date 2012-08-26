@@ -4,7 +4,7 @@
   <output>
     <movie outputType="Application" />
     <movie input="" />
-    <movie path="bin\janicek-core.js" />
+    <movie path="test\browser\janicek-core-test-browser.js" />
     <movie fps="0" />
     <movie width="0" />
     <movie height="0" />
@@ -16,15 +16,16 @@
   <!-- Other classes to be compiled into your SWF -->
   <classpaths>
     <class path="src" />
-    <class path="test" />
+    <class path="test\src" />
     <class path="lib\jasmine-haxe" />
     <class path="lib\html5-haxe" />
+    <class path="..\..\mocha.js-haxe\mocha.js-haxe\src" />
   </classpaths>
   <!-- Build options -->
   <build>
     <option directives="" />
     <option flashStrict="False" />
-    <option mainClass="Main" />
+    <option mainClass="MainBrowser" />
     <option enabledebug="False" />
     <option additional="-debug&#xA;-xml doc/bin/janicek-core.xml" />
   </build>
@@ -43,7 +44,8 @@
   <!-- Executed before build -->
   <preBuildCommand />
   <!-- Executed after build -->
-  <postBuildCommand alwaysRun="False">make-docs.cmd</postBuildCommand>
+  <postBuildCommand alwaysRun="False">$(CompilerPath)\haxe $(ProjectDir)\build-node.hxml
+build-docs.cmd</postBuildCommand>
   <!-- Other project options -->
   <options>
     <option showHiddenPaths="False" />

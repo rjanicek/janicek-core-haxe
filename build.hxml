@@ -1,0 +1,13 @@
+-cp src
+-cp test/src
+-cp lib/html5-haxe
+-cp ../../mocha.js-haxe/mocha.js-haxe/src
+-js test/browser/janicek-core-test-browser.js
+-main MainBrowser
+--js-modern
+--dead-code-elimination
+-debug
+
+-cmd haxe build-node.hxml
+
+-cmd build-docs.cmd
