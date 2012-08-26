@@ -9,5 +9,3 @@
 -debug
 
 -cmd haxe build-node.hxml
-
--cmd build-docs.cmd

@@ -13,9 +13,9 @@ Functional style preferred:
 * Favor passing parameters by value, and immutability.
 * Functions that have reference parameter types can mutate the parameters, but should always return the mutated parameter reference. Callers of these functions should not depend on the parameter mutations but should only depend on the returned values. This will make it easier to add immutability should Haxe ever support it without sacrificing performance now.
 
-Tested with Haxe 2.10 on JavaScript.
+Tested with Haxe 2.10 on JavaScript and Node.js.
 
-See [spec classes](https://github.com/rjanicek/janicek-core-haxe/tree/master/test/specs/co/janicek/core) for examples of how to use the libraries.
+See [spec classes](https://github.com/rjanicek/janicek-core-haxe/tree/master/test/src/specs/co/janicek/core) for examples of how to use the libraries.
 
 Make sure to run ``git submodule update --init`` to clone dependencies.
 
