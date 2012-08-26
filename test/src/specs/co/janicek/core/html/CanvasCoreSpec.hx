@@ -81,7 +81,7 @@ class CanvasCoreSpec {
 							[o, x, o],
 							[x, o, x]
 						];
-						bitmap.should().equal(checkerboard);
+						bitmap.should().eql(checkerboard);
 					});
 				});
 			});
