@@ -1464,7 +1464,7 @@ specs.co.janicek.core.html.CanvasCoreSpec = function() {
 					var o = false;
 					var x = true;
 					var checkerboard = [[x,o,x],[o,x,o],[x,o,x]];
-					js.expect.E.should(bitmap).equal(checkerboard);
+					js.expect.E.should(bitmap).eql(checkerboard);
 				});
 			});
 		});
