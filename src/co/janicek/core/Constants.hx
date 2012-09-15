@@ -38,4 +38,10 @@ class Constants {
 	public static inline var SECONDS_PER_DAY = SECONDS_PER_HOUR * HOURS_PER_DAY;
 	public static inline var MINUTES_PER_HOUR = 60;
 	public static inline var HOURS_PER_DAY = 24;
+	
+	/**
+	 * @see http://en.wikipedia.org/wiki/Kibibyte
+	 */
+	public static inline var BYTES_IN_KIBIBYTE = 1024;
+	public static inline var BYTES_IN_MEBIBYTE = 1024 * BYTES_IN_KIBIBYTE;
 }
