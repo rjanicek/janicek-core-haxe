@@ -9,6 +9,7 @@ import specs.co.janicek.core.HashTableCoreSpec;
 import specs.co.janicek.core.html.HtmlColorCoreSpec;
 import specs.co.janicek.core.http.HttpCookieCoreSpec;
 import specs.co.janicek.core.http.UrlCoreSpec;
+import specs.co.janicek.core.LineageCoreSpec;
 import specs.co.janicek.core.math.HashCoreSpec;
 import specs.co.janicek.core.math.MathCoreSpec;
 import specs.co.janicek.core.math.PerlinNoiseSpec;
@@ -38,6 +39,7 @@ class MainBrowser {
 		new HashTableCoreSpec();
 		new HtmlColorCoreSpec();
 		new HttpCookieCoreSpec();
+		new LineageCoreSpec();
 		new MathCoreSpec();
 		new NullCoreSpec();
 		new PathCoreSpec();
