@@ -44,4 +44,8 @@ class Constants {
 	 */
 	public static inline var BYTES_IN_KIBIBYTE = 1024;
 	public static inline var BYTES_IN_MEBIBYTE = 1024 * BYTES_IN_KIBIBYTE;
+	
+	public static var UPPERCASE_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	public static var LOWERCASE_ALPHABET = "abcdefghijklmnopqrstuvwxyz";
+	public static var DIGITS = "0123456789";
 }

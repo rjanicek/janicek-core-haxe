@@ -82,4 +82,26 @@ class StringCore {
 		return Std.parseInt(s) != null;
 	}
 	
+	/**
+	 * Wraps a string to a given number of characters.
+	 * @param	text The text to wrap.
+	 * @param	width The number of characters at which the string will be wrapped.
+	 * @param	cut If the cut is set to TRUE, the string is always wrapped at or before the specified width. So if you have a word that is larger than the given width, it is broken apart.
+	 * @return 	Original text as an array of strings each wrapped to width.
+	 */
+	public static function wordWrap( text : String, width = 75, cut = false ) : Array<String> {
+		if (text.isNullOrEmpty() || text.length <= width) { return [text]; }
+
+		var regex = new EReg(".{1," +width + "}(\\s|$)" + (cut ? "|.{" +width + "}|.+$" : "|\\S+?(\\s|$)"), "g");
+		
+		var wordWrappedLines = new Array<String>();
+		
+		while (regex.match(text)) { 
+			wordWrappedLines.push(regex.matched(0));
+			text = regex.matchedRight(); 
+		} 
+		
+		return wordWrappedLines;
+	}
+	
 }

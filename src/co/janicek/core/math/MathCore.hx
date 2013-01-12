@@ -27,9 +27,10 @@
  */
 package co.janicek.core.math;
 
-using Lambda;
-using Std;
 using co.janicek.core.math.MathCore;
+using Lambda;
+using Math;
+using Std;
 
 class MathCore {
 
@@ -106,6 +107,14 @@ class MathCore {
 		return numbers.fold(function(number, total) {
 			return total + number;
 		}, 0) / numbers.length;
-	}	
+	}
+	
+	/**
+	 * Calculate the distance between two points.
+	 */
+	public static function distance( a : {x : Float, y:Float}, b : {x : Float, y:Float} ) : Float {
+		return (	(a.x - b.x).pow(2)
+				  + (a.y - b.y).pow(2)	).sqrt();
+	}
 	
 }

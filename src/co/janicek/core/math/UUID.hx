@@ -57,6 +57,24 @@ class UUID {
 	}
 	
 	/**
+	 * Generate a UUID using specific characters.
+	 * @param	length the desired number of characters
+	 * @param	?characters optional desired characters to use to build the UUID
+	 * @param	?seed optional PRNG seed
+	 */
+	public static function uuidChars( length : Int, ?characters : String, ?seed : Int ) {
+		if (seed.isNull())
+			seed = RandomCore.makeRandomSeed();
+		var chars = characters.isNull() ? CHARS : characters.split("");
+		if (chars.length < 2)
+			throw "must have at least 2 characters";
+		var uuid = [];
+		var radix = chars.length;
+		for (i in 0...length) uuid[i] = chars[0 | ((seed = seed.nextParkMiller()).toFloat() * radix).int()];
+		return uuid.join("");
+	}
+	
+	/**
 	 * generate RFC4122, version 4 ID
 	 * example "92329D39-6F5C-4520-ABFC-AAB64544E172"
 	 * @param	seed optional PRNG seed
