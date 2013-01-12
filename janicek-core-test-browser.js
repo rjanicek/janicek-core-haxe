@@ -790,6 +790,18 @@ co.janicek.core.StringCore.isInteger = function(s) {
 	if(co.janicek.core.StringCore.contains(s,".")) return false;
 	return Std.parseInt(s) != null;
 }
+co.janicek.core.StringCore.wordWrap = function(text,width,cut) {
+	if(cut == null) cut = false;
+	if(width == null) width = 75;
+	if(text == null || text.length == 0 || text.length <= width) return [text];
+	var regex = new EReg(".{1," + width + "}(\\s|$)" + (cut?"|.{" + width + "}|.+$":"|\\S+?(\\s|$)"),"g");
+	var wordWrappedLines = new Array();
+	while(regex.match(text)) {
+		wordWrappedLines.push(regex.matched(0));
+		text = regex.matchedRight();
+	}
+	return wordWrappedLines;
+}
 if(!co.janicek.core.array) co.janicek.core.array = {}
 co.janicek.core.array.Array2dCore = function() { }
 co.janicek.core.array.Array2dCore.__name__ = true;
@@ -1215,6 +1227,9 @@ co.janicek.core.math.MathCore.averageInt = function(numbers) {
 		return total + number;
 	},0) / numbers.length;
 }
+co.janicek.core.math.MathCore.distance = function(a,b) {
+	return Math.sqrt(Math.pow(a.x - b.x,2) + Math.pow(a.y - b.y,2));
+}
 co.janicek.core.math.PerlinNoise = function() { }
 co.janicek.core.math.PerlinNoise.__name__ = true;
 co.janicek.core.math.PerlinNoise.makePerlinNoise = function(width,height,_x,_y,_z,seed,octaves,falloff,_) {
@@ -1356,6 +1371,19 @@ co.janicek.core.math.UUID.uuid = function(length,radix,seed) {
 	while(_g < length) {
 		var i1 = _g++;
 		uuid[i1] = chars[0 | ((seed = seed * 16807.0 % 2147483647.0 | 0) / 2147483647.0 * radix | 0)];
+	}
+	return uuid.join("");
+}
+co.janicek.core.math.UUID.uuidChars = function(length,characters,seed) {
+	if(seed == null) seed = co.janicek.core.math.RandomCore.makeRandomSeed();
+	var chars = characters == null?co.janicek.core.math.UUID.CHARS:characters.split("");
+	if(chars.length < 2) throw "must have at least 2 characters";
+	var uuid = [];
+	var radix = chars.length;
+	var _g = 0;
+	while(_g < length) {
+		var i = _g++;
+		uuid[i] = chars[0 | ((seed = seed * 16807.0 % 2147483647.0 | 0) / 2147483647.0 * radix | 0)];
 	}
 	return uuid.join("");
 }
@@ -1941,6 +1969,12 @@ js.mocha.Mocha.setup = function(opts) {
 }
 js.mocha.Mocha.run = function() {
 	js.mocha.Mocha._mocha.run();
+}
+js.mocha.Mocha.timeout = function(milliseconds) {
+	return js.mocha.Mocha._mocha.timeout(milliseconds);
+}
+js.mocha.Mocha.reporter = function(reporter) {
+	return js.mocha.Mocha._mocha.reporter(reporter);
 }
 js.mocha.M = function() { }
 js.mocha.M.__name__ = true;
@@ -2819,6 +2853,9 @@ co.janicek.core.Constants.MINUTES_PER_HOUR = 60;
 co.janicek.core.Constants.HOURS_PER_DAY = 24;
 co.janicek.core.Constants.BYTES_IN_KIBIBYTE = 1024;
 co.janicek.core.Constants.BYTES_IN_MEBIBYTE = 1048576;
+co.janicek.core.Constants.UPPERCASE_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+co.janicek.core.Constants.LOWERCASE_ALPHABET = "abcdefghijklmnopqrstuvwxyz";
+co.janicek.core.Constants.DIGITS = "0123456789";
 co.janicek.core.HashTableCore.DEFAULT_KEY_VALUE_DELIMETER = "=";
 co.janicek.core.HashTableCore.DEFAULT_KEY_VALUE_DELIMETER_REGEX_PATTERN = "=";
 co.janicek.core.HashTableCore.DEFAULT_KEY_VALUE_PAIR_DELIMETER = "&";
