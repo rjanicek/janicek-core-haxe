@@ -29,6 +29,7 @@ package co.janicek.core;
 
 using co.janicek.core.NullCore;
 using co.janicek.core.StringCore;
+using Lambda;
 
 class StringCore {
 
@@ -50,9 +51,14 @@ class StringCore {
 	 * Test if string contains another string.
 	 * @param	search String to test.
 	 * @param	pattern Pattern to find in test string.
+	 * @param	ignoreCase Ignore case when searching for pattern? default = false
 	 * @return	True if string contains pattern, else false.
 	 */
-	public static function contains( string : String, pattern : String ) : Bool {
+	public static function contains( string : String, pattern : String, ignoreCase = false ) : Bool {
+		if (ignoreCase) {
+			string = string.toLowerCase();
+			pattern = pattern.toLowerCase();
+		}
 		return string.indexOf(pattern) != -1;
 	}
 
@@ -90,17 +96,24 @@ class StringCore {
 	 * @return 	Original text as an array of strings each wrapped to width.
 	 */
 	public static function wordWrap( text : String, width = 75, cut = false ) : Array<String> {
-		if (text.isNullOrEmpty() || text.length <= width) { return [text]; }
-
-		var regex = new EReg(".{1," +width + "}(\\s|$)" + (cut ? "|.{" +width + "}|.+$" : "|\\S+?(\\s|$)"), "g");
 		
+		var textLines = text.split("\n");
+
 		var wordWrappedLines = new Array<String>();
 		
-		while (regex.match(text)) { 
-			wordWrappedLines.push(regex.matched(0));
-			text = regex.matchedRight(); 
-		} 
-		
+		textLines.iter(function(line) {
+			if (line.length == 0) {
+				wordWrappedLines.push(line);
+			}
+			else {
+				var regex = new EReg(".{1," +width + "}(\\s|$)" + (cut ? "|.{" +width + "}|.+$" : "|\\S+?(\\s|$)"), "g");
+				
+				while (regex.match(line)) { 
+					wordWrappedLines.push(regex.matched(0));
+					line = regex.matchedRight(); 
+				} 
+			}		
+		});	
 		return wordWrappedLines;
 	}
 	

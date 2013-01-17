@@ -66,6 +66,12 @@ class PathCoreSpec {
 				});
 			});
 			
+			M.describe("makeSafeFilename()", function(){
+				M.it("should remove new lines from filename", function() {
+					"\r\nfilename\r\n".makeSafeFilename().should().equal("filename");
+				});
+			});
+			
 		});
 	}
 	

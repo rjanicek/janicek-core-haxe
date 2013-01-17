@@ -27,6 +27,9 @@
  */
 package co.janicek.core;
 
+using StringTools;
+using co.janicek.core.StringCore;
+
 class PathCore {
 
 	/**
@@ -49,6 +52,17 @@ class PathCore {
 	 */
 	public static function removeFileNameExtension( path : String, fileExtensionDelimeter = "." ) : String {
 		return path.split(fileExtensionDelimeter)[0];
+	}
+	
+	/**
+	 * Aggressively remove caracters that might be invalid for a filename.
+	 */
+	public static function makeSafeFilename( fileName : String ) : String {
+		if (fileName.isNullOrEmpty()) {
+			return "";
+		}
+		var r = ~/[^A-Za-z0-9 _\-\.]/g;
+		return r.replace(fileName, "");
 	}
 
 }
