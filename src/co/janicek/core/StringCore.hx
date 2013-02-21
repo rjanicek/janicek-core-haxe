@@ -79,6 +79,14 @@ class StringCore {
 	}
 	
 	/**
+	 * Test if sting is not null or empty.
+	 * @return True if string is not null or empty.
+	 */
+	public static inline function isNotNullOrEmpty( string : Null<String> ) : Bool {
+		return !string.isNullOrEmpty();
+	}
+	
+	/**
 	 * Test string for Integer value.
 	 * @param	s String to test.
 	 * @return	True if string is an Integer, else false.

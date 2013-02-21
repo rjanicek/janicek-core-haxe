@@ -29,7 +29,9 @@ package co.janicek.core.http;
 
 using co.janicek.core.NullCore;
 using co.janicek.core.HashTableCore;
+using co.janicek.core.StringCore;
 using Reflect;
+using Lambda;
 
 /**
  * Parts of a URL.
@@ -57,9 +59,9 @@ typedef Url = {
  * @author Richard Janicek
  */
 class UrlCore {
-	
-	public static inline var QUERY_KEY_VALUE_DELIMETER = "=";
-	public static inline var QUERY_KEY_VALUE_PAIR_DELIMETER = "&";
+	public static inline var URL_FRAGMENT_DELIMETER = "#";
+	public static inline var KEY_VALUE_DELIMETER = "=";
+	public static inline var KEY_VALUE_PAIR_DELIMETER = "&";
 	
 	public static function makeEmptyUrl() : Url {
 		return {
@@ -108,7 +110,33 @@ class UrlCore {
 	 * Parse a URL query into a hash table.
 	 */
 	public static function parseUrlQuery( query : String ) : Hash<String> {
-		return query.parseHashTable(QUERY_KEY_VALUE_DELIMETER, QUERY_KEY_VALUE_PAIR_DELIMETER);
+		return query.parseHashTable(KEY_VALUE_DELIMETER, KEY_VALUE_PAIR_DELIMETER);
+	}
+	
+	public static function parseUrlFragment( fragment : String ) : Dynamic {
+		if (fragment.charAt(0) == URL_FRAGMENT_DELIMETER) {
+			fragment = fragment.substr(1);
+		}
+		return parseKeyValuePairsToStruct(fragment, KEY_VALUE_DELIMETER, KEY_VALUE_PAIR_DELIMETER);
+	}
+	
+	/**
+	 * Parse a string into a struct object using regular expression patterns for delimeters.
+	 * The caller can store the result in a strongly typed struct: eg: typedef Fragment = { id : String }
+	 */
+	public static function parseKeyValuePairsToStruct( delimetedData : String, keyValueDelimeterRegexPattern = KEY_VALUE_DELIMETER, pairDelimeterRegexPattern = KEY_VALUE_PAIR_DELIMETER ) : Dynamic {
+		var struct = { };
+		
+		if (!delimetedData.isNullOrEmpty()) {
+			var keyValueSplitter = new EReg(keyValueDelimeterRegexPattern, "");
+			
+			new EReg(pairDelimeterRegexPattern, "").split(delimetedData).iter(function(delimetedData) {
+					var item = keyValueSplitter.split(delimetedData);
+					struct.setField(item[0], item.length > 1 ? item[1] : "");
+			});
+		}
+		
+		return struct;
 	}
 
 }

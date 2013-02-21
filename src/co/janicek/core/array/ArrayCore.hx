@@ -8,6 +8,20 @@ package co.janicek.core.array;
 class ArrayCore {
 
 	/**
+	 * Get first element of array.
+	 */
+	public static inline function first<T>( a : Array<T> ) : T {
+		return a[0];
+	}
+	
+	/**
+	 * Get last element of array.
+	 */
+	public static inline function last<T>( a : Array<T> ) : T {
+		return a[a.length - 1];
+	}
+	
+	/**
 	 * Moves an array element toward the start of the array with optional wrapping.
 	 */
 	public static function moveTowardStart<T>(a : Array<T>, index : Int, wrap = true) : Array<T> {
