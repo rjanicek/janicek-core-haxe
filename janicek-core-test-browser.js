@@ -771,13 +771,23 @@ co.janicek.core.PathCore.removeFileNameExtension = function(path,fileExtensionDe
 	if(fileExtensionDelimeter == null) fileExtensionDelimeter = ".";
 	return path.split(fileExtensionDelimeter)[0];
 }
+co.janicek.core.PathCore.makeSafeFilename = function(fileName) {
+	if(fileName == null || fileName.length == 0) return "";
+	var r = new EReg("[^A-Za-z0-9 _\\-\\.]","g");
+	return r.replace(fileName,"");
+}
 co.janicek.core.StringCore = function() { }
 co.janicek.core.StringCore.__name__ = true;
 co.janicek.core.StringCore.removeFromEnd = function(string,pattern) {
 	if(StringTools.endsWith(string,pattern)) return HxOverrides.substr(string,0,string.lastIndexOf(pattern));
 	return string;
 }
-co.janicek.core.StringCore.contains = function(string,pattern) {
+co.janicek.core.StringCore.contains = function(string,pattern,ignoreCase) {
+	if(ignoreCase == null) ignoreCase = false;
+	if(ignoreCase) {
+		string = string.toLowerCase();
+		pattern = pattern.toLowerCase();
+	}
 	return string.indexOf(pattern) != -1;
 }
 co.janicek.core.StringCore.isEmpty = function(string) {
@@ -786,6 +796,14 @@ co.janicek.core.StringCore.isEmpty = function(string) {
 co.janicek.core.StringCore.isNullOrEmpty = function(string) {
 	return string == null || string.length == 0;
 }
+co.janicek.core.StringCore.isNotNullOrEmpty = function(string) {
+	return !(string == null || string.length == 0);
+}
+co.janicek.core.StringCore.firstNotNullOrEmpty = function(strings) {
+	return co.janicek.core.LambdaCore.first(strings,function(s) {
+		return !(s == null || s.length == 0);
+	});
+}
 co.janicek.core.StringCore.isInteger = function(s) {
 	if(co.janicek.core.StringCore.contains(s,".")) return false;
 	return Std.parseInt(s) != null;
@@ -793,13 +811,17 @@ co.janicek.core.StringCore.isInteger = function(s) {
 co.janicek.core.StringCore.wordWrap = function(text,width,cut) {
 	if(cut == null) cut = false;
 	if(width == null) width = 75;
-	if(text == null || text.length == 0 || text.length <= width) return [text];
-	var regex = new EReg(".{1," + width + "}(\\s|$)" + (cut?"|.{" + width + "}|.+$":"|\\S+?(\\s|$)"),"g");
+	var textLines = text.split("\n");
 	var wordWrappedLines = new Array();
-	while(regex.match(text)) {
-		wordWrappedLines.push(regex.matched(0));
-		text = regex.matchedRight();
-	}
+	Lambda.iter(textLines,function(line) {
+		if(line.length == 0) wordWrappedLines.push(line); else {
+			var regex = new EReg(".{1," + width + "}(\\s|$)" + (cut?"|.{" + width + "}|.+$":"|\\S+?(\\s|$)"),"g");
+			while(regex.match(line)) {
+				wordWrappedLines.push(regex.matched(0));
+				line = regex.matchedRight();
+			}
+		}
+	});
 	return wordWrappedLines;
 }
 if(!co.janicek.core.array) co.janicek.core.array = {}
@@ -1161,7 +1183,32 @@ co.janicek.core.http.UrlCore.parseUrl = function(url) {
 	return urlParts;
 }
 co.janicek.core.http.UrlCore.parseUrlQuery = function(query) {
-	return co.janicek.core.HashTableCore.parseHashTable(query,"=","&");
+	if(query.charAt(0) == "?") query = HxOverrides.substr(query,1,null);
+	return co.janicek.core.http.UrlCore.parseKeyValuePairsToStruct(query,"=","&");
+}
+co.janicek.core.http.UrlCore.parseUrlFragment = function(fragment) {
+	if(fragment.charAt(0) == "#") fragment = HxOverrides.substr(fragment,1,null);
+	return co.janicek.core.http.UrlCore.parseKeyValuePairsToStruct(fragment,"=","&");
+}
+co.janicek.core.http.UrlCore.parseKeyValuePairsToStruct = function(delimetedData,keyValueDelimeterRegexPattern,pairDelimeterRegexPattern) {
+	if(pairDelimeterRegexPattern == null) pairDelimeterRegexPattern = "&";
+	if(keyValueDelimeterRegexPattern == null) keyValueDelimeterRegexPattern = "=";
+	var struct = { };
+	if(!(delimetedData == null || delimetedData.length == 0)) {
+		var keyValueSplitter = new EReg(keyValueDelimeterRegexPattern,"");
+		Lambda.iter(new EReg(pairDelimeterRegexPattern,"g").split(delimetedData),function(delimetedData1) {
+			var item = keyValueSplitter.split(delimetedData1);
+			if(Reflect.hasField(struct,item[0])) {
+				if(!js.Boot.__instanceof(Reflect.field(struct,item[0]),Array)) {
+					var a = new Array();
+					a.push(Reflect.field(struct,item[0]));
+					struct[item[0]] = a;
+				}
+				Reflect.field(struct,item[0]).push(item.length > 1?item[1]:"");
+			} else struct[item[0]] = item.length > 1?item[1]:"";
+		});
+	}
+	return struct;
 }
 if(!co.janicek.core.math) co.janicek.core.math = {}
 co.janicek.core.math.HashCore = function() { }
@@ -1867,7 +1914,7 @@ js.Lib.debug = function() {
 js.Lib.alert = function(v) {
 	alert(js.Boot.__string_rec(v,""));
 }
-js.Lib["eval"] = function(code) {
+js.Lib.eval = function(code) {
 	return eval(code);
 }
 js.Lib.setErrorHandler = function(f) {
@@ -2341,6 +2388,11 @@ specs.co.janicek.core.PathCoreSpec = function() {
 				js.expect.E.should(co.janicek.core.PathCore.removeFileNameExtension("filename")).equal("filename");
 			});
 		});
+		js.mocha.M.describe("makeSafeFilename()",function() {
+			js.mocha.M.it("should remove new lines from filename",function() {
+				js.expect.E.should(co.janicek.core.PathCore.makeSafeFilename("\r\nfilename\r\n")).equal("filename");
+			});
+		});
 	});
 };
 specs.co.janicek.core.PathCoreSpec.__name__ = true;
@@ -2359,6 +2411,27 @@ specs.co.janicek.core.StringCoreSpec = function() {
 				js.expect.E.should(true).be.ok();
 				js.expect.E.should("".length == 0).be.ok();
 				js.expect.E.should("not null or empty".length == 0).not.be.ok();
+			});
+		});
+		js.mocha.M.describe("isNotNullOrEmpty()",function() {
+			js.mocha.M.it("should check if string is not null or empty",function() {
+				js.expect.E.should(false).not.be.ok();
+				js.expect.E.should(!("".length == 0)).not.be.ok();
+				js.expect.E.should(!("not null or empty".length == 0)).be.ok();
+			});
+		});
+		js.mocha.M.describe("firstNotNullOrEmpty()",function() {
+			js.mocha.M.it("should find first string that is not null or empty",function() {
+				js.expect.E.should(co.janicek.core.StringCore.firstNotNullOrEmpty(["x"])).equal("x");
+				js.expect.E.should(co.janicek.core.StringCore.firstNotNullOrEmpty([null,"x"])).equal("x");
+				js.expect.E.should(co.janicek.core.StringCore.firstNotNullOrEmpty(["","x"])).equal("x");
+				js.expect.E.should(co.janicek.core.StringCore.firstNotNullOrEmpty([null,"","x"])).equal("x");
+			});
+			js.mocha.M.it("should return null if no match is found",function() {
+				js.expect.E.should(co.janicek.core.StringCore.firstNotNullOrEmpty([])).equal(null);
+				js.expect.E.should(co.janicek.core.StringCore.firstNotNullOrEmpty([null])).equal(null);
+				js.expect.E.should(co.janicek.core.StringCore.firstNotNullOrEmpty([""])).equal(null);
+				js.expect.E.should(co.janicek.core.StringCore.firstNotNullOrEmpty([null,""])).equal(null);
 			});
 		});
 		js.mocha.M.describe("isInteger()",function() {
@@ -2546,12 +2619,38 @@ specs.co.janicek.core.http.UrlCoreSpec = function() {
 				js.expect.E.should(url.fragment).equal("fragment");
 			});
 		});
+		js.mocha.M.describe("parseKeyValuePairsToStruct()",function() {
+			js.mocha.M.it("should return struct object from key value delimeted string",function() {
+				var struct = co.janicek.core.http.UrlCore.parseKeyValuePairsToStruct("key=value&key2=value2&key3=value3","=","&");
+				js.expect.E.should(struct.key).equal("value");
+				js.expect.E.should(struct.key2).equal("value2");
+				js.expect.E.should(struct.key3).equal("value3");
+			});
+			js.mocha.M.it("should return arrays for duplicate keys from key value delimeted string",function() {
+				var struct = co.janicek.core.http.UrlCore.parseKeyValuePairsToStruct("key=value&key=value2&key=value3","=","&");
+				js.expect.E.should(struct.key[0]).equal("value");
+				js.expect.E.should(struct.key[1]).equal("value2");
+				js.expect.E.should(struct.key[2]).equal("value3");
+			});
+		});
 		js.mocha.M.describe("parseUrlQuery()",function() {
-			js.mocha.M.it("should return hashtable from url query",function() {
-				var query = co.janicek.core.http.UrlCore.parseUrlQuery("key=value&key2=value2");
-				js.expect.E.should(Lambda.count(query)).equal(2);
-				js.expect.E.should(query.get("key")).equal("value");
-				js.expect.E.should(query.get("key2")).equal("value2");
+			js.mocha.M.it("should return struct object from url query string",function() {
+				var query = co.janicek.core.http.UrlCore.parseUrlQuery("key=value");
+				js.expect.E.should(query.key).equal("value");
+			});
+			js.mocha.M.it("should return struct object from url query string with delimeter",function() {
+				var query = co.janicek.core.http.UrlCore.parseUrlQuery("?key=value");
+				js.expect.E.should(query.key).equal("value");
+			});
+		});
+		js.mocha.M.describe("parseUrlFragment()",function() {
+			js.mocha.M.it("should return struct object from url query fragment",function() {
+				var fragment = co.janicek.core.http.UrlCore.parseUrlFragment("key=value");
+				js.expect.E.should(fragment.key).equal("value");
+			});
+			js.mocha.M.it("should return struct object from url fragment string with delimeter",function() {
+				var fragment = co.janicek.core.http.UrlCore.parseUrlFragment("#key=value");
+				js.expect.E.should(fragment.key).equal("value");
 			});
 		});
 	});
@@ -2868,8 +2967,10 @@ co.janicek.core.html.CanvasCore.CANVAS_ALPHA_OFFSET = 3;
 co.janicek.core.html.HtmlColorCore.MAX_COLOR_COMPONENT = 255;
 co.janicek.core.http.HttpCookieCore.COOKIE_PAIR_DELIMETER_REGEX_PATTERN = "[;,] ";
 co.janicek.core.http.HttpCookieCore.COOKIE_KEY_VALUE_DELIMETER = "=";
-co.janicek.core.http.UrlCore.QUERY_KEY_VALUE_DELIMETER = "=";
-co.janicek.core.http.UrlCore.QUERY_KEY_VALUE_PAIR_DELIMETER = "&";
+co.janicek.core.http.UrlCore.URL_QUERY_DELIMETER = "?";
+co.janicek.core.http.UrlCore.URL_FRAGMENT_DELIMETER = "#";
+co.janicek.core.http.UrlCore.KEY_VALUE_DELIMETER = "=";
+co.janicek.core.http.UrlCore.KEY_VALUE_PAIR_DELIMETER = "&";
 co.janicek.core.math.MathCore.INT32_MAX = 2147483647;
 co.janicek.core.math.MathCore.WHOLE_NUMBER_MAX = 9007199254740992;
 co.janicek.core.math.MathCore.WHOLE_NUMBER_MIN = -9007199254740992;
