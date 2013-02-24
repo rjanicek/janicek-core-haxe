@@ -27,6 +27,7 @@
  */
 package co.janicek.core;
 
+using co.janicek.core.LambdaCore;
 using co.janicek.core.NullCore;
 using co.janicek.core.StringCore;
 using Lambda;
@@ -84,6 +85,16 @@ class StringCore {
 	 */
 	public static inline function isNotNullOrEmpty( string : Null<String> ) : Bool {
 		return !string.isNullOrEmpty();
+	}
+
+	/**
+	 * Find first string that is not null or empty.
+	 * @return First string that is not null or empty or null if none found.
+	 */
+	public static function firstNotNullOrEmpty( strings : Iterable<Null<String>> ) : Null<String> {
+		return strings.first(function(s) {
+			return s.isNotNullOrEmpty();
+		});
 	}
 	
 	/**

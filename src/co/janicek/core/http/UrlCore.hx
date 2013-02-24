@@ -32,6 +32,7 @@ using co.janicek.core.HashTableCore;
 using co.janicek.core.StringCore;
 using Reflect;
 using Lambda;
+using Std;
 
 /**
  * Parts of a URL.
@@ -59,6 +60,7 @@ typedef Url = {
  * @author Richard Janicek
  */
 class UrlCore {
+	public static inline var URL_QUERY_DELIMETER = "?";
 	public static inline var URL_FRAGMENT_DELIMETER = "#";
 	public static inline var KEY_VALUE_DELIMETER = "=";
 	public static inline var KEY_VALUE_PAIR_DELIMETER = "&";
@@ -107,12 +109,22 @@ class UrlCore {
 	}
 	
 	/**
-	 * Parse a URL query into a hash table.
+	 * Parse a URL query into a struct object.
+	 * Duplicate keys are stored as arrays.
+	 * The caller can store the result in a strongly typed struct: eg: typedef Query = { id : String, item : Array<String> }
 	 */
-	public static function parseUrlQuery( query : String ) : Hash<String> {
-		return query.parseHashTable(KEY_VALUE_DELIMETER, KEY_VALUE_PAIR_DELIMETER);
+	public static function parseUrlQuery( query : String ) : Dynamic {
+		if (query.charAt(0) == URL_QUERY_DELIMETER) {
+			query = query.substr(1);
+		}
+		return parseKeyValuePairsToStruct(query, KEY_VALUE_DELIMETER, KEY_VALUE_PAIR_DELIMETER);
 	}
 	
+	/**
+	 * Parse a URL fragment into a struct object.
+	 * Duplicate keys are stored as arrays.
+	 * The caller can store the result in a strongly typed struct: eg: typedef Fragment = { id : String, item : Array<String> }
+	 */
 	public static function parseUrlFragment( fragment : String ) : Dynamic {
 		if (fragment.charAt(0) == URL_FRAGMENT_DELIMETER) {
 			fragment = fragment.substr(1);
@@ -122,7 +134,8 @@ class UrlCore {
 	
 	/**
 	 * Parse a string into a struct object using regular expression patterns for delimeters.
-	 * The caller can store the result in a strongly typed struct: eg: typedef Fragment = { id : String }
+	 * Duplicate keys are stored as arrays.
+	 * The caller can store the result in a strongly typed struct: eg: typedef Fragment = { id : String, item : Array<String> }
 	 */
 	public static function parseKeyValuePairsToStruct( delimetedData : String, keyValueDelimeterRegexPattern = KEY_VALUE_DELIMETER, pairDelimeterRegexPattern = KEY_VALUE_PAIR_DELIMETER ) : Dynamic {
 		var struct = { };
@@ -130,9 +143,19 @@ class UrlCore {
 		if (!delimetedData.isNullOrEmpty()) {
 			var keyValueSplitter = new EReg(keyValueDelimeterRegexPattern, "");
 			
-			new EReg(pairDelimeterRegexPattern, "").split(delimetedData).iter(function(delimetedData) {
+			new EReg(pairDelimeterRegexPattern, "g").split(delimetedData).iter(function(delimetedData) {
 					var item = keyValueSplitter.split(delimetedData);
-					struct.setField(item[0], item.length > 1 ? item[1] : "");
+					if (struct.hasField(item[0])) {
+						if (!struct.field(item[0]).is(Array)) {
+							var a = new Array<String>();
+							a.push(struct.field(item[0]));
+							struct.setField(item[0], a);
+						}
+						struct.field(item[0]).push(item.length > 1 ? item[1] : "");
+					}
+					else {
+						struct.setField(item[0], item.length > 1 ? item[1] : "");
+					}
 			});
 		}
 		

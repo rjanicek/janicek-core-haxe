@@ -61,6 +61,30 @@ class StringCoreSpec {
 				});
 			});
 			
+			M.describe("isNotNullOrEmpty()", function () {
+				M.it("should check if string is not null or empty", function() {
+					StringCore.isNotNullOrEmpty(null).should().not.be.ok();
+					"".isNotNullOrEmpty().should().not.be.ok();
+					"not null or empty".isNotNullOrEmpty().should().be.ok();
+				});
+			});
+			
+			M.describe("firstNotNullOrEmpty()", function () {
+				M.it("should find first string that is not null or empty", function() {
+					["x"].firstNotNullOrEmpty().should().equal("x");
+					[null, "x"].firstNotNullOrEmpty().should().equal("x");
+					["", "x"].firstNotNullOrEmpty().should().equal("x");
+					[null, "", "x"].firstNotNullOrEmpty().should().equal("x");
+				});
+				
+				M.it("should return null if no match is found", function() {
+					[].firstNotNullOrEmpty().should().equal(null);
+					[null].firstNotNullOrEmpty().should().equal(null);
+					[""].firstNotNullOrEmpty().should().equal(null);
+					[null, ""].firstNotNullOrEmpty().should().equal(null);
+				});
+			});
+			
 			M.describe("isInteger()", function () {
 				M.it("should return true if string is an Integer", function() {
 					"0".isInteger().should().be.ok();

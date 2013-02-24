@@ -61,14 +61,42 @@ class UrlCoreSpec {
 					url.query.should().equal("parameter=value&parameter2=value2");
 					url.fragment.should().equal("fragment");
 				});
-			});			
+			});
+			
+			M.describe("parseKeyValuePairsToStruct()", function () {
+				M.it("should return struct object from key value delimeted string", function() {
+					var struct : { key : String, key2 : String, key3 : String } = "key=value&key2=value2&key3=value3".parseKeyValuePairsToStruct("=", "&");
+					struct.key.should().equal("value");
+					struct.key2.should().equal("value2");
+					struct.key3.should().equal("value3");
+				});
+				M.it("should return arrays for duplicate keys from key value delimeted string", function() {
+					var struct : { key : Array<String> } = "key=value&key=value2&key=value3".parseKeyValuePairsToStruct("=", "&");
+					struct.key[0].should().equal("value");
+					struct.key[1].should().equal("value2");
+					struct.key[2].should().equal("value3");
+				});
+			});
 			
 			M.describe("parseUrlQuery()", function () {
-				M.it("should return hashtable from url query", function() {
-					var query = "key=value&key2=value2".parseUrlQuery();
-					query.count().should().equal(2);
-					query.get("key").should().equal("value");
-					query.get("key2").should().equal("value2");
+				M.it("should return struct object from url query string", function() {
+					var query : { key : String, key2 : String, key3 : String } = "key=value".parseUrlQuery();
+					query.key.should().equal("value");
+				});
+				M.it("should return struct object from url query string with delimeter", function() {
+					var query : { key : String, key2 : String } = "?key=value".parseUrlQuery();
+					query.key.should().equal("value");
+				});
+			});
+			
+			M.describe("parseUrlFragment()", function () {
+				M.it("should return struct object from url query fragment", function() {
+					var fragment : { key : String, key2 : String, key3 : String } = "key=value".parseUrlFragment();
+					fragment.key.should().equal("value");
+				});
+				M.it("should return struct object from url fragment string with delimeter", function() {
+					var fragment : { key : String, key2 : String } = "#key=value".parseUrlFragment();
+					fragment.key.should().equal("value");
 				});
 			});
 			
