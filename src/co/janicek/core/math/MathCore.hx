@@ -53,7 +53,7 @@ class MathCore {
 	 * WARNING: bit operations don't work on numbers < -INT32_MAX
 	 * @see <a href="http://en.wikipedia.org/wiki/IEEE_754-1985">http://en.wikipedia.org/wiki/IEEE_754-1985</a>
 	 */
-	inline public static var WHOLE_NUMBER_MIN = -WHOLE_NUMBER_MAX;
+	inline public static var WHOLE_NUMBER_MIN = -9007199254740992;
 
 	public static function isEven( n : Int ) : Bool {
 		return n % 2 == 0;

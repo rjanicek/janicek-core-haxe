@@ -1,6 +1,5 @@
 package;
 
-import haxe.Firebug;
 import js.mocha.Mocha;
 import specs.co.janicek.core.Array2dSpec;
 import specs.co.janicek.core.BaseCode64Spec;
@@ -27,10 +26,6 @@ import specs.co.janicek.core.StringCoreSpec;
 class MainBrowser {
 	
 	static function main() {
-		
-		if (Firebug.detect())
-			Firebug.redirectTraces();
-			
 		Mocha.setup( { ui: Ui.BDD } );
 		new CanvasCoreSpec();
 		new Array2dSpec();

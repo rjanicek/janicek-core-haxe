@@ -46,7 +46,7 @@ class HttpCookieCore {
 	 * @param	rawCookies
 	 * @return	Hash table of cookies.
 	 */
-	public static function parseCookies( rawCookies : String ) : Hash<String> {
+	public static function parseCookies( rawCookies : String ) : Map<String, String> {
 		return rawCookies.parseHashTable(COOKIE_KEY_VALUE_DELIMETER, COOKIE_PAIR_DELIMETER_REGEX_PATTERN);
 	}
 	

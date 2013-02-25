@@ -1,0 +1,4 @@
+*.js.map
+/test/browser/mocha-haxe-test-browser.js
+/test/node/mocha-haxe-test-node.js
+/test/node/node_modules/*

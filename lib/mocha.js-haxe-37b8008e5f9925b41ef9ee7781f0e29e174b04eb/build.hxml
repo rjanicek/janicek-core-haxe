@@ -1,0 +1,8 @@
+-cp src
+-cp test/src
+-js test/browser/mocha-haxe-test-browser.js
+-main MainBrowser
+-dce std
+-debug
+
+-cmd haxe build-node.hxml

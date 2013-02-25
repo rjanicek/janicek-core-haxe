@@ -44,8 +44,8 @@ class HashTableCore {
 	/**
 	 * Parse a string into a hash table using regular expression patterns for delimeters.
 	 */
-	public static function parseHashTable( rawHashTable : String, keyValueDelimeterRegexPattern = DEFAULT_KEY_VALUE_DELIMETER_REGEX_PATTERN, pairDelimeterRegexPattern = DEFAULT_KEY_VALUE_PAIR_DELIMETER_REGEX_PATTERN ) : Hash<String> {
-		var hashTable = new Hash<String>();
+	public static function parseHashTable( rawHashTable : String, keyValueDelimeterRegexPattern = DEFAULT_KEY_VALUE_DELIMETER_REGEX_PATTERN, pairDelimeterRegexPattern = DEFAULT_KEY_VALUE_PAIR_DELIMETER_REGEX_PATTERN ) : Map<String, String> {
+		var hashTable = new Map<String, String>();
 		
 		if (!rawHashTable.isNullOrEmpty()) {
 			var keyValueSplitter = new EReg(keyValueDelimeterRegexPattern, "");
@@ -67,11 +67,10 @@ class HashTableCore {
 	/**
 	 * Serialize a hash table into a string using delimeters.
 	 */
-	public static function stringifyHashTable( ht : Hash<String>, keyValueDelimeter = DEFAULT_KEY_VALUE_DELIMETER, pairDelimeter = DEFAULT_KEY_VALUE_PAIR_DELIMETER ) : String {
-		return { iterator: ht.keys }.fold(function(key, buf : String) {
+	public static function stringifyHashTable( ht : Map < String, String > , keyValueDelimeter = DEFAULT_KEY_VALUE_DELIMETER, pairDelimeter = DEFAULT_KEY_VALUE_PAIR_DELIMETER ) : String {
+		return { iterator: function(){return ht.keys();} }.fold(function(key, buf : String) {
 			var value = ht.get(key);
-			return (buf.isEmpty() ? "" : buf + pairDelimeter)
-					+ key + (value.isNullOrEmpty() ? "" : keyValueDelimeter + value);
+			return (buf.isEmpty() ? "" : buf + pairDelimeter) + key + (value.isNullOrEmpty() ? "" : keyValueDelimeter + value);
 		}, "");
 	}
 

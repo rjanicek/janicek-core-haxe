@@ -26,7 +26,7 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 package co.janicek.core;
-import haxe.BaseCode;
+import haxe.crypto.BaseCode;
 import haxe.io.Bytes;
 import haxe.io.BytesData;
 

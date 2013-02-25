@@ -17,9 +17,8 @@
   <classpaths>
     <class path="src" />
     <class path="test\src" />
-    <class path="lib\jasmine-haxe" />
-    <class path="lib\html5-haxe" />
-    <class path="..\..\mocha.js-haxe\mocha.js-haxe\src" />
+    <class path="lib\html5-haxe-7423e2b0990c7948fc239d7e3fc78c892c272114" />
+    <class path="lib\mocha.js-haxe-37b8008e5f9925b41ef9ee7781f0e29e174b04eb\src" />
   </classpaths>
   <!-- Build options -->
   <build>
@@ -44,8 +43,7 @@
   <!-- Executed before build -->
   <preBuildCommand />
   <!-- Executed after build -->
-  <postBuildCommand alwaysRun="False">$(CompilerPath)\haxe $(ProjectDir)\build-node.hxml
-build-docs.cmd</postBuildCommand>
+  <postBuildCommand alwaysRun="False">"$(CompilerPath)\haxe" $(ProjectDir)\build-node.hxml</postBuildCommand>
   <!-- Other project options -->
   <options>
     <option showHiddenPaths="False" />

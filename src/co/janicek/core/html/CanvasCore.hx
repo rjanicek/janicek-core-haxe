@@ -36,7 +36,7 @@ import html5.File;
 import html5.FileReader;
 import html5.Image;
 import html5.ImageData;
-import js.Lib;
+import js.Browser;
 
 using co.janicek.core.array.Array2dCore;
 using co.janicek.core.html.CanvasCore;
@@ -170,7 +170,7 @@ class CanvasCore {
 	 * Get image data from an HTML image.
 	 */
 	public static function getImageData( image : Image ) : ImageData {
-		var canvas:Canvas = cast Lib.document.createElement("canvas");
+		var canvas:Canvas = cast Browser.document.createElement("canvas");
 		canvas.width = image.width;
 		canvas.height = image.height;
 		var ctx = canvas.getContext("2d");
@@ -183,7 +183,7 @@ class CanvasCore {
 	 * Make image data URL from image data.
 	 */
 	public static function makeImageDataUrlFromImageData( imageData : ImageData ) : String {
-		var canvas:Canvas = cast Lib.document.createElement("canvas");
+		var canvas:Canvas = cast Browser.document.createElement("canvas");
 		canvas.width = imageData.width.int();
 		canvas.height = imageData.height.int();
 		canvas.getContext("2d").putImageData(imageData, 0, 0);

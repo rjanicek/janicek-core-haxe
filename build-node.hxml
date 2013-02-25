@@ -4,5 +4,5 @@
 -js test/node/janicek-core-test-node.js
 -main MainNode
 --js-modern
---dead-code-elimination
+-dce std
 -debug

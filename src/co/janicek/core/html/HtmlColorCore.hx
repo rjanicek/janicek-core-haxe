@@ -96,7 +96,7 @@ class HtmlColorCore {
 	 * @param	blue Blue channel (0 - 0xff).
 	 */
 	public static function rgb( red : Int, green : Int, blue : Int ) : String {
-		return "rgb($red,$green,$blue)".format();
+		return 'rgb($red,$green,$blue)';
 	}
 
 	/**
@@ -107,7 +107,7 @@ class HtmlColorCore {
 	 * @param	alpha Alpha channel (0.0 - 1.0).
 	 */
 	public static function rgba( red : Int, green : Int, blue : Int, alpha : Float) : String {
-		return Std.format("rgba($red,$green,$blue,$alpha)");
+		return 'rgba($red,$green,$blue,$alpha)';
 	}
 
 	/**
@@ -117,7 +117,7 @@ class HtmlColorCore {
 	 * @param	blue Blue channel (0.0 - 1.0).
 	 */
 	public static function rgbF( red : Float, green : Float, blue : Float ) : String {
-		return Std.format("rgb(${red*100}%,${green*100}%,${blue*100}%)");
+		return 'rgb(${red*100}%,${green*100}%,${blue*100}%)';
 	}
 	
 	/**
@@ -128,7 +128,7 @@ class HtmlColorCore {
 	 * @param	alpha Alpha channel (0.0 - 1.0).
 	 */
 	public static function rgbaF( red : Float, green : Float, blue : Float, alpha : Float) : String {
-		return Std.format("rgba(${red*100}%,${green*100}%,${blue*100}%,$alpha)");
+		return 'rgba(${red*100}%,${green*100}%,${blue*100}%,$alpha)';
 	}
 
 	/**
@@ -139,7 +139,7 @@ class HtmlColorCore {
 	 * @return	HTML color string.
 	 */
 	public static function hsl(hue : Int, saturation : Float, lightness : Float) : String {
-		return "hsl($hue,${saturation*100}%,${lightness*100}%)".format();
+		return 'hsl($hue,${saturation*100}%,${lightness*100}%)';
 	}
 
 	/**
@@ -151,7 +151,7 @@ class HtmlColorCore {
 	 * @return	HTML color string.
 	 */
 	public static function hsla( hue : Int, saturation : Float, lightness : Float, alpha : Float) : String {
-		return "hsla($hue,${saturation*100}%,${lightness*100}%,$alpha)".format();
+		return 'hsla($hue,${saturation*100}%,${lightness*100}%,$alpha)';
 	}
 
 }

@@ -130,7 +130,7 @@ class UUID {
 	 */
 	public static function uuidCompact( ?seed : Int ) {
 		if (seed.isNull()) seed = RandomCore.makeRandomSeed();
-		return new EReg("[xy]", "g").customReplace("xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx", function (c) {
+		return new EReg("[xy]", "g").map("xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx", function (c) {
 			var r = ((seed = seed.nextParkMiller()).toFloat() * 16).int() | 0, v = c.matched(0) == "x" ? r : (r & 0x3 | 0x8);
 			return v.hex();
 		});

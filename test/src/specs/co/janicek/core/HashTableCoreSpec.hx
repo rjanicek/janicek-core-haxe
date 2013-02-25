@@ -71,22 +71,22 @@ class HashTableCoreSpec {
 			
 			M.describe("stringifyHashTable()", function () {
 				M.it("should return empty string from empty hash table", function() {
-					var ht = new Hash<String>();
+					var ht = new Map();
 					ht.stringifyHashTable().should().equal("");
 				});
 				M.it("should return a key / value pair string", function() {
-					var ht = new Hash<String>();
+					var ht = new Map();
 					ht.set("key", "value");
 					ht.stringifyHashTable().should().equal("key=value");
 				});
 				M.it("should return multiple key / value pairs string", function() {
-					var ht = new Hash<String>();
+					var ht = new Map();
 					ht.set("key", "value");
 					ht.set("key2", "value2");
 					ht.stringifyHashTable().should().equal("key=value&key2=value2");
 				});
 				M.it("should return key with empty value without key value delimeter", function() {
-					var ht = new Hash<String>();
+					var ht = new Map();
 					ht.set("key", "");
 					ht.stringifyHashTable().should().equal("key");
 					ht.set("key2", "");
