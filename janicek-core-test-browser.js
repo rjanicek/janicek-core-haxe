@@ -1,3 +1,4 @@
+(function () { "use strict";
 var $estr = function() { return js.Boot.__string_rec(this,''); };
 var EReg = function(r,opt) {
 	opt = opt.split("u").join("");
@@ -5,15 +6,23 @@ var EReg = function(r,opt) {
 };
 EReg.__name__ = true;
 EReg.prototype = {
-	customReplace: function(s,f) {
+	map: function(s,f) {
+		var offset = 0;
 		var buf = new StringBuf();
-		while(true) {
-			if(!this.match(s)) break;
-			buf.b += Std.string(this.matchedLeft());
+		do {
+			if(offset >= s.length) break; else if(!this.matchSub(s,offset)) {
+				buf.b += Std.string(HxOverrides.substr(s,offset,null));
+				break;
+			}
+			var p = this.matchedPos();
+			buf.b += Std.string(HxOverrides.substr(s,offset,p.pos - offset));
 			buf.b += Std.string(f(this));
-			s = this.matchedRight();
-		}
-		buf.b += Std.string(s);
+			if(p.len == 0) {
+				buf.b += Std.string(HxOverrides.substr(s,p.pos,1));
+				offset = p.pos + 1;
+			} else offset = p.pos + p.len;
+		} while(this.r.global);
+		if(!this.r.global && offset < s.length) buf.b += Std.string(HxOverrides.substr(s,offset,null));
 		return buf.b;
 	}
 	,replace: function(s,by) {
@@ -23,6 +32,27 @@ EReg.prototype = {
 		var d = "#__delim__#";
 		return s.replace(this.r,d).split(d);
 	}
+	,matchSub: function(s,pos,len) {
+		if(len == null) len = -1;
+		return this.r.global?(function($this) {
+			var $r;
+			$this.r.lastIndex = pos;
+			$this.r.m = $this.r.exec(len < 0?s:HxOverrides.substr(s,0,pos + len));
+			var b = $this.r.m != null;
+			if(b) $this.r.s = s;
+			$r = b;
+			return $r;
+		}(this)):(function($this) {
+			var $r;
+			var b = $this.match(len < 0?HxOverrides.substr(s,pos,null):HxOverrides.substr(s,pos,len));
+			if(b) {
+				$this.r.s = s;
+				$this.r.m.index += pos;
+			}
+			$r = b;
+			return $r;
+		}(this));
+	}
 	,matchedPos: function() {
 		if(this.r.m == null) throw "No string matched";
 		return { pos : this.r.m.index, len : this.r.m[0].length};
@@ -31,10 +61,6 @@ EReg.prototype = {
 		if(this.r.m == null) throw "No string matched";
 		var sz = this.r.m.index + this.r.m[0].length;
 		return this.r.s.substr(sz,this.r.s.length - sz);
-	}
-	,matchedLeft: function() {
-		if(this.r.m == null) throw "No string matched";
-		return this.r.s.substr(0,this.r.m.index);
 	}
 	,matched: function(n) {
 		return this.r.m != null && n >= 0 && n < this.r.m.length?this.r.m[n]:(function($this) {
@@ -51,89 +77,8 @@ EReg.prototype = {
 	}
 	,__class__: EReg
 }
-var Hash = function() {
-	this.h = { };
-};
-Hash.__name__ = true;
-Hash.prototype = {
-	toString: function() {
-		var s = new StringBuf();
-		s.b += Std.string("{");
-		var it = this.keys();
-		while( it.hasNext() ) {
-			var i = it.next();
-			s.b += Std.string(i);
-			s.b += Std.string(" => ");
-			s.b += Std.string(Std.string(this.get(i)));
-			if(it.hasNext()) s.b += Std.string(", ");
-		}
-		s.b += Std.string("}");
-		return s.b;
-	}
-	,iterator: function() {
-		return { ref : this.h, it : this.keys(), hasNext : function() {
-			return this.it.hasNext();
-		}, next : function() {
-			var i = this.it.next();
-			return this.ref["$" + i];
-		}};
-	}
-	,keys: function() {
-		var a = [];
-		for( var key in this.h ) {
-		if(this.h.hasOwnProperty(key)) a.push(key.substr(1));
-		}
-		return HxOverrides.iter(a);
-	}
-	,remove: function(key) {
-		key = "$" + key;
-		if(!this.h.hasOwnProperty(key)) return false;
-		delete(this.h[key]);
-		return true;
-	}
-	,exists: function(key) {
-		return this.h.hasOwnProperty("$" + key);
-	}
-	,get: function(key) {
-		return this.h["$" + key];
-	}
-	,set: function(key,value) {
-		this.h["$" + key] = value;
-	}
-	,__class__: Hash
-}
 var HxOverrides = function() { }
 HxOverrides.__name__ = true;
-HxOverrides.dateStr = function(date) {
-	var m = date.getMonth() + 1;
-	var d = date.getDate();
-	var h = date.getHours();
-	var mi = date.getMinutes();
-	var s = date.getSeconds();
-	return date.getFullYear() + "-" + (m < 10?"0" + m:"" + m) + "-" + (d < 10?"0" + d:"" + d) + " " + (h < 10?"0" + h:"" + h) + ":" + (mi < 10?"0" + mi:"" + mi) + ":" + (s < 10?"0" + s:"" + s);
-}
-HxOverrides.strDate = function(s) {
-	switch(s.length) {
-	case 8:
-		var k = s.split(":");
-		var d = new Date();
-		d.setTime(0);
-		d.setUTCHours(k[0]);
-		d.setUTCMinutes(k[1]);
-		d.setUTCSeconds(k[2]);
-		return d;
-	case 10:
-		var k = s.split("-");
-		return new Date(k[0],k[1] - 1,k[2],0,0,0);
-	case 19:
-		var k = s.split(" ");
-		var y = k[0].split("-");
-		var t = k[1].split(":");
-		return new Date(y[0],y[1] - 1,y[2],t[0],t[1],t[2]);
-	default:
-		throw "Invalid date format : " + s;
-	}
-}
 HxOverrides.cca = function(s,index) {
 	var x = s.charCodeAt(index);
 	if(x != x) return undefined;
@@ -148,18 +93,6 @@ HxOverrides.substr = function(s,pos,len) {
 	} else if(len < 0) len = s.length + len - pos;
 	return s.substr(pos,len);
 }
-HxOverrides.remove = function(a,obj) {
-	var i = 0;
-	var l = a.length;
-	while(i < l) {
-		if(a[i] == obj) {
-			a.splice(i,1);
-			return true;
-		}
-		i++;
-	}
-	return false;
-}
 HxOverrides.iter = function(a) {
 	return { cur : 0, arr : a, hasNext : function() {
 		return this.cur < this.arr.length;
@@ -167,106 +100,14 @@ HxOverrides.iter = function(a) {
 		return this.arr[this.cur++];
 	}};
 }
-var IntIter = function(min,max) {
-	this.min = min;
-	this.max = max;
-};
-IntIter.__name__ = true;
-IntIter.prototype = {
-	next: function() {
-		return this.min++;
-	}
-	,hasNext: function() {
-		return this.min < this.max;
-	}
-	,__class__: IntIter
-}
 var Lambda = function() { }
 Lambda.__name__ = true;
-Lambda.array = function(it) {
-	var a = new Array();
-	var $it0 = $iterator(it)();
-	while( $it0.hasNext() ) {
-		var i = $it0.next();
-		a.push(i);
-	}
-	return a;
-}
-Lambda.list = function(it) {
-	var l = new List();
-	var $it0 = $iterator(it)();
-	while( $it0.hasNext() ) {
-		var i = $it0.next();
-		l.add(i);
-	}
-	return l;
-}
-Lambda.map = function(it,f) {
-	var l = new List();
-	var $it0 = $iterator(it)();
-	while( $it0.hasNext() ) {
-		var x = $it0.next();
-		l.add(f(x));
-	}
-	return l;
-}
-Lambda.mapi = function(it,f) {
-	var l = new List();
-	var i = 0;
-	var $it0 = $iterator(it)();
-	while( $it0.hasNext() ) {
-		var x = $it0.next();
-		l.add(f(i++,x));
-	}
-	return l;
-}
-Lambda.has = function(it,elt,cmp) {
-	if(cmp == null) {
-		var $it0 = $iterator(it)();
-		while( $it0.hasNext() ) {
-			var x = $it0.next();
-			if(x == elt) return true;
-		}
-	} else {
-		var $it1 = $iterator(it)();
-		while( $it1.hasNext() ) {
-			var x = $it1.next();
-			if(cmp(x,elt)) return true;
-		}
-	}
-	return false;
-}
-Lambda.exists = function(it,f) {
-	var $it0 = $iterator(it)();
-	while( $it0.hasNext() ) {
-		var x = $it0.next();
-		if(f(x)) return true;
-	}
-	return false;
-}
-Lambda.foreach = function(it,f) {
-	var $it0 = $iterator(it)();
-	while( $it0.hasNext() ) {
-		var x = $it0.next();
-		if(!f(x)) return false;
-	}
-	return true;
-}
 Lambda.iter = function(it,f) {
 	var $it0 = $iterator(it)();
 	while( $it0.hasNext() ) {
 		var x = $it0.next();
 		f(x);
 	}
-}
-Lambda.filter = function(it,f) {
-	var l = new List();
-	var $it0 = $iterator(it)();
-	while( $it0.hasNext() ) {
-		var x = $it0.next();
-		if(f(x)) l.add(x);
-	}
-	return l;
 }
 Lambda.fold = function(it,f,first) {
 	var $it0 = $iterator(it)();
@@ -296,144 +137,9 @@ Lambda.count = function(it,pred) {
 Lambda.empty = function(it) {
 	return !$iterator(it)().hasNext();
 }
-Lambda.indexOf = function(it,v) {
-	var i = 0;
-	var $it0 = $iterator(it)();
-	while( $it0.hasNext() ) {
-		var v2 = $it0.next();
-		if(v == v2) return i;
-		i++;
-	}
-	return -1;
-}
-Lambda.concat = function(a,b) {
-	var l = new List();
-	var $it0 = $iterator(a)();
-	while( $it0.hasNext() ) {
-		var x = $it0.next();
-		l.add(x);
-	}
-	var $it1 = $iterator(b)();
-	while( $it1.hasNext() ) {
-		var x = $it1.next();
-		l.add(x);
-	}
-	return l;
-}
-var List = function() {
-	this.length = 0;
-};
-List.__name__ = true;
-List.prototype = {
-	map: function(f) {
-		var b = new List();
-		var l = this.h;
-		while(l != null) {
-			var v = l[0];
-			l = l[1];
-			b.add(f(v));
-		}
-		return b;
-	}
-	,filter: function(f) {
-		var l2 = new List();
-		var l = this.h;
-		while(l != null) {
-			var v = l[0];
-			l = l[1];
-			if(f(v)) l2.add(v);
-		}
-		return l2;
-	}
-	,join: function(sep) {
-		var s = new StringBuf();
-		var first = true;
-		var l = this.h;
-		while(l != null) {
-			if(first) first = false; else s.b += Std.string(sep);
-			s.b += Std.string(l[0]);
-			l = l[1];
-		}
-		return s.b;
-	}
-	,toString: function() {
-		var s = new StringBuf();
-		var first = true;
-		var l = this.h;
-		s.b += Std.string("{");
-		while(l != null) {
-			if(first) first = false; else s.b += Std.string(", ");
-			s.b += Std.string(Std.string(l[0]));
-			l = l[1];
-		}
-		s.b += Std.string("}");
-		return s.b;
-	}
-	,iterator: function() {
-		return { h : this.h, hasNext : function() {
-			return this.h != null;
-		}, next : function() {
-			if(this.h == null) return null;
-			var x = this.h[0];
-			this.h = this.h[1];
-			return x;
-		}};
-	}
-	,remove: function(v) {
-		var prev = null;
-		var l = this.h;
-		while(l != null) {
-			if(l[0] == v) {
-				if(prev == null) this.h = l[1]; else prev[1] = l[1];
-				if(this.q == l) this.q = prev;
-				this.length--;
-				return true;
-			}
-			prev = l;
-			l = l[1];
-		}
-		return false;
-	}
-	,clear: function() {
-		this.h = null;
-		this.q = null;
-		this.length = 0;
-	}
-	,isEmpty: function() {
-		return this.h == null;
-	}
-	,pop: function() {
-		if(this.h == null) return null;
-		var x = this.h[0];
-		this.h = this.h[1];
-		if(this.h == null) this.q = null;
-		this.length--;
-		return x;
-	}
-	,last: function() {
-		return this.q == null?null:this.q[0];
-	}
-	,first: function() {
-		return this.h == null?null:this.h[0];
-	}
-	,push: function(item) {
-		var x = [item,this.h];
-		this.h = x;
-		if(this.q == null) this.q = x;
-		this.length++;
-	}
-	,add: function(item) {
-		var x = [item];
-		if(this.h == null) this.h = x; else this.q[1] = x;
-		this.q = x;
-		this.length++;
-	}
-	,__class__: List
-}
 var MainBrowser = function() { }
 MainBrowser.__name__ = true;
 MainBrowser.main = function() {
-	if(haxe.Firebug.detect()) haxe.Firebug.redirectTraces();
 	js.mocha.Mocha.setup({ ui : js.mocha.Ui.BDD});
 	new specs.co.janicek.core.html.CanvasCoreSpec();
 	new specs.co.janicek.core.Array2dSpec();
@@ -466,77 +172,20 @@ Reflect.field = function(o,field) {
 	}
 	return v;
 }
-Reflect.setField = function(o,field,value) {
-	o[field] = value;
-}
-Reflect.getProperty = function(o,field) {
-	var tmp;
-	return o == null?null:o.__properties__ && (tmp = o.__properties__["get_" + field])?o[tmp]():o[field];
-}
-Reflect.setProperty = function(o,field,value) {
-	var tmp;
-	if(o.__properties__ && (tmp = o.__properties__["set_" + field])) o[tmp](value); else o[field] = value;
-}
-Reflect.callMethod = function(o,func,args) {
-	return func.apply(o,args);
-}
 Reflect.fields = function(o) {
 	var a = [];
 	if(o != null) {
 		var hasOwnProperty = Object.prototype.hasOwnProperty;
 		for( var f in o ) {
-		if(hasOwnProperty.call(o,f)) a.push(f);
+		if(f != "__id__" && hasOwnProperty.call(o,f)) a.push(f);
 		}
 	}
 	return a;
 }
-Reflect.isFunction = function(f) {
-	return typeof(f) == "function" && !(f.__name__ || f.__ename__);
-}
-Reflect.compare = function(a,b) {
-	return a == b?0:a > b?1:-1;
-}
-Reflect.compareMethods = function(f1,f2) {
-	if(f1 == f2) return true;
-	if(!Reflect.isFunction(f1) || !Reflect.isFunction(f2)) return false;
-	return f1.scope == f2.scope && f1.method == f2.method && f1.method != null;
-}
-Reflect.isObject = function(v) {
-	if(v == null) return false;
-	var t = typeof(v);
-	return t == "string" || t == "object" && !v.__enum__ || t == "function" && (v.__name__ || v.__ename__);
-}
-Reflect.deleteField = function(o,f) {
-	if(!Reflect.hasField(o,f)) return false;
-	delete(o[f]);
-	return true;
-}
-Reflect.copy = function(o) {
-	var o2 = { };
-	var _g = 0, _g1 = Reflect.fields(o);
-	while(_g < _g1.length) {
-		var f = _g1[_g];
-		++_g;
-		o2[f] = Reflect.field(o,f);
-	}
-	return o2;
-}
-Reflect.makeVarArgs = function(f) {
-	return function() {
-		var a = Array.prototype.slice.call(arguments);
-		return f(a);
-	};
-}
 var Std = function() { }
 Std.__name__ = true;
-Std["is"] = function(v,t) {
-	return js.Boot.__instanceof(v,t);
-}
 Std.string = function(s) {
 	return js.Boot.__string_rec(s,"");
-}
-Std["int"] = function(x) {
-	return x | 0;
 }
 Std.parseInt = function(x) {
 	var v = parseInt(x,10);
@@ -544,97 +193,19 @@ Std.parseInt = function(x) {
 	if(isNaN(v)) return null;
 	return v;
 }
-Std.parseFloat = function(x) {
-	return parseFloat(x);
-}
-Std.random = function(x) {
-	return Math.floor(Math.random() * x);
-}
 var StringBuf = function() {
 	this.b = "";
 };
 StringBuf.__name__ = true;
 StringBuf.prototype = {
-	toString: function() {
-		return this.b;
-	}
-	,addSub: function(s,pos,len) {
-		this.b += HxOverrides.substr(s,pos,len);
-	}
-	,addChar: function(c) {
-		this.b += String.fromCharCode(c);
-	}
-	,add: function(x) {
-		this.b += Std.string(x);
-	}
-	,__class__: StringBuf
+	__class__: StringBuf
 }
 var StringTools = function() { }
 StringTools.__name__ = true;
-StringTools.urlEncode = function(s) {
-	return encodeURIComponent(s);
-}
-StringTools.urlDecode = function(s) {
-	return decodeURIComponent(s.split("+").join(" "));
-}
-StringTools.htmlEscape = function(s) {
-	return s.split("&").join("&amp;").split("<").join("&lt;").split(">").join("&gt;");
-}
-StringTools.htmlUnescape = function(s) {
-	return s.split("&gt;").join(">").split("&lt;").join("<").split("&amp;").join("&");
-}
-StringTools.startsWith = function(s,start) {
-	return s.length >= start.length && HxOverrides.substr(s,0,start.length) == start;
-}
 StringTools.endsWith = function(s,end) {
 	var elen = end.length;
 	var slen = s.length;
 	return slen >= elen && HxOverrides.substr(s,slen - elen,elen) == end;
-}
-StringTools.isSpace = function(s,pos) {
-	var c = HxOverrides.cca(s,pos);
-	return c >= 9 && c <= 13 || c == 32;
-}
-StringTools.ltrim = function(s) {
-	var l = s.length;
-	var r = 0;
-	while(r < l && StringTools.isSpace(s,r)) r++;
-	if(r > 0) return HxOverrides.substr(s,r,l - r); else return s;
-}
-StringTools.rtrim = function(s) {
-	var l = s.length;
-	var r = 0;
-	while(r < l && StringTools.isSpace(s,l - r - 1)) r++;
-	if(r > 0) return HxOverrides.substr(s,0,l - r); else return s;
-}
-StringTools.trim = function(s) {
-	return StringTools.ltrim(StringTools.rtrim(s));
-}
-StringTools.rpad = function(s,c,l) {
-	var sl = s.length;
-	var cl = c.length;
-	while(sl < l) if(l - sl < cl) {
-		s += HxOverrides.substr(c,0,l - sl);
-		sl = l;
-	} else {
-		s += c;
-		sl += cl;
-	}
-	return s;
-}
-StringTools.lpad = function(s,c,l) {
-	var ns = "";
-	var sl = s.length;
-	if(sl >= l) return s;
-	var cl = c.length;
-	while(sl < l) if(l - sl < cl) {
-		ns += HxOverrides.substr(c,0,l - sl);
-		sl = l;
-	} else {
-		ns += c;
-		sl += cl;
-	}
-	return ns + s;
 }
 StringTools.replace = function(s,sub,by) {
 	return s.split(sub).join(by);
@@ -649,21 +220,15 @@ StringTools.hex = function(n,digits) {
 	if(digits != null) while(s.length < digits) s = "0" + s;
 	return s;
 }
-StringTools.fastCodeAt = function(s,index) {
-	return s.charCodeAt(index);
-}
-StringTools.isEOF = function(c) {
-	return c != c;
-}
-var co = co || {}
-if(!co.janicek) co.janicek = {}
-if(!co.janicek.core) co.janicek.core = {}
+var co = {}
+co.janicek = {}
+co.janicek.core = {}
 co.janicek.core.BaseCode64 = function() { }
 co.janicek.core.BaseCode64.__name__ = true;
 co.janicek.core.BaseCode64.base64EncodeBytesData = function(bytesData) {
 	var bytes = haxe.io.Bytes.ofData(bytesData);
 	var encodings = haxe.io.Bytes.ofString("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/");
-	var base64 = new haxe.BaseCode(encodings).encodeBytes(bytes).toString();
+	var base64 = new haxe.crypto.BaseCode(encodings).encodeBytes(bytes).toString();
 	var remainder = base64.length % 4;
 	if(remainder > 1) base64 += "=";
 	if(remainder == 2) base64 += "=";
@@ -674,7 +239,7 @@ co.janicek.core.BaseCode64.base64DecodeBytesData = function(base64) {
 	if(base64.charAt(base64.length - 2) == "=") paddingSize = 2; else if(base64.charAt(base64.length - 1) == "=") paddingSize = 1;
 	if(paddingSize != -1) base64 = HxOverrides.substr(base64,0,base64.length - paddingSize);
 	var encodings = haxe.io.Bytes.ofString("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/");
-	var bytes = new haxe.BaseCode(encodings).decodeBytes(haxe.io.Bytes.ofString(base64));
+	var bytes = new haxe.crypto.BaseCode(encodings).decodeBytes(haxe.io.Bytes.ofString(base64));
 	return bytes.b;
 }
 co.janicek.core.BaseCode64.base64EncodeString = function(string) {
@@ -691,7 +256,7 @@ co.janicek.core.HashTableCore.__name__ = true;
 co.janicek.core.HashTableCore.parseHashTable = function(rawHashTable,keyValueDelimeterRegexPattern,pairDelimeterRegexPattern) {
 	if(pairDelimeterRegexPattern == null) pairDelimeterRegexPattern = "&";
 	if(keyValueDelimeterRegexPattern == null) keyValueDelimeterRegexPattern = "=";
-	var hashTable = new Hash();
+	var hashTable = new haxe.ds.StringMap();
 	if(!(rawHashTable == null || rawHashTable.length == 0)) {
 		var keyValueSplitter = new EReg(keyValueDelimeterRegexPattern,"");
 		Lambda.iter(new EReg(pairDelimeterRegexPattern,"").split(rawHashTable),function(rawKeyValuePair) {
@@ -704,7 +269,9 @@ co.janicek.core.HashTableCore.parseHashTable = function(rawHashTable,keyValueDel
 co.janicek.core.HashTableCore.stringifyHashTable = function(ht,keyValueDelimeter,pairDelimeter) {
 	if(pairDelimeter == null) pairDelimeter = "&";
 	if(keyValueDelimeter == null) keyValueDelimeter = "=";
-	return Lambda.fold({ iterator : $bind(ht,ht.keys)},function(key,buf) {
+	return Lambda.fold({ iterator : function() {
+		return ht.keys();
+	}},function(key,buf) {
 		var value = ht.get(key);
 		return (buf.length == 0?"":buf + pairDelimeter) + key + (value == null || value.length == 0?"":keyValueDelimeter + value);
 	},"");
@@ -824,7 +391,7 @@ co.janicek.core.StringCore.wordWrap = function(text,width,cut) {
 	});
 	return wordWrappedLines;
 }
-if(!co.janicek.core.array) co.janicek.core.array = {}
+co.janicek.core.array = {}
 co.janicek.core.array.Array2dCore = function() { }
 co.janicek.core.array.Array2dCore.__name__ = true;
 co.janicek.core.array.Array2dCore.get = function(a,x,y) {
@@ -957,7 +524,7 @@ co.janicek.core.array.Array2dValueIterator.prototype = {
 	}
 	,__class__: co.janicek.core.array.Array2dValueIterator
 }
-if(!co.janicek.core.html) co.janicek.core.html = {}
+co.janicek.core.html = {}
 co.janicek.core.html.CanvasCore = function() { }
 co.janicek.core.html.CanvasCore.__name__ = true;
 co.janicek.core.html.CanvasCore.renderCanvasPixelArray = function(imageData,f) {
@@ -1020,7 +587,7 @@ co.janicek.core.html.CanvasCore.loadFileIntoImage = function(file,img) {
 	reader.readAsDataURL(file);
 }
 co.janicek.core.html.CanvasCore.getImageData = function(image) {
-	var canvas = js.Lib.document.createElement("canvas");
+	var canvas = js.Browser.document.createElement("canvas");
 	canvas.width = image.width;
 	canvas.height = image.height;
 	var ctx = canvas.getContext("2d");
@@ -1029,7 +596,7 @@ co.janicek.core.html.CanvasCore.getImageData = function(image) {
 	return imageData;
 }
 co.janicek.core.html.CanvasCore.makeImageDataUrlFromImageData = function(imageData) {
-	var canvas = js.Lib.document.createElement("canvas");
+	var canvas = js.Browser.document.createElement("canvas");
 	canvas.width = imageData.width | 0;
 	canvas.height = imageData.height | 0;
 	canvas.getContext("2d").putImageData(imageData,0,0);
@@ -1081,32 +648,32 @@ co.janicek.core.html.HtmlColors.toString = function(c) {
 		var $e = (c);
 		switch( $e[1] ) {
 		case 0:
-			var c1 = $e[2];
-			$r = co.janicek.core.html.HtmlColorCore.intToHexColor(c1);
+			var c_eColor_0 = $e[2];
+			$r = co.janicek.core.html.HtmlColorCore.intToHexColor(c_eColor_0);
 			break;
 		case 1:
-			var b = $e[4], g = $e[3], r = $e[2];
-			$r = co.janicek.core.html.HtmlColorCore.rgb(r,g,b);
+			var c_eRgb_2 = $e[4], c_eRgb_1 = $e[3], c_eRgb_0 = $e[2];
+			$r = co.janicek.core.html.HtmlColorCore.rgb(c_eRgb_0,c_eRgb_1,c_eRgb_2);
 			break;
 		case 2:
-			var a = $e[5], b = $e[4], g = $e[3], r = $e[2];
-			$r = co.janicek.core.html.HtmlColorCore.rgba(r,g,b,a);
+			var c_eRgba_3 = $e[5], c_eRgba_2 = $e[4], c_eRgba_1 = $e[3], c_eRgba_0 = $e[2];
+			$r = co.janicek.core.html.HtmlColorCore.rgba(c_eRgba_0,c_eRgba_1,c_eRgba_2,c_eRgba_3);
 			break;
 		case 3:
-			var b = $e[4], g = $e[3], r = $e[2];
-			$r = co.janicek.core.html.HtmlColorCore.rgbF(r,g,b);
+			var c_eRgbF_2 = $e[4], c_eRgbF_1 = $e[3], c_eRgbF_0 = $e[2];
+			$r = co.janicek.core.html.HtmlColorCore.rgbF(c_eRgbF_0,c_eRgbF_1,c_eRgbF_2);
 			break;
 		case 4:
-			var a = $e[5], b = $e[4], g = $e[3], r = $e[2];
-			$r = co.janicek.core.html.HtmlColorCore.rgbaF(r,g,b,a);
+			var c_eRgbaF_3 = $e[5], c_eRgbaF_2 = $e[4], c_eRgbaF_1 = $e[3], c_eRgbaF_0 = $e[2];
+			$r = co.janicek.core.html.HtmlColorCore.rgbaF(c_eRgbaF_0,c_eRgbaF_1,c_eRgbaF_2,c_eRgbaF_3);
 			break;
 		case 5:
-			var l = $e[4], s = $e[3], h = $e[2];
-			$r = co.janicek.core.html.HtmlColorCore.hsl(h,s,l);
+			var c_eHsl_2 = $e[4], c_eHsl_1 = $e[3], c_eHsl_0 = $e[2];
+			$r = co.janicek.core.html.HtmlColorCore.hsl(c_eHsl_0,c_eHsl_1,c_eHsl_2);
 			break;
 		case 6:
-			var a = $e[5], l = $e[4], s = $e[3], h = $e[2];
-			$r = co.janicek.core.html.HtmlColorCore.hsla(h,s,l,a);
+			var c_eHsla_3 = $e[5], c_eHsla_2 = $e[4], c_eHsla_1 = $e[3], c_eHsla_0 = $e[2];
+			$r = co.janicek.core.html.HtmlColorCore.hsla(c_eHsla_0,c_eHsla_1,c_eHsla_2,c_eHsla_3);
 			break;
 		}
 		return $r;
@@ -1156,7 +723,7 @@ co.janicek.core.html.HtmlColorCore.hsl = function(hue,saturation,lightness) {
 co.janicek.core.html.HtmlColorCore.hsla = function(hue,saturation,lightness,alpha) {
 	return "hsla(" + hue + "," + saturation * 100 + "%," + lightness * 100 + "%," + alpha + ")";
 }
-if(!co.janicek.core.http) co.janicek.core.http = {}
+co.janicek.core.http = {}
 co.janicek.core.http.HttpCookieCore = function() { }
 co.janicek.core.http.HttpCookieCore.__name__ = true;
 co.janicek.core.http.HttpCookieCore.parseCookies = function(rawCookies) {
@@ -1210,7 +777,7 @@ co.janicek.core.http.UrlCore.parseKeyValuePairsToStruct = function(delimetedData
 	}
 	return struct;
 }
-if(!co.janicek.core.math) co.janicek.core.math = {}
+co.janicek.core.math = {}
 co.janicek.core.math.HashCore = function() { }
 co.janicek.core.math.HashCore.__name__ = true;
 co.janicek.core.math.HashCore.djb2 = function(s) {
@@ -1467,13 +1034,14 @@ co.janicek.core.math.UUID.uuidFast = function(seed) {
 }
 co.janicek.core.math.UUID.uuidCompact = function(seed) {
 	if(seed == null) seed = co.janicek.core.math.RandomCore.makeRandomSeed();
-	return new EReg("[xy]","g").customReplace("xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx",function(c) {
+	return new EReg("[xy]","g").map("xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx",function(c) {
 		var r = (seed = seed * 16807.0 % 2147483647.0 | 0) / 2147483647.0 * 16 | 0 | 0, v = c.matched(0) == "x"?r:r & 3 | 8;
 		return StringTools.hex(v);
 	});
 }
-var haxe = haxe || {}
-haxe.BaseCode = function(base) {
+var haxe = {}
+haxe.crypto = {}
+haxe.crypto.BaseCode = function(base) {
 	var len = base.length;
 	var nbits = 1;
 	while(len > 1 << nbits) nbits++;
@@ -1481,23 +1049,9 @@ haxe.BaseCode = function(base) {
 	this.base = base;
 	this.nbits = nbits;
 };
-haxe.BaseCode.__name__ = true;
-haxe.BaseCode.encode = function(s,base) {
-	var b = new haxe.BaseCode(haxe.io.Bytes.ofString(base));
-	return b.encodeString(s);
-}
-haxe.BaseCode.decode = function(s,base) {
-	var b = new haxe.BaseCode(haxe.io.Bytes.ofString(base));
-	return b.decodeString(s);
-}
-haxe.BaseCode.prototype = {
-	decodeString: function(s) {
-		return this.decodeBytes(haxe.io.Bytes.ofString(s)).toString();
-	}
-	,encodeString: function(s) {
-		return this.encodeBytes(haxe.io.Bytes.ofString(s)).toString();
-	}
-	,decodeBytes: function(b) {
+haxe.crypto.BaseCode.__name__ = true;
+haxe.crypto.BaseCode.prototype = {
+	decodeBytes: function(b) {
 		var nbits = this.nbits;
 		var base = this.base;
 		if(this.tbl == null) this.initTable();
@@ -1557,80 +1111,41 @@ haxe.BaseCode.prototype = {
 		if(curbits > 0) out.b[pout++] = base.b[buf << nbits - curbits & mask] & 255;
 		return out;
 	}
-	,__class__: haxe.BaseCode
+	,__class__: haxe.crypto.BaseCode
 }
-haxe.Firebug = function() { }
-haxe.Firebug.__name__ = true;
-haxe.Firebug.detect = function() {
-	try {
-		return console != null && console.error != null;
-	} catch( e ) {
-		return false;
-	}
-}
-haxe.Firebug.redirectTraces = function() {
-	haxe.Log.trace = haxe.Firebug.trace;
-	js.Lib.onerror = haxe.Firebug.onError;
-}
-haxe.Firebug.onError = function(err,stack) {
-	var buf = err + "\n";
-	var _g = 0;
-	while(_g < stack.length) {
-		var s = stack[_g];
-		++_g;
-		buf += "Called from " + s + "\n";
-	}
-	haxe.Firebug.trace(buf,null);
-	return true;
-}
-haxe.Firebug.trace = function(v,inf) {
-	var type = inf != null && inf.customParams != null?inf.customParams[0]:null;
-	if(type != "warn" && type != "info" && type != "debug" && type != "error") type = inf == null?"error":"log";
-	console[type]((inf == null?"":inf.fileName + ":" + inf.lineNumber + " : ") + Std.string(v));
-}
-haxe.Log = function() { }
-haxe.Log.__name__ = true;
-haxe.Log.trace = function(v,infos) {
-	js.Boot.__trace(v,infos);
-}
-haxe.Log.clear = function() {
-	js.Boot.__clear_trace();
-}
-haxe.Timer = function(time_ms) {
-	var me = this;
-	this.id = window.setInterval(function() {
-		me.run();
-	},time_ms);
+haxe.ds = {}
+haxe.ds.StringMap = function() {
+	this.h = { };
 };
-haxe.Timer.__name__ = true;
-haxe.Timer.delay = function(f,time_ms) {
-	var t = new haxe.Timer(time_ms);
-	t.run = function() {
-		t.stop();
-		f();
-	};
-	return t;
-}
-haxe.Timer.measure = function(f,pos) {
-	var t0 = haxe.Timer.stamp();
-	var r = f();
-	haxe.Log.trace(haxe.Timer.stamp() - t0 + "s",pos);
-	return r;
-}
-haxe.Timer.stamp = function() {
-	return new Date().getTime() / 1000;
-}
-haxe.Timer.prototype = {
-	run: function() {
+haxe.ds.StringMap.__name__ = true;
+haxe.ds.StringMap.prototype = {
+	iterator: function() {
+		return { ref : this.h, it : this.keys(), hasNext : function() {
+			return this.it.hasNext();
+		}, next : function() {
+			var i = this.it.next();
+			return this.ref["$" + i];
+		}};
 	}
-	,stop: function() {
-		if(this.id == null) return;
-		window.clearInterval(this.id);
-		this.id = null;
+	,keys: function() {
+		var a = [];
+		for( var key in this.h ) {
+		if(this.h.hasOwnProperty(key)) a.push(key.substr(1));
+		}
+		return HxOverrides.iter(a);
 	}
-	,__class__: haxe.Timer
+	,exists: function(key) {
+		return this.h.hasOwnProperty("$" + key);
+	}
+	,get: function(key) {
+		return this.h["$" + key];
+	}
+	,set: function(key,value) {
+		this.h["$" + key] = value;
+	}
+	,__class__: haxe.ds.StringMap
 }
-if(!haxe.io) haxe.io = {}
+haxe.io = {}
 haxe.io.Bytes = function(length,b) {
 	this.length = length;
 	this.b = b;
@@ -1671,28 +1186,7 @@ haxe.io.Bytes.ofData = function(b) {
 	return new haxe.io.Bytes(b.length,b);
 }
 haxe.io.Bytes.prototype = {
-	getData: function() {
-		return this.b;
-	}
-	,toHex: function() {
-		var s = new StringBuf();
-		var chars = [];
-		var str = "0123456789abcdef";
-		var _g1 = 0, _g = str.length;
-		while(_g1 < _g) {
-			var i = _g1++;
-			chars.push(HxOverrides.cca(str,i));
-		}
-		var _g1 = 0, _g = this.length;
-		while(_g1 < _g) {
-			var i = _g1++;
-			var c = this.b[i];
-			s.b += String.fromCharCode(chars[c >> 4]);
-			s.b += String.fromCharCode(chars[c & 15]);
-		}
-		return s.b;
-	}
-	,toString: function() {
+	toString: function() {
 		return this.readString(0,this.length);
 	}
 	,readString: function(pos,len) {
@@ -1718,45 +1212,6 @@ haxe.io.Bytes.prototype = {
 		}
 		return s;
 	}
-	,compare: function(other) {
-		var b1 = this.b;
-		var b2 = other.b;
-		var len = this.length < other.length?this.length:other.length;
-		var _g = 0;
-		while(_g < len) {
-			var i = _g++;
-			if(b1[i] != b2[i]) return b1[i] - b2[i];
-		}
-		return this.length - other.length;
-	}
-	,sub: function(pos,len) {
-		if(pos < 0 || len < 0 || pos + len > this.length) throw haxe.io.Error.OutsideBounds;
-		return new haxe.io.Bytes(len,this.b.slice(pos,pos + len));
-	}
-	,blit: function(pos,src,srcpos,len) {
-		if(pos < 0 || srcpos < 0 || len < 0 || pos + len > this.length || srcpos + len > src.length) throw haxe.io.Error.OutsideBounds;
-		var b1 = this.b;
-		var b2 = src.b;
-		if(b1 == b2 && pos > srcpos) {
-			var i = len;
-			while(i > 0) {
-				i--;
-				b1[i + pos] = b2[i + srcpos];
-			}
-			return;
-		}
-		var _g = 0;
-		while(_g < len) {
-			var i = _g++;
-			b1[i + pos] = b2[i + srcpos];
-		}
-	}
-	,set: function(pos,v) {
-		this.b[pos] = v & 255;
-	}
-	,get: function(pos) {
-		return this.b[pos];
-	}
 	,__class__: haxe.io.Bytes
 }
 haxe.io.Error = { __ename__ : true, __constructs__ : ["Blocked","Overflow","OutsideBounds","Custom"] }
@@ -1770,31 +1225,9 @@ haxe.io.Error.OutsideBounds = ["OutsideBounds",2];
 haxe.io.Error.OutsideBounds.toString = $estr;
 haxe.io.Error.OutsideBounds.__enum__ = haxe.io.Error;
 haxe.io.Error.Custom = function(e) { var $x = ["Custom",3,e]; $x.__enum__ = haxe.io.Error; $x.toString = $estr; return $x; }
-var js = js || {}
+var js = {}
 js.Boot = function() { }
 js.Boot.__name__ = true;
-js.Boot.__unhtml = function(s) {
-	return s.split("&").join("&amp;").split("<").join("&lt;").split(">").join("&gt;");
-}
-js.Boot.__trace = function(v,i) {
-	var msg = i != null?i.fileName + ":" + i.lineNumber + ": ":"";
-	msg += js.Boot.__string_rec(v,"");
-	var d;
-	if(typeof(document) != "undefined" && (d = document.getElementById("haxe:trace")) != null) d.innerHTML += js.Boot.__unhtml(msg) + "<br/>"; else if(typeof(console) != "undefined" && console.log != null) console.log(msg);
-}
-js.Boot.__clear_trace = function() {
-	var d = document.getElementById("haxe:trace");
-	if(d != null) d.innerHTML = "";
-}
-js.Boot.isClass = function(o) {
-	return o.__name__;
-}
-js.Boot.isEnum = function(e) {
-	return e.__ename__;
-}
-js.Boot.getClass = function(o) {
-	return o.__class__;
-}
 js.Boot.__string_rec = function(o,s) {
 	if(o == null) return "null";
 	if(s.length >= 5) return "<...>";
@@ -1903,34 +1336,18 @@ js.Boot.__instanceof = function(o,cl) {
 		return o.__enum__ == cl;
 	}
 }
-js.Boot.__cast = function(o,t) {
-	if(js.Boot.__instanceof(o,t)) return o; else throw "Cannot cast " + Std.string(o) + " to " + Std.string(t);
-}
-js.Lib = function() { }
-js.Lib.__name__ = true;
-js.Lib.debug = function() {
-	debugger;
-}
-js.Lib.alert = function(v) {
-	alert(js.Boot.__string_rec(v,""));
-}
-js.Lib.eval = function(code) {
-	return eval(code);
-}
-js.Lib.setErrorHandler = function(f) {
-	js.Lib.onerror = f;
-}
-if(!js.expect) js.expect = {}
+js.Browser = function() { }
+js.Browser.__name__ = true;
+js.expect = {}
 js.expect.E = function() { }
 js.expect.E.__name__ = true;
-js.expect.E.__properties__ = {get_version:"getVersion"}
 js.expect.E.expect = function(actual) {
 	return js.expect.E._expect(actual);
 }
 js.expect.E.should = function(actual) {
 	return js.expect.E._expect(actual);
 }
-js.expect.E.getVersion = function() {
+js.expect.E.get_version = function() {
 	return js.expect.E._expect.version;
 }
 js.expect.ExpectMixins = function() { }
@@ -1944,7 +1361,7 @@ js.expect.ExpectMixins.match = function(e,pattern,modifiers) {
 js.expect.ExpectMixins.throwExceptionMatch = function(e,pattern,modifiers) {
 	return e.throwException(new RegExp(pattern,modifiers));
 }
-if(!js.mocha) js.mocha = {}
+js.mocha = {}
 js.mocha.Ui = { __ename__ : true, __constructs__ : ["BDD","EXPORTS","QUNIT","TDD"] }
 js.mocha.Ui.BDD = ["BDD",0];
 js.mocha.Ui.BDD.toString = $estr;
@@ -2067,10 +1484,10 @@ js.mocha.M.test = function(description,test) {
 js.mocha.M.teardown = function(func) {
 	teardown(func);
 }
-var specs = specs || {}
-if(!specs.co) specs.co = {}
-if(!specs.co.janicek) specs.co.janicek = {}
-if(!specs.co.janicek.core) specs.co.janicek.core = {}
+var specs = {}
+specs.co = {}
+specs.co.janicek = {}
+specs.co.janicek.core = {}
 specs.co.janicek.core.Array2dSpec = function() {
 	js.mocha.M.describe("Array2DCore",function() {
 		js.mocha.M.describe("get()",function() {
@@ -2103,20 +1520,20 @@ specs.co.janicek.core.Array2dSpec = function() {
 		});
 		js.mocha.M.describe("foreachY()",function() {
 			js.mocha.M.it("should iterate y indexes (rows)",function() {
-				var a = [[1],[2]];
+				var a1 = [[1],[2]];
 				var row = 0;
-				co.janicek.core.array.Array2dCore.foreachY(a,function(y) {
-					js.expect.E.should(co.janicek.core.array.Array2dCore.get(a,0,row)).equal(y[0]);
+				co.janicek.core.array.Array2dCore.foreachY(a1,function(y) {
+					js.expect.E.should(co.janicek.core.array.Array2dCore.get(a1,0,row)).equal(y[0]);
 					row++;
 				});
-				js.expect.E.should(row).equal(a.length);
+				js.expect.E.should(row).equal(a1.length);
 			});
 		});
 		js.mocha.M.describe("foreachXY()",function() {
 			js.mocha.M.it("should iterate x,y indexes (cells)",function() {
-				var a = [[1,2],[3,4]];
-				co.janicek.core.array.Array2dCore.foreachXY(a,function(x,y,value) {
-					js.expect.E.should(co.janicek.core.array.Array2dCore.get(a,x,y)).equal(value);
+				var a2 = [[1,2],[3,4]];
+				co.janicek.core.array.Array2dCore.foreachXY(a2,function(x,y,value) {
+					js.expect.E.should(co.janicek.core.array.Array2dCore.get(a2,x,y)).equal(value);
 				});
 			});
 		});
@@ -2251,22 +1668,22 @@ specs.co.janicek.core.HashTableCoreSpec = function() {
 		});
 		js.mocha.M.describe("stringifyHashTable()",function() {
 			js.mocha.M.it("should return empty string from empty hash table",function() {
-				var ht = new Hash();
+				var ht = new haxe.ds.StringMap();
 				js.expect.E.should(co.janicek.core.HashTableCore.stringifyHashTable(ht)).equal("");
 			});
 			js.mocha.M.it("should return a key / value pair string",function() {
-				var ht = new Hash();
+				var ht = new haxe.ds.StringMap();
 				ht.set("key","value");
 				js.expect.E.should(co.janicek.core.HashTableCore.stringifyHashTable(ht)).equal("key=value");
 			});
 			js.mocha.M.it("should return multiple key / value pairs string",function() {
-				var ht = new Hash();
+				var ht = new haxe.ds.StringMap();
 				ht.set("key","value");
 				ht.set("key2","value2");
 				js.expect.E.should(co.janicek.core.HashTableCore.stringifyHashTable(ht)).equal("key=value&key2=value2");
 			});
 			js.mocha.M.it("should return key with empty value without key value delimeter",function() {
-				var ht = new Hash();
+				var ht = new haxe.ds.StringMap();
 				ht.set("key","");
 				js.expect.E.should(co.janicek.core.HashTableCore.stringifyHashTable(ht)).equal("key");
 				ht.set("key2","");
@@ -2320,7 +1737,7 @@ specs.co.janicek.core.NullCoreSpec = function() {
 			});
 			js.mocha.M.it("should test reflected nullable type for null",function() {
 				var o = { property : null};
-				js.expect.E.should(Reflect.field(o,"property") == null).be.ok();
+				js.expect.E.should(co.janicek.core.NullCore.isNull(Reflect.field(o,"property"))).be.ok();
 			});
 		});
 		js.mocha.M.describe("isNotNull()",function() {
@@ -2337,7 +1754,7 @@ specs.co.janicek.core.NullCoreSpec = function() {
 			});
 			js.mocha.M.it("should test reflected nullable type for not null",function() {
 				var o = { property : null};
-				js.expect.E.should(Reflect.field(o,"property") != null).not.be.ok();
+				js.expect.E.should(co.janicek.core.NullCore.isNotNull(Reflect.field(o,"property"))).not.be.ok();
 			});
 		});
 		js.mocha.M.describe("coalesce()",function() {
@@ -2452,7 +1869,7 @@ specs.co.janicek.core.StringCoreSpec.__name__ = true;
 specs.co.janicek.core.StringCoreSpec.prototype = {
 	__class__: specs.co.janicek.core.StringCoreSpec
 }
-if(!specs.co.janicek.core.html) specs.co.janicek.core.html = {}
+specs.co.janicek.core.html = {}
 specs.co.janicek.core.html.CanvasCoreSpec = function() {
 	js.mocha.M.describe("CanvasCore",function() {
 		js.mocha.M.describe("loadImage()",function() {
@@ -2574,7 +1991,7 @@ specs.co.janicek.core.html.HtmlColorCoreSpec.__name__ = true;
 specs.co.janicek.core.html.HtmlColorCoreSpec.prototype = {
 	__class__: specs.co.janicek.core.html.HtmlColorCoreSpec
 }
-if(!specs.co.janicek.core.http) specs.co.janicek.core.http = {}
+specs.co.janicek.core.http = {}
 specs.co.janicek.core.http.HttpCookieCoreSpec = function() {
 	js.mocha.M.describe("HttpCookieCore",function() {
 		js.mocha.M.describe("parseCookies()",function() {
@@ -2659,7 +2076,7 @@ specs.co.janicek.core.http.UrlCoreSpec.__name__ = true;
 specs.co.janicek.core.http.UrlCoreSpec.prototype = {
 	__class__: specs.co.janicek.core.http.UrlCoreSpec
 }
-if(!specs.co.janicek.core.math) specs.co.janicek.core.math = {}
+specs.co.janicek.core.math = {}
 specs.co.janicek.core.math.HashCoreSpec = function() {
 	js.mocha.M.describe("HashCore",function() {
 		js.mocha.M.describe("djb2()",function() {
@@ -2871,16 +2288,16 @@ specs.co.janicek.core.math.UUIDSpec = function() {
 			});
 		});
 		js.mocha.M.describe("uuidRfc4122V4()",function() {
-			var uuid;
+			var uuid1;
 			js.mocha.M.it("should make a uuid",function() {
-				uuid = co.janicek.core.math.UUID.uuidRfc4122V4();
-				js.expect.E.should(uuid).be.a("string");
+				uuid1 = co.janicek.core.math.UUID.uuidRfc4122V4();
+				js.expect.E.should(uuid1).be.a("string");
 			});
 			js.mocha.M.it("should be 36 characters long",function() {
-				js.expect.E.should(uuid).have.length(36);
+				js.expect.E.should(uuid1).have.length(36);
 			});
 			js.mocha.M.it("should have 5 parts seperated by hyphens",function() {
-				js.expect.E.should(uuid.split("-")).have.length(5);
+				js.expect.E.should(uuid1.split("-")).have.length(5);
 			});
 		});
 		js.mocha.M.describe("uuidFast()",function() {
@@ -2902,12 +2319,6 @@ specs.co.janicek.core.math.UUIDSpec.prototype = {
 function $iterator(o) { if( o instanceof Array ) return function() { return HxOverrides.iter(o); }; return typeof(o.iterator) == 'function' ? $bind(o,o.iterator) : o.iterator; };
 var $_;
 function $bind(o,m) { var f = function(){ return f.method.apply(f.scope, arguments); }; f.scope = o; f.method = m; return f; };
-if(Array.prototype.indexOf) HxOverrides.remove = function(a,o) {
-	var i = a.indexOf(o);
-	if(i == -1) return false;
-	a.splice(i,1);
-	return true;
-}; else null;
 Math.__name__ = ["Math"];
 Math.NaN = Number.NaN;
 Math.NEGATIVE_INFINITY = Number.NEGATIVE_INFINITY;
@@ -2922,8 +2333,6 @@ String.prototype.__class__ = String;
 String.__name__ = true;
 Array.prototype.__class__ = Array;
 Array.__name__ = true;
-Date.prototype.__class__ = Date;
-Date.__name__ = ["Date"];
 var Int = { __name__ : ["Int"]};
 var Dynamic = { __name__ : ["Dynamic"]};
 var Float = Number;
@@ -2932,16 +2341,6 @@ var Bool = Boolean;
 Bool.__ename__ = ["Bool"];
 var Class = { __name__ : ["Class"]};
 var Enum = { };
-var Void = { __ename__ : ["Void"]};
-if(typeof document != "undefined") js.Lib.document = document;
-if(typeof window != "undefined") {
-	js.Lib.window = window;
-	js.Lib.window.onerror = function(msg,url,line) {
-		var f = js.Lib.onerror;
-		if(f == null) return false;
-		return f(msg,[url + ":" + line]);
-	};
-}
 if(typeof expect !== 'undefined') js.expect.E._expect = expect; else if(typeof require !== 'undefined') js.expect.E._expect = require('expect.js'); else throw "make sure to include expect.js";
 co.janicek.core.BaseCode64.BASE_64_ENCODINGS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 co.janicek.core.BaseCode64.BASE_64_PADDING = "=";
@@ -2978,7 +2377,9 @@ co.janicek.core.math.PerlinNoise.p = [151,160,137,91,90,15,131,13,201,95,96,53,1
 co.janicek.core.math.RandomCore.MPM = 2147483647.0;
 co.janicek.core.math.RandomCore.MINSTD = 16807.0;
 co.janicek.core.math.UUID.CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".split("");
+js.Browser.document = typeof window != "undefined" ? window.document : null;
 js.mocha.Mocha._mocha = mocha;
 MainBrowser.main();
+})();
 
 //@ sourceMappingURL=janicek-core-test-browser.js.map
