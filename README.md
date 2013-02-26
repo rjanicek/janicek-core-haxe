@@ -17,8 +17,8 @@ Tested with Haxe 3.0, JavaScript, and Node.js.
 
 See [spec classes](https://github.com/rjanicek/janicek-core-haxe/tree/master/test/src/specs/co/janicek/core) for examples of how to use the libraries.
 
-API Docs -> http://rjanicek.github.com/janicek-core-haxe/api
+API docs -> http://rjanicek.github.com/janicek-core-haxe/api
 
-Browser Tests -> http://rjanicek.github.com/janicek-core-haxe
+browser tests -> http://rjanicek.github.com/janicek-core-haxe
 
 GitHub -> https://github.com/rjanicek/janicek-core-haxe

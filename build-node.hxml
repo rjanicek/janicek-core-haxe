@@ -3,6 +3,5 @@
 -cp ../../mocha.js-haxe/mocha.js-haxe/src
 -js test/node/janicek-core-test-node.js
 -main MainNode
---js-modern
--dce std
+-dce full
 -debug
