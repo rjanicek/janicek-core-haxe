@@ -27,17 +27,17 @@
  */
 package co.janicek.core;
 
-using co.janicek.core.LineageCore;
+using co.janicek.core.FamilyCore;
 using co.janicek.core.LambdaCore;
-
+using Reflect;
 
 /**
- * Functions for objects that have lineage.
- * Objects must have a "parent" object.
+ * Functions for objects that have parent / child or tree structures.
+ * Objects should have a "parent" object and "children" Array.
  * Lineages are terminated by a null parent.
  * @author Richard Janicek
  */
-class LineageCore {
+class FamilyCore {
 
 	/**
 	 * Detect the root node.
@@ -50,7 +50,7 @@ class LineageCore {
 	 * Get the root node.
 	 */
 	public static function root<T>( node : T ) : T {
-		// TODO: when Haxe >2.10, add type constraint "root<T:{parent:T}>( node : T ) : T"
+		// TODO: when Haxe >2.10, add type constraint "root<T:{parent:Null<Dynamic>}>( node : T ) : T"
 		
 		return node.lineage().first(function(n) {
 			// TODO: when Haxe >2.10, remove untyped
@@ -66,7 +66,7 @@ class LineageCore {
 	 * TODO: Detect and throw on circular references.
 	 */
 	public static function lineage<T>( node : T ) : Iterable<T> {
-		// TODO: when Haxe >2.10, add type constraint "lineage<T : {parent : Null<T>}>( node : T ) : Iterable<T>"
+		// TODO: when Haxe >2.10, add type constraint "lineage<T : {parent : Null<D>}>( node : T ) : Iterable<T>"
 		// see: http://code.google.com/p/haxe/issues/detail?id=516
 		
 		return { iterator: function() {
@@ -79,6 +79,57 @@ class LineageCore {
 					// TODO: when haxe >2.10, remove untyped
 					untyped node = node.parent;
 					return current;
+				}
+			};
+		}};
+	}
+	
+	/**
+	 * Family iterator.
+	 * Recursively iterates every node in a family including the parent node.
+	 * Nodes may have a field called children : Array.
+	 */
+	public static function family<T>( parent : T ) : Iterable<T> {
+		var stack = new Array<T>();
+		stack.push(parent);
+		return { iterator: function() {
+			return {
+				hasNext : function() : Bool {
+					return stack.length > 0;
+				},
+				next : function() : T {
+					var node = stack.pop();
+					if (node.hasField("children")) {
+						stack = stack.concat(untyped node.children);
+					}
+					return node;
+				}
+			};
+		}};
+	}
+	
+	/**
+	 * Descendants iterator.
+	 * Recursively iterates every node that is a descendant of the parent node.
+	 * Nodes may have a field called children : Array.
+	 */
+	public static function descendants<T>( parent : T ) : Iterable<T> {
+		var stack = new Array<T>();
+		var loadStack = function(node : T) {
+			if (node.hasField("children")) {
+				stack = stack.concat(untyped node.children);
+			}
+		}
+		loadStack(parent);
+		return { iterator: function() {
+			return {
+				hasNext : function() : Bool {
+					return stack.length > 0;
+				},
+				next : function() : T {
+					var n = stack.pop();
+					loadStack(n);
+					return n;
 				}
 			};
 		}};

@@ -9,3 +9,4 @@
 -debug
 
 -cmd haxe build-node.hxml
+-cmd haxe build-demo.hxml

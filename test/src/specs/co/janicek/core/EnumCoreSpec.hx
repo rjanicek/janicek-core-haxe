@@ -27,38 +27,26 @@
  */
 package specs.co.janicek.core;
 
-import js.mocha.Mocha;
+import js.mocha.Mocha.M.*;
 
 using js.expect.Expect;
-using co.janicek.core.LineageCore;
-using Lambda;
+using co.janicek.core.EnumCore;
 
-class LineageCoreSpec {
+enum Hobbit {
+	Frodo;
+}
+
+class EnumCoreSpec {
 
 	public function new() {
-		M.describe("LineageCore", function() {
+		describe("EnumCore", function() {
 			
-			M.describe("isRoot()", function () {
-				M.it("should test node for parent that is null", function() {
-					{parent : null }.isRoot().should().equal(true);
-					{parent : { parent : null } }.isRoot().should().equal(false);
+			describe("parseEnum()", function () {
+				it("should parse an enum from a string", function() {
+					Hobbit.parseEnum("Frodo").should().equal(Hobbit.Frodo);
 				});
-			});
-			
-			M.describe("root()", function () {
-				M.it("should find the root node in a lineage", function() {
-					{id : 1, parent : null }
-						.root().id.should().equal(1);
-						
-					{id : 1, parent : { id : 2, parent : null } }
-						.root().id.should().equal(2);
-				});
-			});
-			
-			M.describe("lineage()", function () {
-				M.it("should iterate a node's lineage", function() {
-					{id : 1, parent : { id : 2, parent : null } }
-						.lineage().count().should().equal(2);
+				it("should return null if enum is undefined", function() {
+					Hobbit.parseEnum("Bilbo").should().equal(null);
 				});
 			});
 			

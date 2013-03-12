@@ -1,0 +1,6 @@
+-cp src
+-cp test/src
+-js test/node/janicek-core-demo-node.js
+-main MainDemo
+-dce full
+-debug

@@ -2,11 +2,12 @@ package;
 
 import specs.co.janicek.core.Array2dSpec;
 import specs.co.janicek.core.BaseCode64Spec;
+import specs.co.janicek.core.EnumCoreSpec;
 import specs.co.janicek.core.HashTableCoreSpec;
 import specs.co.janicek.core.html.HtmlColorCoreSpec;
 import specs.co.janicek.core.http.HttpCookieCoreSpec;
 import specs.co.janicek.core.http.UrlCoreSpec;
-import specs.co.janicek.core.LineageCoreSpec;
+import specs.co.janicek.core.FamilyCoreSpec;
 import specs.co.janicek.core.math.HashCoreSpec;
 import specs.co.janicek.core.math.MathCoreSpec;
 import specs.co.janicek.core.math.PerlinNoiseSpec;
@@ -25,11 +26,12 @@ class MainNode {
 	static function main() {
 		new Array2dSpec();
 		new BaseCode64Spec();
+		new EnumCoreSpec();
+		new FamilyCoreSpec();
 		new HashCoreSpec();
 		new HashTableCoreSpec();
 		new HtmlColorCoreSpec();
 		new HttpCookieCoreSpec();
-		new LineageCoreSpec();
 		new MathCoreSpec();
 		new NullCoreSpec();
 		new PathCoreSpec();
