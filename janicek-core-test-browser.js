@@ -141,14 +141,15 @@ var MainBrowser = function() { }
 MainBrowser.__name__ = true;
 MainBrowser.main = function() {
 	js.mocha.Mocha.setup({ ui : js.mocha.Ui.BDD});
-	new specs.co.janicek.core.html.CanvasCoreSpec();
 	new specs.co.janicek.core.Array2dSpec();
 	new specs.co.janicek.core.BaseCode64Spec();
+	new specs.co.janicek.core.html.CanvasCoreSpec();
+	new specs.co.janicek.core.EnumCoreSpec();
+	new specs.co.janicek.core.FamilyCoreSpec();
 	new specs.co.janicek.core.math.HashCoreSpec();
 	new specs.co.janicek.core.HashTableCoreSpec();
 	new specs.co.janicek.core.html.HtmlColorCoreSpec();
 	new specs.co.janicek.core.http.HttpCookieCoreSpec();
-	new specs.co.janicek.core.LineageCoreSpec();
 	new specs.co.janicek.core.math.MathCoreSpec();
 	new specs.co.janicek.core.NullCoreSpec();
 	new specs.co.janicek.core.PathCoreSpec();
@@ -181,6 +182,9 @@ Reflect.fields = function(o) {
 		}
 	}
 	return a;
+}
+Reflect.isFunction = function(f) {
+	return typeof(f) == "function" && !(f.__name__ || f.__ename__);
 }
 var Std = function() { }
 Std.__name__ = true;
@@ -220,6 +224,18 @@ StringTools.hex = function(n,digits) {
 	if(digits != null) while(s.length < digits) s = "0" + s;
 	return s;
 }
+var Type = function() { }
+Type.__name__ = true;
+Type.createEnum = function(e,constr,params) {
+	var f = Reflect.field(e,constr);
+	if(f == null) throw "No such constructor " + constr;
+	if(Reflect.isFunction(f)) {
+		if(params == null) throw "Constructor " + constr + " need parameters";
+		return f.apply(e,params);
+	}
+	if(params != null && params.length != 0) throw "Constructor " + constr + " does not need parameters";
+	return f;
+}
 var co = {}
 co.janicek = {}
 co.janicek.core = {}
@@ -251,6 +267,66 @@ co.janicek.core.BaseCode64.base64DecodeString = function(base64) {
 }
 co.janicek.core.Constants = function() { }
 co.janicek.core.Constants.__name__ = true;
+co.janicek.core.EnumCore = function() { }
+co.janicek.core.EnumCore.__name__ = true;
+co.janicek.core.EnumCore.parseEnum = function(e,constr,params) {
+	var result = null;
+	try {
+		result = Type.createEnum(e,constr,params);
+	} catch( error ) {
+	}
+	return result;
+}
+co.janicek.core.FamilyCore = function() { }
+co.janicek.core.FamilyCore.__name__ = true;
+co.janicek.core.FamilyCore.isRoot = function(node) {
+	return node.parent == null;
+}
+co.janicek.core.FamilyCore.root = function(node) {
+	return co.janicek.core.LambdaCore.first(co.janicek.core.FamilyCore.lineage(node),function(n) {
+		return n.parent == null;
+	});
+}
+co.janicek.core.FamilyCore.lineage = function(node) {
+	return { iterator : function() {
+		return { hasNext : function() {
+			return node != null;
+		}, next : function() {
+			var current = node;
+			node = node.parent;
+			return current;
+		}};
+	}};
+}
+co.janicek.core.FamilyCore.family = function(parent) {
+	var stack = new Array();
+	stack.push(parent);
+	return { iterator : function() {
+		return { hasNext : function() {
+			return stack.length > 0;
+		}, next : function() {
+			var node = stack.pop();
+			if(Reflect.hasField(node,"children")) stack = stack.concat(node.children);
+			return node;
+		}};
+	}};
+}
+co.janicek.core.FamilyCore.descendants = function(parent) {
+	var stack = new Array();
+	var loadStack = function(node) {
+		if(Reflect.hasField(node,"children")) stack = stack.concat(node.children);
+	};
+	loadStack(parent);
+	return { iterator : function() {
+		return { hasNext : function() {
+			return stack.length > 0;
+		}, next : function() {
+			var n = stack.pop();
+			loadStack(n);
+			return n;
+		}};
+	}};
+}
 co.janicek.core.HashTableCore = function() { }
 co.janicek.core.HashTableCore.__name__ = true;
 co.janicek.core.HashTableCore.parseHashTable = function(rawHashTable,keyValueDelimeterRegexPattern,pairDelimeterRegexPattern) {
@@ -285,27 +361,6 @@ co.janicek.core.LambdaCore.first = function(it,f) {
 		if(f(x)) return x;
 	}
 	return null;
-}
-co.janicek.core.LineageCore = function() { }
-co.janicek.core.LineageCore.__name__ = true;
-co.janicek.core.LineageCore.isRoot = function(node) {
-	return node.parent == null;
-}
-co.janicek.core.LineageCore.root = function(node) {
-	return co.janicek.core.LambdaCore.first(co.janicek.core.LineageCore.lineage(node),function(n) {
-		return n.parent == null;
-	});
-}
-co.janicek.core.LineageCore.lineage = function(node) {
-	return { iterator : function() {
-		return { hasNext : function() {
-			return node != null;
-		}, next : function() {
-			var current = node;
-			node = node.parent;
-			return current;
-		}};
-	}};
 }
 co.janicek.core.NullCore = function() { }
 co.janicek.core.NullCore.__name__ = true;
@@ -1635,6 +1690,61 @@ specs.co.janicek.core.BaseCode64Spec.__name__ = true;
 specs.co.janicek.core.BaseCode64Spec.prototype = {
 	__class__: specs.co.janicek.core.BaseCode64Spec
 }
+specs.co.janicek.core.Hobbit = { __ename__ : true, __constructs__ : ["Frodo"] }
+specs.co.janicek.core.Hobbit.Frodo = ["Frodo",0];
+specs.co.janicek.core.Hobbit.Frodo.toString = $estr;
+specs.co.janicek.core.Hobbit.Frodo.__enum__ = specs.co.janicek.core.Hobbit;
+specs.co.janicek.core.EnumCoreSpec = function() {
+	js.mocha.M.describe("EnumCore",function() {
+		js.mocha.M.describe("parseEnum()",function() {
+			js.mocha.M.it("should parse an enum from a string",function() {
+				js.expect.E.should(co.janicek.core.EnumCore.parseEnum(specs.co.janicek.core.Hobbit,"Frodo")).equal(specs.co.janicek.core.Hobbit.Frodo);
+			});
+			js.mocha.M.it("should return null if enum is undefined",function() {
+				js.expect.E.should(co.janicek.core.EnumCore.parseEnum(specs.co.janicek.core.Hobbit,"Bilbo")).equal(null);
+			});
+		});
+	});
+};
+specs.co.janicek.core.EnumCoreSpec.__name__ = true;
+specs.co.janicek.core.EnumCoreSpec.prototype = {
+	__class__: specs.co.janicek.core.EnumCoreSpec
+}
+specs.co.janicek.core.FamilyCoreSpec = function() {
+	js.mocha.M.describe("FamilyCore",function() {
+		js.mocha.M.describe("isRoot()",function() {
+			js.mocha.M.it("should test node for parent that is null",function() {
+				js.expect.E.should(co.janicek.core.FamilyCore.isRoot({ parent : null})).equal(true);
+				js.expect.E.should(co.janicek.core.FamilyCore.isRoot({ parent : { parent : null}})).equal(false);
+			});
+		});
+		js.mocha.M.describe("root()",function() {
+			js.mocha.M.it("should find the root node in a lineage",function() {
+				js.expect.E.should(co.janicek.core.FamilyCore.root({ id : 1, parent : null}).id).equal(1);
+				js.expect.E.should(co.janicek.core.FamilyCore.root({ id : 1, parent : { id : 2, parent : null}}).id).equal(2);
+			});
+		});
+		js.mocha.M.describe("lineage()",function() {
+			js.mocha.M.it("should iterate a node's lineage",function() {
+				js.expect.E.should(Lambda.count(co.janicek.core.FamilyCore.lineage({ id : 1, parent : { id : 2, parent : null}}))).equal(2);
+			});
+		});
+		js.mocha.M.describe("family()",function() {
+			js.mocha.M.it("should iterate a node's family tree including parent node",function() {
+				js.expect.E.should(Lambda.count(co.janicek.core.FamilyCore.family({ children : [{ name : "child"}]}))).equal(2);
+			});
+		});
+		js.mocha.M.describe("descendants()",function() {
+			js.mocha.M.it("should iterate a node's descendants",function() {
+				js.expect.E.should(Lambda.count(co.janicek.core.FamilyCore.descendants({ children : [{ name : "child"}]}))).equal(1);
+			});
+		});
+	});
+};
+specs.co.janicek.core.FamilyCoreSpec.__name__ = true;
+specs.co.janicek.core.FamilyCoreSpec.prototype = {
+	__class__: specs.co.janicek.core.FamilyCoreSpec
+}
 specs.co.janicek.core.HashTableCoreSpec = function() {
 	js.mocha.M.describe("HashTableCore",function() {
 		js.mocha.M.describe("parseHashTable()",function() {
@@ -1695,31 +1805,6 @@ specs.co.janicek.core.HashTableCoreSpec = function() {
 specs.co.janicek.core.HashTableCoreSpec.__name__ = true;
 specs.co.janicek.core.HashTableCoreSpec.prototype = {
 	__class__: specs.co.janicek.core.HashTableCoreSpec
-}
-specs.co.janicek.core.LineageCoreSpec = function() {
-	js.mocha.M.describe("LineageCore",function() {
-		js.mocha.M.describe("isRoot()",function() {
-			js.mocha.M.it("should test node for parent that is null",function() {
-				js.expect.E.should(co.janicek.core.LineageCore.isRoot({ parent : null})).equal(true);
-				js.expect.E.should(co.janicek.core.LineageCore.isRoot({ parent : { parent : null}})).equal(false);
-			});
-		});
-		js.mocha.M.describe("root()",function() {
-			js.mocha.M.it("should find the root node in a lineage",function() {
-				js.expect.E.should(co.janicek.core.LineageCore.root({ id : 1, parent : null}).id).equal(1);
-				js.expect.E.should(co.janicek.core.LineageCore.root({ id : 1, parent : { id : 2, parent : null}}).id).equal(2);
-			});
-		});
-		js.mocha.M.describe("lineage()",function() {
-			js.mocha.M.it("should iterate a node's lineage",function() {
-				js.expect.E.should(Lambda.count(co.janicek.core.LineageCore.lineage({ id : 1, parent : { id : 2, parent : null}}))).equal(2);
-			});
-		});
-	});
-};
-specs.co.janicek.core.LineageCoreSpec.__name__ = true;
-specs.co.janicek.core.LineageCoreSpec.prototype = {
-	__class__: specs.co.janicek.core.LineageCoreSpec
 }
 specs.co.janicek.core.NullCoreSpec = function() {
 	js.mocha.M.describe("NullCore",function() {
