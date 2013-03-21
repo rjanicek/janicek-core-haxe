@@ -146,6 +146,7 @@ MainBrowser.main = function() {
 	new specs.co.janicek.core.html.CanvasCoreSpec();
 	new specs.co.janicek.core.EnumCoreSpec();
 	new specs.co.janicek.core.FamilyCoreSpec();
+	new specs.co.janicek.core.math.GeometryCoreSpec();
 	new specs.co.janicek.core.math.HashCoreSpec();
 	new specs.co.janicek.core.HashTableCoreSpec();
 	new specs.co.janicek.core.html.HtmlColorCoreSpec();
@@ -833,6 +834,20 @@ co.janicek.core.http.UrlCore.parseKeyValuePairsToStruct = function(delimetedData
 	return struct;
 }
 co.janicek.core.math = {}
+co.janicek.core.math.GeometryCore = function() { }
+co.janicek.core.math.GeometryCore.__name__ = true;
+co.janicek.core.math.GeometryCore.getCenterRectangles = function(anchorTop,anchorLeft,anchorWidth,anchorHeight,movableTop,movableLeft,movableWidth,movableHeight) {
+	var anchorCenterY = anchorTop + anchorHeight / 2;
+	var anchorCenterX = anchorLeft + anchorWidth / 2;
+	var movableCenterY = movableTop + movableHeight / 2;
+	var movableCenterX = movableLeft + movableWidth / 2;
+	return { left : anchorCenterX - movableCenterX, top : anchorCenterY - movableCenterY};
+}
+co.janicek.core.math.GeometryCore.fitRectangle = function(width,height,maxWidth,maxHeight,preserveAspectRatio) {
+	if(preserveAspectRatio == null) preserveAspectRatio = true;
+	var scale = preserveAspectRatio?Math.min(width <= maxWidth?1:maxWidth / width,height <= maxHeight?1:maxHeight / height):1;
+	return { width : Math.min(width * scale,maxWidth), height : Math.min(height * scale,maxHeight)};
+}
 co.janicek.core.math.HashCore = function() { }
 co.janicek.core.math.HashCore.__name__ = true;
 co.janicek.core.math.HashCore.djb2 = function(s) {
@@ -2162,6 +2177,28 @@ specs.co.janicek.core.http.UrlCoreSpec.prototype = {
 	__class__: specs.co.janicek.core.http.UrlCoreSpec
 }
 specs.co.janicek.core.math = {}
+specs.co.janicek.core.math.GeometryCoreSpec = function() {
+	js.mocha.M.describe("GeometryCore",function() {
+		js.mocha.M.describe("fitRectangle()",function() {
+			js.mocha.M.it("should not change a smaller rectangle",function() {
+				js.expect.E.should(co.janicek.core.math.GeometryCore.fitRectangle(10,10,11,11,false)).eql({ width : 10, height : 10});
+			});
+			js.mocha.M.it("should shrink a larger rectangle",function() {
+				js.expect.E.should(co.janicek.core.math.GeometryCore.fitRectangle(11,11,10,10,false)).eql({ width : 10, height : 10});
+				js.expect.E.should(co.janicek.core.math.GeometryCore.fitRectangle(10,10,5,7,false)).eql({ width : 5, height : 7});
+			});
+			js.mocha.M.it("should shrink a larger rectangle and preserve aspect ratio",function() {
+				js.expect.E.should(co.janicek.core.math.GeometryCore.fitRectangle(10,10,5,10,true)).eql({ width : 5, height : 5});
+				js.expect.E.should(co.janicek.core.math.GeometryCore.fitRectangle(10,10,10,5,true)).eql({ width : 5, height : 5});
+				js.expect.E.should(co.janicek.core.math.GeometryCore.fitRectangle(10,10,5,7.5,true)).eql({ width : 5, height : 5});
+			});
+		});
+	});
+};
+specs.co.janicek.core.math.GeometryCoreSpec.__name__ = true;
+specs.co.janicek.core.math.GeometryCoreSpec.prototype = {
+	__class__: specs.co.janicek.core.math.GeometryCoreSpec
+}
 specs.co.janicek.core.math.HashCoreSpec = function() {
 	js.mocha.M.describe("HashCore",function() {
 		js.mocha.M.describe("djb2()",function() {
