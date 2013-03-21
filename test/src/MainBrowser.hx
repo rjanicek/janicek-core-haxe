@@ -10,6 +10,7 @@ import specs.co.janicek.core.html.HtmlColorCoreSpec;
 import specs.co.janicek.core.http.HttpCookieCoreSpec;
 import specs.co.janicek.core.http.UrlCoreSpec;
 import specs.co.janicek.core.FamilyCoreSpec;
+import specs.co.janicek.core.math.GeometryCoreSpec;
 import specs.co.janicek.core.math.HashCoreSpec;
 import specs.co.janicek.core.math.MathCoreSpec;
 import specs.co.janicek.core.math.PerlinNoiseSpec;
@@ -34,6 +35,7 @@ class MainBrowser {
 		new CanvasCoreSpec();
 		new EnumCoreSpec();
 		new FamilyCoreSpec();
+		new GeometryCoreSpec();
 		new HashCoreSpec();
 		new HashTableCoreSpec();
 		new HtmlColorCoreSpec();
