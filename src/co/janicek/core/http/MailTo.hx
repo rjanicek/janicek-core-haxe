@@ -25,17 +25,41 @@
  * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package co.janicek.core.macro;
 
-import haxe.macro.Context;
+package co.janicek.core.http;
 
-class Resource{
+using Std;
+using StringTools;
+
+/**
+ * @see http://en.wikipedia.org/wiki/Mailto
+ */
+class MailTo{
 
 	/**
-	 * Embed a file into source code as a string.
+	 * Create a mailto: link.
 	 */
-	macro public static function embedFileAsString( file : String ) {
-		return Context.makeExpr(sys.io.File.getContent(file), Context.currentPos());
-	}
+	public static function createLink( to : Array<String>, subject = "", body = "", ?cc : Array<String> ) : String {
+		var href = ["mailto:${to.join(',')}".format()];
+		var parameters = [];
 
+		if (cc != null) {
+			parameters.push("cc=${to.join(',').urlEncode}".format());
+		}
+
+		if (subject.length > 0) {
+			parameters.push("subject=${subject.urlEncode()}".format());
+		}
+
+		if (body.length > 0) {
+			parameters.push("body=${body.urlEncode()}".format());
+		}
+
+		if (parameters.length > 0) {
+			href.push(parameters.join("&"));
+		}
+
+		return href.join("?") ;
+	}
+	
 }

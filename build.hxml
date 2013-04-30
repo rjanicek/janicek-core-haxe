@@ -1,7 +1,7 @@
 -cp src
 -cp test/src
--cp lib/html5-haxe
--cp ../../mocha.js-haxe/mocha.js-haxe/src
+-cp lib/html5-haxe-7423e2b0990c7948fc239d7e3fc78c892c272114
+-cp lib/mocha.js-haxe-37b8008e5f9925b41ef9ee7781f0e29e174b04eb/src
 -js test/browser/janicek-core-test-browser.js
 -main MainBrowser
 --js-modern

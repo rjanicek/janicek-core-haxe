@@ -1,6 +1,6 @@
 -cp src
 -cp test/src
--cp ../../mocha.js-haxe/mocha.js-haxe/src
+-cp lib/mocha.js-haxe-37b8008e5f9925b41ef9ee7781f0e29e174b04eb/src
 -js test/node/janicek-core-test-node.js
 -main MainNode
 -dce full

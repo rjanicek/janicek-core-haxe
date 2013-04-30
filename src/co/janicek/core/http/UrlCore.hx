@@ -26,6 +26,7 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 package co.janicek.core.http;
+import haxe.ds.GenericStack;
 
 using co.janicek.core.NullCore;
 using co.janicek.core.HashTableCore;
@@ -161,5 +162,14 @@ class UrlCore {
 		
 		return struct;
 	}
+	
+	public static function stringifyStructToKeyValuePairs( map : {}, keyValueDelimeter = KEY_VALUE_DELIMETER, pairDelimeter = KEY_VALUE_PAIR_DELIMETER ) : String {
+		var fields = new Array<String>();
+		for (field in map.fields()) {
+			fields.push(field + keyValueDelimeter + StringTools.urlEncode(map.field(field)));
+		}
+		return fields.join(pairDelimeter);
+	}
+	
 
 }
